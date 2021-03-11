@@ -1,0 +1,8 @@
+prefix=/home/anton/P4_catkin_ws/install
+
+Name: jaco
+Description: Description of jaco
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
