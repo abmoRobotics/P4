@@ -7,6 +7,10 @@
       },
       "includePath": [
         "/opt/ros/melodic/include/**",
+<<<<<<< HEAD
+=======
+        "/home/anton/P4_catkin_ws/src/jaco/include/**",
+>>>>>>> f17584d6b36f014642113a29975f5345dce657a7
         "/usr/include/**"
       ],
       "name": "ROS"
