@@ -67,3 +67,5 @@ qtcreator-*
 CATKIN_IGNORE
 
 # End of https://www.toptal.com/developers/gitignore/api/ros
+src/.vscode/settings.json
+src/.vscode/c_cpp_properties.json
