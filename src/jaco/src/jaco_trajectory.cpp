@@ -1,0 +1,299 @@
+#include <ros/ros.h>
+#include <jaco_trajectory.h>
+
+#include <actionlib/client/simple_action_client.h>
+//#include <kinova_msgs/SetFingersPositionAction.h>
+#include <tf_conversions/tf_eigen.h>
+
+
+//moveit::planning_interface::MoveGroupInterface group_("arm");
+//moveit::planning_interface::MoveGroupInterface gripper_group_("gripper");
+
+const double FINGER_MAX = 6400;
+
+tf::Quaternion EulerZYZ_to_Quaternion(double tz1, double ty, double tz2)
+{
+    tf::Quaternion q;
+    tf::Matrix3x3 rot;
+    tf::Matrix3x3 rot_temp;
+    rot.setIdentity();
+
+    rot_temp.setEulerYPR(tz1, 0.0, 0.0);
+    rot *= rot_temp;
+    rot_temp.setEulerYPR(0.0, ty, 0.0);
+    rot *= rot_temp;
+    rot_temp.setEulerYPR(tz2, 0.0, 0.0);
+    rot *= rot_temp;
+    rot.getRotation(q);
+    return q;
+}
+
+
+bool jaco_trajectory::gripper_action(double finger_turn){
+moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+    ROS_INFO_STREAM(robot_connected_);
+    if(robot_connected_ == false)
+    {
+        if (finger_turn>0.5*FINGER_MAX)
+        {
+
+          //gripper_group_->setNamedTarget("Close");
+        }
+        else
+        {
+          //gripper_group_->setNamedTarget("Open");
+        }
+
+        tripod_grip(80.0);
+        
+        bool success = (gripper_group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
+        //gripper_group_->move();
+        gripper_group_->execute(my_plan);
+        return true;
+    }
+
+    if (finger_turn < 0)
+    {
+        finger_turn = 0.0;
+    }
+    else
+    {
+        finger_turn = std::min(finger_turn, FINGER_MAX);
+    }
+
+    kinova_msgs::SetFingersPositionGoal goal;
+    goal.fingers.finger1 = finger_turn;
+    goal.fingers.finger2 = goal.fingers.finger1;
+    goal.fingers.finger3 = goal.fingers.finger1;
+    finger_client_->sendGoal(goal);
+
+    if (finger_client_->waitForResult(ros::Duration(5.0)))
+    {
+        finger_client_->getResult();
+        return true;
+    }
+    else
+    {
+        finger_client_->cancelAllGoals();
+        ROS_WARN_STREAM("The gripper action timed-out");
+        return false;
+    }
+}
+
+void jaco_trajectory::spherical_grip(double diameter){
+
+	double jointValue = (M_PI / 4.0) - asin((diameter / 44.0) - (29.0 / 22.0));
+    ROS_INFO_STREAM(jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
+
+}
+
+
+void jaco_trajectory::pinch_grip(double diameter){
+
+	double jointValue = (M_PI / 4.0) - asin((diameter / 87.0) - (2.0 / 3.0));
+    ROS_INFO_STREAM(jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
+	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
+
+}
+void jaco_trajectory::tripod_grip(double diameter){
+
+	double jointValue = (M_PI / 4.0) - asin((diameter / 77.0) - (58.0 / 77.0));
+    ROS_INFO_STREAM(jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
+	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
+
+}
+
+void jaco_trajectory::pickup_object(){
+    //once the object is know to be grasped
+    //we remove obstacle from work scene
+    co_.id = "cylinder";
+    co_.operation = moveit_msgs::CollisionObject::REMOVE;
+    pub_co_.publish(co_);
+
+    //and then we declare it as an attached obstacle
+    aco_.object.operation = moveit_msgs::CollisionObject::ADD;
+    aco_.link_name = "j2n6s300_end_effector";
+    aco_.touch_links.push_back("j2n6s300_end_effector");
+    aco_.touch_links.push_back("j2n6s300_link_finger_1");
+    aco_.touch_links.push_back("j2n6s300_link_finger_2");
+    aco_.touch_links.push_back("j2n6s300_link_finger_3");
+    aco_.touch_links.push_back("j2n6s300_link_finger_tip_1");
+    aco_.touch_links.push_back("j2n6s300_link_finger_tip_2");
+    aco_.touch_links.push_back("j2n6s300_link_finger_tip_3");
+    pub_aco_.publish(aco_);
+}
+
+
+void jaco_trajectory::add_target()
+{
+    //remove target_cylinder
+    co_.id = "cylinder";
+    co_.operation = moveit_msgs::CollisionObject::REMOVE;
+    pub_co_.publish(co_);
+
+    //add target_cylinder
+    co_.primitives.resize(1);
+    co_.primitive_poses.resize(1);
+    co_.primitives[0].type = shape_msgs::SolidPrimitive::CYLINDER;
+    co_.primitives[0].dimensions.resize(geometric_shapes::SolidPrimitiveDimCount<shape_msgs::SolidPrimitive::CYLINDER>::value);
+    co_.operation = moveit_msgs::CollisionObject::ADD;
+
+    co_.primitives[0].dimensions[shape_msgs::SolidPrimitive::CYLINDER_HEIGHT] = 0.13;
+    co_.primitives[0].dimensions[shape_msgs::SolidPrimitive::CYLINDER_RADIUS] = 0.036;
+    co_.primitive_poses[0].position.x = 0.7;
+    co_.primitive_poses[0].position.y = 0.0;
+    co_.primitive_poses[0].position.z = 0.13/2;
+    // can_pose_.pose.position.x = co_.primitive_poses[0].position.x;
+    // can_pose_.pose.position.y = co_.primitive_poses[0].position.y;
+    // can_pose_.pose.position.z = co_.primitive_poses[0].position.z;
+    pub_co_.publish(co_);
+    planning_scene_msg_.world.collision_objects.push_back(co_);
+    planning_scene_msg_.is_diff = true;
+    pub_planning_scene_diff_.publish(planning_scene_msg_);
+    aco_.object = co_;
+    ros::WallDuration(0.1).sleep();
+}
+
+void jaco_trajectory::generate_trajectory(geometry_msgs::PoseStamped pose){
+    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+    ROS_INFO("Starting");
+    group_->clearPathConstraints();
+    group_->setPoseTarget(pose);
+    //group_->setNamedTarget("Home");
+    
+ bool   success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
+    group_->execute(my_plan);
+}
+
+geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
+{
+    geometry_msgs::PoseStamped pose_msg;
+
+    pose_msg.header.frame_id = "root";
+    pose_msg.header.stamp = ros::Time::now();
+
+    // computer pregrasp position w.r.t. location of grasp_pose in spherical coordinate. Orientation is w.r.t. fixed world (root) reference frame.
+    double delta_x = -dist * cos(azimuth) * sin(polar);
+    double delta_y = -dist * sin(azimuth) * sin(polar);
+    double delta_z = -dist * cos(polar);
+
+    // computer the orientation of gripper w.r.t. fixed world (root) reference frame. The gripper (z axis) should point(open) to the grasp_pose.
+    tf::Quaternion q = EulerZYZ_to_Quaternion(azimuth, polar, rot_gripper_z);
+
+    pose_msg.pose.position.x = targetpose_msg.pose.position.x+ delta_x;
+    pose_msg.pose.position.y = targetpose_msg.pose.position.y+ delta_y;
+    pose_msg.pose.position.z = targetpose_msg.pose.position.z+ delta_z;
+    pose_msg.pose.orientation.x = q.x();
+    pose_msg.pose.orientation.y = q.y();
+    pose_msg.pose.orientation.z = q.z();
+    pose_msg.pose.orientation.w = q.w();
+
+
+    return pose_msg;
+
+}
+
+void jaco_trajectory::define_cartesian_pose()
+{
+    tf::Quaternion q;
+
+    // // define start pose before grasp
+    // start_pose_.header.frame_id = "root";
+    // start_pose_.header.stamp = ros::Time::now();
+    // start_pose_.pose.position.x = 0.5;
+    // start_pose_.pose.position.y = -0.5;
+    // start_pose_.pose.position.z = 0.5;
+
+    // q = EulerZYZ_to_Quaternion(-M_PI/4, M_PI/2, M_PI);
+    // start_pose_.pose.orientation.x = q.x();
+    // start_pose_.pose.orientation.y = q.y();
+    // start_pose_.pose.orientation.z = q.z();
+    // start_pose_.pose.orientation.w = q.w();
+
+    // define grasp pose
+    grasp_pose_.header.frame_id = "root";
+    grasp_pose_.header.stamp  = ros::Time::now();
+
+    // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2)
+    grasp_pose_.pose.position.x = 0.7;
+    grasp_pose_.pose.position.y = 0.0;
+    grasp_pose_.pose.position.z = 0.13/2;
+
+    q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
+    grasp_pose_.pose.orientation.x = q.x();
+    grasp_pose_.pose.orientation.y = q.y();
+    grasp_pose_.pose.orientation.z = q.z();
+    grasp_pose_.pose.orientation.w = q.w();
+
+    // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
+    grasp_pose_= generate_gripper_align_pose(grasp_pose_, 0.03999, 0, M_PI/2, M_PI/2);
+    pregrasp_pose_ = generate_gripper_align_pose(grasp_pose_, 0.1, 0, M_PI/2, M_PI/2);
+    postgrasp_pose_ = grasp_pose_;
+    postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
+}
+
+jaco_trajectory::~jaco_trajectory(){
+    delete group_;
+    delete gripper_group_;
+}
+
+
+jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
+
+     
+    // // Before we can load the planner, we need two objects, a RobotModel and a PlanningScene.
+    // robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
+    // robot_model_ = robot_model_loader.getModel();
+
+    // // construct a `PlanningScene` that maintains the state of the world (including the robot).
+    // planning_scene_.reset(new planning_scene::PlanningScene(robot_model_));
+    // planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
+    nh_.param<bool>("/robot_connected",robot_connected_,true);
+    //nh_.param<std::string>("/robot_type",robot_type_,"j2n6s300"); 
+
+    group_ = new moveit::planning_interface::MoveGroupInterface("arm");
+    gripper_group_ = new moveit::planning_interface::MoveGroupInterface("gripper");
+    //pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    define_cartesian_pose();
+    generate_trajectory(pregrasp_pose_);
+    generate_trajectory(grasp_pose_);
+    group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
+
+    //  finger_client_ = new actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>
+    //          ("/j2n6s300_driver/fingers_action/finger_positions", false);
+    //  while(robot_connected_ && !finger_client_->waitForServer(ros::Duration(5.0))){
+    //    ROS_INFO("Waiting for the finger action server to come up");
+    //  }moveit::planning_interface::MoveGroupInterface
+    
+     pub_aco_ = nh_.advertise<moveit_msgs::AttachedCollisionObject>("/attached_collision_object", 10);
+    pub_co_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10);
+      pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+
+
+    add_target();
+    gripper_action(0.5*FINGER_MAX);
+    pickup_object();
+}
+
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "test");
+    ros::NodeHandle node;
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
+
+    jaco_trajectory Jaco(node);
+
+    //ros::spin();
+    return 0;
+}

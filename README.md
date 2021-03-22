@@ -6,3 +6,9 @@
 To run the code, the required external packages must be downloaded, this is done by following the steps listed below:
 1. Navigate to the project folder(p4) folder (cd p4)
 2. git submodule update --init --recursive
+
+
+
+## other commands
+
+sudo apt-get install ros*controller*

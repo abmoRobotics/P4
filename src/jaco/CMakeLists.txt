@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(jaco)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+ add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -12,6 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   std_msgs
+  moveit_core
+  #moveit_ros_planning
+  moveit_ros_planning_interface
 )
 
 ## System dependencies are found with CMake's conventions
@@ -111,11 +114,13 @@ install(PROGRAMS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+ INCLUDE_DIRS include
 #  LIBRARIES jaco
-CATKIN_DEPENDS roscpp std_msgs message_runtime
+CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_interface
 #  DEPENDS system_lib
 )
+
+#find_package(Eigen REQUIRED)
 
 ###########
 ## Build ##
@@ -124,8 +129,9 @@ CATKIN_DEPENDS roscpp std_msgs message_runtime
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  
 )
 
 ## Declare a C++ library
@@ -212,3 +218,12 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+add_executable(work_scene2 src/work_scene2.cpp)
+target_link_libraries(work_scene2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS work_scene2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(jaco_trajectory src/jaco_trajectory.cpp include/jaco_trajectory.h)
+target_link_libraries(jaco_trajectory ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS jaco_trajectory DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
