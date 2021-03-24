@@ -171,6 +171,7 @@ void jaco_trajectory::generate_trajectory(geometry_msgs::PoseStamped pose){
     //group_->setNamedTarget("Home");
     
  bool   success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
+
     group_->execute(my_plan);
 }
 
@@ -247,6 +248,48 @@ jaco_trajectory::~jaco_trajectory(){
 }
 
 
+void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
+    
+};
+
+void jaco_trajectory::itongue_control(int test){
+moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+//geometry_msgs::PoseStamped currentpose = group_->getCurrentPose();
+robot_state::RobotStatePtr fdgsfgdgfs = group_->getCurrentState();
+// switch (test)
+// {
+// case 1:
+//     currentpose.pose.position.x = currentpose.pose.position.x + 0.01;
+//     break;
+// case 2:
+//     currentpose.pose.position.x = currentpose.pose.position.x - 0.01;
+//     break;
+//  case 3:
+//     currentpose.pose.position.y = currentpose.pose.position.y + 0.01;
+//     break;
+// case 4:
+//     currentpose.pose.position.y = currentpose.pose.position.y - 0.01;
+//     break;
+// case 5:
+//     currentpose.pose.position.z = currentpose.pose.position.z + 0.01;
+//     break;
+// case 6:
+//     currentpose.pose.position.z = currentpose.pose.position.z - 0.01;
+//     break;
+// default:
+//     break;
+// }
+
+    
+    
+    
+//     group_->setPoseTarget(currentpose);
+//     bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
+//     group_->execute(my_plan);
+
+}
+
+
 jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
 
      
@@ -274,14 +317,33 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     //    ROS_INFO("Waiting for the finger action server to come up");
     //  }moveit::planning_interface::MoveGroupInterface
     
-     pub_aco_ = nh_.advertise<moveit_msgs::AttachedCollisionObject>("/attached_collision_object", 10);
+    pub_aco_ = nh_.advertise<moveit_msgs::AttachedCollisionObject>("/attached_collision_object", 10);
     pub_co_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10);
-      pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1000, &jaco_trajectory::itongue_callback,this);
+
+    // add_target();
+    // gripper_action(0.5*FINGER_MAX);
+    // pickup_object();
 
 
-    add_target();
-    gripper_action(0.5*FINGER_MAX);
-    pickup_object();
+
+    for (size_t i = 0; i < 20; i++)
+    {
+        itongue_control(1);
+         //ros::WallDuration(0.01).sleep();
+    }
+    for (size_t i = 0; i < 20; i++)
+    {
+        itongue_control(2);
+         //ros::WallDuration(0.01).sleep();
+    }
+    for (size_t i = 0; i < 20; i++)
+    {
+        itongue_control(3);
+         //ros::WallDuration(0.01).sleep();
+    }
+    
 }
 
 

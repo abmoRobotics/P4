@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import rospy
 
@@ -51,7 +51,7 @@ class TCI(object):
                                          [0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1],
                                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1]])
         self.sensorsNotNeighbors = 1 - self.sensorsNeighbors
-
+        
         rospy.init_node('rawitonguetalker', anonymous=True)
         self.pubRAW = rospy.Publisher('RAWItongueOut', RAWItongueOut, queue_size=10)
 
@@ -208,6 +208,7 @@ def run():
     rospy.Subscriber('Sys_cmd', sys_msg, tci_handle.NewSysCmd)
     R = rospy.Rate(60) # tci sends 30hz
     while not rospy.is_shutdown():
+        
         tci_handle.ReadXY()
         R.sleep()
 
