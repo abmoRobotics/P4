@@ -11,6 +11,7 @@ To run the code, the required external packages must be downloaded, this is done
 4. Run : catkin_make
   - If catkin_make fails run the following command: source devel/setup.bash
   - Run: catkin_make
+5. Because the moveit needs controllers run the follwing command: sudo apt-get install ros*controller*
 
 
 ## other commands
