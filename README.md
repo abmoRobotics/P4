@@ -1,4 +1,5 @@
 ## Requirements
+** Install ubuntu 18.04
 **Ros melodic - install via: http://wiki.ros.org/melodic/Installation/Ubuntu.
 ** Install moveit: sudo apt install ros-melodic-moveit
 ## Downloading the project
