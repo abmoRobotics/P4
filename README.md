@@ -11,7 +11,8 @@ To run the code, the required external packages must be downloaded, this is done
 4. Run : catkin_make
   - If catkin_make fails run the following command: source devel/setup.bash
   - Run: catkin_make
-5. Because the moveit needs controllers run the follwing command: sudo apt-get install ros*controller*
+5. sudo apt-get install ros-melodic-trac-ik-kinematics-plugin
+6. Because the gazebo needs controllers run the follwing command: sudo apt-get install ros*controller*
 
 
 ## other commands
