@@ -18,8 +18,5 @@ To run the code, the required external packages must be downloaded, this is done
 6. Because the gazebo needs controllers run the follwing command: sudo apt-get install ros*controller*
 
 
-## other commands
 # Usb permission for iTongue
 sudo chmod 777 /dev/ttyUSB0
-# fdsa
-sudo apt-get install ros*controller*
