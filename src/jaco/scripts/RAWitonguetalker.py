@@ -56,6 +56,7 @@ class TCI(object):
         self.pubRAW = rospy.Publisher('RAWItongueOut', RAWItongueOut, queue_size=10)
 
     def NewSysCmd(self, data):
+        print("her")
         self.COM = data.tci_port   #Name of port, should be /dev/ttyUSB0 if you use the USB port and the raw data, you can also comment this out if you don't want to use this, it is initiated at the top
         self.ContactThreshold = data.ContactThreshold #initial should be 0.12, you can play around with this number, you can also comment this out if you don't want to use this, it is initiated at the top
         self.CuttingThreshold = data.CuttingThreshold #initial should be 0.08, you can also play around with this number, you can also comment this out if you don't want to use this, it is initiated at the top
@@ -69,6 +70,7 @@ class TCI(object):
             print('Already disconnected')
 
     def Connect(self):
+        print("hej")
 #        """ Connect to the serial"""
         try:
             if self.s is None:

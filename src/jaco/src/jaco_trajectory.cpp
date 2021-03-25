@@ -251,67 +251,96 @@ jaco_trajectory::~jaco_trajectory(){
 void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
    // planning_scene_monitor_->waitForCurrentRobotState(ros::Time::now());
      moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-     //geometry_msgs::PoseStamped currentpose = group_->getCurrentPose();
-    //geometry_msgs::PoseStamped currentpose;
+   //  geometry_msgs::PoseStamped currentpose = group_->getCurrentPose();
+   geometry_msgs::PoseStamped currentpose;
 //    ros::topic::waitForMessage('/tf', node, ros::Duration(2));
+
+//         tf2_ros::Buffer tfBuffer;
+//   tf2_ros::TransformListener tfListener(tfBuffer);
+//  try{
+       
+//        current_robot_transformStamped = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
+//                                 ros::Time::now(),ros::Duration(3.0));
+//      }
+//      catch (tf2::TransformException &ex) {
+//        ROS_WARN("%s",ex.what());
+//        ros::Duration(1.0).sleep();
+//      }
 
 
     ROS_INFO_STREAM(msg->Sensor);
-    // switch (msg->Sensor)
-    // {
-    //  case 17: //Z forwards  - away from oneself
-    //  ROS_INFO("Z forwards  - away from oneself");
-    //     currentpose.pose.position.z = currentpose.pose.position.z - 0.050000;
-    //     break;
-    //  case 12: //Z backwards -- towards oneself
-    //     currentpose.pose.position.z = currentpose.pose.position.z + 0.050000;
-    //     break; 
-    // case 11: // cross up-left
-    // ROS_INFO("cross up-left");
-    //     currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-    //     currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
-    //     break;
-    // case 8:// Y upwards
-    // ROS_INFO("Y upwards");
-    //     currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-    //     break;
-    // case 13: // Cross up-right
-    // ROS_INFO("Cross up-right");
-    //     currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-    //     currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
-    //     break;
-    // case 14: //x left
-    // ROS_INFO("x left");
-    //     currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
-    //     break;
-    // case 15: //x right
-    // ROS_INFO("x right");
-    //     currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
-    //     break;
-    // case 16: // Cross down-left
-    //     currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-    //     currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
-    //     break;
-    // case 9: // y downwards
-    //     currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-    //     break;
-    // case 18: // Cross down-right
-    //     currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-    //     currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
-    //     break;
+    ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.x );
+    ROS_INFO_STREAM(currentpose.pose.position.x);
+    ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.y );
+    ROS_INFO_STREAM(currentpose.pose.position.y);
+    ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.z );
+    ROS_INFO_STREAM(currentpose.pose.position.z);
 
-    // default:
-    //     break;
-    // }
 
-    //  group_->setPoseTarget(currentpose);
-    //  group_->move();
-    // bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
-    // group_->execute(my_plan);
+    if(current_robot_transformStamped.transform.translation.x != 0){
+    currentpose.header = current_robot_transformStamped.header;
+    currentpose.pose.orientation=current_robot_transformStamped.transform.rotation;
+    currentpose.pose.position.x = current_robot_transformStamped.transform.translation.x;
+    currentpose.pose.position.y = current_robot_transformStamped.transform.translation.y;
+    currentpose.pose.position.z = current_robot_transformStamped.transform.translation.z;
+     switch (msg->Sensor)
+    {
+     case 17: //Z forwards  - away from oneself
+     ROS_INFO("Z forwards  - away from oneself");
+        currentpose.pose.position.z = currentpose.pose.position.z - 0.050000;
+        break;
+     case 12: //Z backwards -- towards oneself
+        currentpose.pose.position.z = currentpose.pose.position.z + 0.050000;
+        break; 
+    case 11: // cross up-left
+    ROS_INFO("cross up-left");
+        currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
+        currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+        break;
+    case 8:// Y upwards
+    ROS_INFO("Y upwards");
+        currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
+        break;
+    case 13: // Cross up-right
+    ROS_INFO("Cross up-right");
+        currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
+        currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+        break;
+    case 14: //x left
+    ROS_INFO("x left");
+        currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+        break;
+    case 15: //x right
+    ROS_INFO("x right");
+        currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+        break;
+    case 16: // Cross down-left
+        currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
+        currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+        break;
+    case 9: // y downwards
+        currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
+        break;
+    case 18: // Cross down-right
+        currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
+        currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+        break;
+
+    default:
+        break;
+    }
+    ROS_INFO_STREAM(currentpose.pose.position.x);
+     ROS_INFO_STREAM(currentpose.pose.position.y);
+     ROS_INFO_STREAM(currentpose.pose.position.z);
+     group_->setPoseTarget(currentpose);
+     group_->move();
+    bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
+    group_->execute(my_plan);
+    }
 }
 
 void jaco_trajectory::tf_callback(const tf::tfMessageConstPtr& msg1){
-    //ROS_INFO_STREAM(msg1->transforms[6].header.frame_id);
+    ROS_INFO_STREAM(msg1->transforms[6].header.frame_id);
 
     
 
@@ -392,11 +421,11 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     pub_co_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10);
     pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
     itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1, &jaco_trajectory::itongue_callback,this);
-    tf_sub = nh.subscribe<tf::tfMessage>("/tf", 1, &jaco_trajectory::tf_callback, this);
+    //tf_sub = nh.subscribe<tf::tfMessage>("/tf", 1, &jaco_trajectory::tf_callback, this);
 
 
-    tf2::toMsg(tf2::Transform::getIdentity(), joint_global_frame_pose_stamped.pose);
-    tf2::toMsg(tf2::Transform::getIdentity(), joint_pose_stamped.pose);
+    // tf2::toMsg(tf2::Transform::getIdentity(), joint_global_frame_pose_stamped.pose);
+    // tf2::toMsg(tf2::Transform::getIdentity(), joint_pose_stamped.pose);
 
     //tf::TransformListener listener;
     //tf::StampedTransform transform;
@@ -424,7 +453,22 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     //     itongue_control(3);
     //      //ros::WallDuration(0.01).sleep();10| eelchair for the first time, please observe the following precautions:1.Practice using the Itongueon a computer or tablet before using it with a wheelchair.2.Ask your wheelchair service technician to reduce the speed settings of your wheelchair.3.Practice using the Itongueto control the wheelchair indoors and with others present.4.Be aware that speaking while in control of a wheelchair may cause the wheelchair to move unexpectedly.Menu (Key-board)
     // }
-    
+    tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
+   ros::Rate rate(10.0);
+   while (nh_.ok()){
+     
+     try{
+       
+       current_robot_transformStamped = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
+                                ros::Time::now(),ros::Duration(3.0));
+     }
+     catch (tf2::TransformException &ex) {
+       ROS_WARN("%s",ex.what());
+       ros::Duration(1.0).sleep();
+       continue;
+     }
+   }
 }
 
 
@@ -440,14 +484,8 @@ int main(int argc, char **argv)
     // ros::Rate rate(10.0);
     // while(ros::ok()){
 
-
     // }
-            Jaco.joint_pose_stamped.header.frame_id = "j2n6s300_link_6";
-        Jaco.joint_pose_stamped.header.stamp = ros::Time();
-        Jaco.tf_.transform(Jaco.joint_pose_stamped, Jaco.joint_global_frame_pose_stamped, "j2n6s300_link_base");
-        ROS_INFO_STREAM(Jaco.joint_global_frame_pose_stamped.pose.position.x);
-                /////// Pass frame from tf ///////
-
+    
     //Jaco.group_->getCurrentPose();
     //ros::spin();
     ros::waitForShutdown();

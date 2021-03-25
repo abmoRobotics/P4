@@ -227,3 +227,7 @@ install(TARGETS work_scene2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 add_executable(jaco_trajectory src/jaco_trajectory.cpp include/jaco_trajectory.h)
 target_link_libraries(jaco_trajectory ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS jaco_trajectory DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(tester2 src/tester2.cpp)
+target_link_libraries(tester2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS tester2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

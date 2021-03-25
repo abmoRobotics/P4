@@ -20,8 +20,10 @@
 #include <geometry_msgs/Pose.h>
 #include <tf/transform_listener.h>
 #include <tf/tfMessage.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+//#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
+ #include <geometry_msgs/TransformStamped.h>
 
 
 class jaco_trajectory
@@ -60,6 +62,7 @@ private:
     geometry_msgs::PoseStamped object_pose_;
     ros::Subscriber itongue_sub_;
     ros::Subscriber tf_sub;
+    geometry_msgs::TransformStamped current_robot_transformStamped;
 
 
 
