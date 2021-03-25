@@ -31,8 +31,8 @@ tf::Quaternion EulerZYZ_to_Quaternion(double tz1, double ty, double tz2)
 
 bool jaco_trajectory::gripper_action(double finger_turn){
 moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-    ROS_INFO_STREAM(robot_connected_);
+    ROS_INFO("GRIPPER_ACTION");
+    //ROS_INFO_STREAM(robot_connected_);
     if(robot_connected_ == false)
     {
         if (finger_turn>0.5*FINGER_MAX)
@@ -45,7 +45,7 @@ moveit::planning_interface::MoveGroupInterface::Plan my_plan;
           //gripper_group_->setNamedTarget("Open");
         }
 
-        tripod_grip(80.0);
+        tripod_grip(finger_turn);
         
         bool success = (gripper_group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
         //gripper_group_->move();
@@ -104,7 +104,8 @@ void jaco_trajectory::pinch_grip(double diameter){
 void jaco_trajectory::tripod_grip(double diameter){
 
 	double jointValue = (M_PI / 4.0) - asin((diameter / 77.0) - (58.0 / 77.0));
-    ROS_INFO_STREAM(jointValue);
+    ROS_INFO_STREAM(diameter);
+    ROS_INFO("TRIPOD");
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
@@ -242,11 +243,48 @@ void jaco_trajectory::define_cartesian_pose()
     postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 }
 
+
+
 jaco_trajectory::~jaco_trajectory(){
     delete group_;
     delete gripper_group_;
 }
 
+void jaco_trajectory::pos_callback(const jaco::positionConstPtr& msg){
+    ROS_INFO("pos_callback");
+    tf::Quaternion q; 
+
+    // define grasp pose
+    grasp_pose_.header.frame_id = "root";
+    grasp_pose_.header.stamp  = ros::Time::now();
+
+    // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2) ---- WORKS
+    grasp_pose_.pose.position.x = msg->posx.x;
+    grasp_pose_.pose.position.y = msg->posy.y;
+    grasp_pose_.pose.position.z = msg->posz.z;
+
+//////Doesnt work
+    q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
+    //q = EulerZYZ_to_Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z);
+    grasp_pose_.pose.orientation.x = q.x();
+    grasp_pose_.pose.orientation.y = q.y();
+    grasp_pose_.pose.orientation.z = q.z();
+    grasp_pose_.pose.orientation.w = q.w();
+
+    //ROS_INFO_STREAM(grasp_pose_.pose.orientation.z); // x, y, and z = 0.5
+
+    // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
+    grasp_pose_= generate_gripper_align_pose(grasp_pose_, 0.03999, 0, M_PI/2, M_PI/2);
+    pregrasp_pose_ = generate_gripper_align_pose(grasp_pose_, 0.1, 0, M_PI/2, M_PI/2);
+    postgrasp_pose_ = grasp_pose_;
+    postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
+
+    generate_trajectory(pregrasp_pose_);
+    generate_trajectory(grasp_pose_);
+    group_->setEndEffectorLink("j2n6s300_end_effector");
+    gripper_action(msg->radius);
+
+}
 
 void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
    // planning_scene_monitor_->waitForCurrentRobotState(ros::Time::now());
@@ -347,6 +385,8 @@ void jaco_trajectory::tf_callback(const tf::tfMessageConstPtr& msg1){
 }
 
 
+
+
 void jaco_trajectory::itongue_control(int test){
 moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 //geometry_msgs::PoseStamped currentpose = group_->getCurrentPose();
@@ -401,12 +441,12 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     group_ = new moveit::planning_interface::MoveGroupInterface("arm");
     gripper_group_ = new moveit::planning_interface::MoveGroupInterface("gripper");
     //pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-
     
-    define_cartesian_pose();
-    generate_trajectory(pregrasp_pose_);
-    generate_trajectory(grasp_pose_);
-    group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
+        /// Functions below are replaced or moved to the pos_callback function
+    //define_cartesian_pose();
+    // generate_trajectory(pregrasp_pose_);
+    // generate_trajectory(grasp_pose_);
+    // group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
     // robot_state::RobotStatePtr current_state;
     // current_state = group_->getCurrentState();
     
@@ -423,6 +463,9 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1, &jaco_trajectory::itongue_callback,this);
     //tf_sub = nh.subscribe<tf::tfMessage>("/tf", 1, &jaco_trajectory::tf_callback, this);
 
+    //itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1, &jaco_trajectory::itongue_callback,this);
+    //tf_sub = nh.subscribe<tf::tfMessage>("/tf", 1, &jaco_trajectory::tf_callback, this);
+    pos_sub = nh.subscribe<jaco::position>("/position", 1000, &jaco_trajectory::pos_callback, this); //EMIL
 
     // tf2::toMsg(tf2::Transform::getIdentity(), joint_global_frame_pose_stamped.pose);
     // tf2::toMsg(tf2::Transform::getIdentity(), joint_pose_stamped.pose);
@@ -485,7 +528,12 @@ int main(int argc, char **argv)
     // while(ros::ok()){
 
     // }
-    
+        //     Jaco.joint_pose_stamped.header.frame_id = "j2n6s300_link_6";
+        // Jaco.joint_pose_stamped.header.stamp = ros::Time();
+        // Jaco.tf_.transform(Jaco.joint_pose_stamped, Jaco.joint_global_frame_pose_stamped, "j2n6s300_link_base");
+        // ROS_INFO_STREAM(Jaco.joint_global_frame_pose_stamped.pose.position.x);
+                /////// Pass frame from tf ///////
+
     //Jaco.group_->getCurrentPose();
     //ros::spin();
     ros::waitForShutdown();

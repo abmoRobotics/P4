@@ -16,8 +16,12 @@
 #include <kinova_msgs/SetFingersPositionAction.h>
 #include <math.h> 
 #include <geometric_shapes/solid_primitive_dims.h>
+
 #include <jaco/RAWItongueOut.h>
+#include <jaco/position.h>
 #include <geometry_msgs/Pose.h>
+
+
 #include <tf/transform_listener.h>
 #include <tf/tfMessage.h>
 //#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -40,6 +44,7 @@ private:
     void define_cartesian_pose();
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
     void tf_callback(const tf::tfMessageConstPtr &msg1);
+    void pos_callback(const jaco::positionConstPtr &msg); //EMIL
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
     
@@ -52,6 +57,7 @@ private:
     bool robot_connected_;
     ros::Publisher pub_co_;
     ros::Publisher pub_aco_;
+    
     moveit_msgs::CollisionObject co_;
     moveit_msgs::AttachedCollisionObject aco_;
     moveit_msgs::PlanningScene planning_scene_msg_;
@@ -63,8 +69,10 @@ private:
     ros::Subscriber itongue_sub_;
     ros::Subscriber tf_sub;
     geometry_msgs::TransformStamped current_robot_transformStamped;
+    ros::Subscriber pos_sub;
 
-
+    //EMIL:
+    ros::Publisher talker_pub;
 
 public: 
     bool gripper_action(double finger_turn);

@@ -55,6 +55,7 @@ add_message_files(
   FILES
    RAWItongueOut.msg
    sys_msg.msg
+   position.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -75,6 +76,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 install(PROGRAMS
   src/jacoScript.py
@@ -231,3 +233,7 @@ install(TARGETS jaco_trajectory DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 add_executable(tester2 src/tester2.cpp)
 target_link_libraries(tester2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS tester2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(shapefitting src/shapefitting.cpp include/jaco_trajectory.h)
+target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS shapefitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
