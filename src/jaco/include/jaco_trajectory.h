@@ -70,7 +70,8 @@ private:
     ros::Subscriber tf_sub;
     geometry_msgs::TransformStamped current_robot_transformStamped;
     ros::Subscriber pos_sub;
-
+    int old_Sensor = 0;
+    int Sensor_count;
     //EMIL:
     ros::Publisher talker_pub;
 

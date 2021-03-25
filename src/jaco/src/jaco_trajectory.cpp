@@ -305,6 +305,12 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
 //        ros::Duration(1.0).sleep();
 //      }
 
+    if (old_Sensor == msg->Sensor)
+    {
+        Sensor_count ++;
+    }
+    else Sensor_count = 0;
+    
 
     ROS_INFO_STREAM(msg->Sensor);
     ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.x );
@@ -315,65 +321,65 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     ROS_INFO_STREAM(currentpose.pose.position.z);
 
 
-    if(current_robot_transformStamped.transform.translation.x != 0){
-    currentpose.header = current_robot_transformStamped.header;
-    currentpose.pose.orientation=current_robot_transformStamped.transform.rotation;
-    currentpose.pose.position.x = current_robot_transformStamped.transform.translation.x;
-    currentpose.pose.position.y = current_robot_transformStamped.transform.translation.y;
-    currentpose.pose.position.z = current_robot_transformStamped.transform.translation.z;
-     switch (msg->Sensor)
-    {
-     case 17: //Z forwards  - away from oneself
-     ROS_INFO("Z forwards  - away from oneself");
-        currentpose.pose.position.z = currentpose.pose.position.z - 0.050000;
-        break;
-     case 12: //Z backwards -- towards oneself
-        currentpose.pose.position.z = currentpose.pose.position.z + 0.050000;
-        break; 
-    case 11: // cross up-left
-    ROS_INFO("cross up-left");
-        currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-        currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
-        break;
-    case 8:// Y upwards
-    ROS_INFO("Y upwards");
-        currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-        break;
-    case 13: // Cross up-right
-    ROS_INFO("Cross up-right");
-        currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-        currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
-        break;
-    case 14: //x left
-    ROS_INFO("x left");
-        currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
-        break;
-    case 15: //x right
-    ROS_INFO("x right");
-        currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
-        break;
-    case 16: // Cross down-left
-        currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-        currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
-        break;
-    case 9: // y downwards
-        currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-        break;
-    case 18: // Cross down-right
-        currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-        currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
-        break;
+    if(current_robot_transformStamped.transform.translation.x != 0 && Sensor_count > 4){
+        currentpose.header = current_robot_transformStamped.header;
+        currentpose.pose.orientation=current_robot_transformStamped.transform.rotation;
+        currentpose.pose.position.x = current_robot_transformStamped.transform.translation.x;
+        currentpose.pose.position.y = current_robot_transformStamped.transform.translation.y;
+        currentpose.pose.position.z = current_robot_transformStamped.transform.translation.z;
+        switch (msg->Sensor)
+        {
+        case 17: //Z forwards  - away from oneself
+        ROS_INFO("Z forwards  - away from oneself");
+            currentpose.pose.position.z = currentpose.pose.position.z - 0.050000;
+            break;
+        case 12: //Z backwards -- towards oneself
+            currentpose.pose.position.z = currentpose.pose.position.z + 0.050000;
+            break; 
+        case 11: // cross up-left
+        ROS_INFO("cross up-left");
+            currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
+            currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+            break;
+        case 8:// Y upwards
+        ROS_INFO("Y upwards");
+            currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
+            break;
+        case 13: // Cross up-right
+        ROS_INFO("Cross up-right");
+            currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
+            currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+            break;
+        case 14: //x left
+        ROS_INFO("x left");
+            currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+            break;
+        case 15: //x right
+        ROS_INFO("x right");
+            currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+            break;
+        case 16: // Cross down-left
+            currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
+            currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+            break;
+        case 9: // y downwards
+            currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
+            break;
+        case 18: // Cross down-right
+            currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
+            currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+            break;
 
-    default:
-        break;
-    }
-    ROS_INFO_STREAM(currentpose.pose.position.x);
-     ROS_INFO_STREAM(currentpose.pose.position.y);
-     ROS_INFO_STREAM(currentpose.pose.position.z);
-     group_->setPoseTarget(currentpose);
-     group_->move();
-    bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
-    group_->execute(my_plan);
+        default:
+            break;
+        }
+        ROS_INFO_STREAM(currentpose.pose.position.x);
+        ROS_INFO_STREAM(currentpose.pose.position.y);
+        ROS_INFO_STREAM(currentpose.pose.position.z);
+        group_->setPoseTarget(currentpose);
+        group_->move();
+        bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
+        group_->execute(my_plan);
     }
 }
 
