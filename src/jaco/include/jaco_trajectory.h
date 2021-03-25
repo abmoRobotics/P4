@@ -19,6 +19,7 @@
 
 #include <jaco/RAWItongueOut.h>
 #include <jaco/position.h>
+#include <jaco/obj_pos.h>
 #include <geometry_msgs/Pose.h>
 
 
@@ -28,6 +29,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_listener.h>
  #include <geometry_msgs/TransformStamped.h>
+ #include <vector>
 
 
 class jaco_trajectory
@@ -44,7 +46,7 @@ private:
     void define_cartesian_pose();
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
     void tf_callback(const tf::tfMessageConstPtr &msg1);
-    void pos_callback(const jaco::positionConstPtr &msg); //EMIL
+    void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
     
@@ -69,11 +71,14 @@ private:
     ros::Subscriber itongue_sub_;
     ros::Subscriber tf_sub;
     geometry_msgs::TransformStamped current_robot_transformStamped;
-    ros::Subscriber pos_sub;
+ 
     int old_Sensor = 0;
     int Sensor_count;
-    //EMIL:
+    //Shape fitting:
+    ros::Subscriber pos_sub;
     ros::Publisher talker_pub;
+
+
 
 public: 
     bool gripper_action(double finger_turn);
@@ -82,7 +87,7 @@ public:
     geometry_msgs::PoseStamped joint_global_frame_pose_stamped;
     geometry_msgs::PoseStamped joint_pose_stamped;
     tf2_ros::Buffer tf_;
-
+    std::vector<jaco::position> obj_vec;
 
     
     ~jaco_trajectory();

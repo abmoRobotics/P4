@@ -56,6 +56,7 @@ add_message_files(
    RAWItongueOut.msg
    sys_msg.msg
    position.msg
+   obj_pos.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -234,6 +235,6 @@ add_executable(tester2 src/tester2.cpp)
 target_link_libraries(tester2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS tester2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-add_executable(shapefitting src/shapefitting.cpp include/jaco_trajectory.h)
+add_executable(shapefitting src/shapefitting.cpp)
 target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS shapefitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
