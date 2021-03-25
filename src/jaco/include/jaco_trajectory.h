@@ -17,6 +17,11 @@
 #include <math.h> 
 #include <geometric_shapes/solid_primitive_dims.h>
 #include <jaco/RAWItongueOut.h>
+#include <geometry_msgs/Pose.h>
+#include <tf/transform_listener.h>
+#include <tf/tfMessage.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
 
 
 class jaco_trajectory
@@ -32,9 +37,10 @@ private:
     void itongue_control(int test);
     void define_cartesian_pose();
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
+    void tf_callback(const tf::tfMessageConstPtr &msg1);
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
-    moveit::planning_interface::MoveGroupInterface* group_;
+    
     moveit::planning_interface::MoveGroupInterface* gripper_group_;
     robot_model::RobotModelPtr robot_model_;
     planning_scene::PlanningScenePtr planning_scene_;
@@ -53,9 +59,19 @@ private:
     geometry_msgs::PoseStamped postgrasp_pose_;
     geometry_msgs::PoseStamped object_pose_;
     ros::Subscriber itongue_sub_;
+    ros::Subscriber tf_sub;
+
+
+
 public: 
     bool gripper_action(double finger_turn);
     jaco_trajectory(ros::NodeHandle &nh);
+    moveit::planning_interface::MoveGroupInterface* group_;
+    geometry_msgs::PoseStamped joint_global_frame_pose_stamped;
+    geometry_msgs::PoseStamped joint_pose_stamped;
+    tf2_ros::Buffer tf_;
+
+
     
     ~jaco_trajectory();
 };
