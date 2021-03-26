@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  jaco
 )
 
 
@@ -112,7 +113,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES shapefitting
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs 
 #  DEPENDS system_lib
 )
 
@@ -213,10 +214,13 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(ShapeFitting src/tester.cpp)
-target_link_libraries(ShapeFitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
-install(TARGETS ShapeFitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-#add_executable(shapefitting src/shapefitting.cpp)
+add_executable(tester src/tester.cpp)
+target_link_libraries(tester ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS tester DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(shapefitting2 src/shapefitting.cpp)
+target_link_libraries(shapefitting2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS shapefitting2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 # target_link_libraries( Shape-Fitting ${OpenCV_LIBS} )
 # target_link_libraries( Shape-Fitting ${realsense2_LIBRARY})
 # target_link_libraries( Shape-Fitting ${CGAL_LIBRARY} )
