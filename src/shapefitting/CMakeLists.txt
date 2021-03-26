@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(jaco)
+project(shapefitting)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
- add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11)
+
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,12 +13,12 @@ project(jaco)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  message_generation
   std_msgs
-  moveit_core
-  #moveit_ros_planning
-  moveit_ros_planning_interface
 )
+
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -24,7 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-#catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -51,13 +54,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-   RAWItongueOut.msg
-   sys_msg.msg
-   position.msg
-   obj_pos.msg
-)
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -74,19 +75,11 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  geometry_msgs
-)
-install(PROGRAMS
-  src/jacoScript.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-install(PROGRAMS
-  src/RAWitonguetalker.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
+
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
@@ -117,13 +110,11 @@ install(PROGRAMS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
-#  LIBRARIES jaco
-CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_interface
+#  INCLUDE_DIRS include
+#  LIBRARIES shapefitting
+#  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
-
-#find_package(Eigen REQUIRED)
 
 ###########
 ## Build ##
@@ -132,14 +123,14 @@ CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_i
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
-  
+  ${OpenCV_INCLUDE_DIRS} 
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/jaco.cpp
+#   src/${PROJECT_NAME}/shapefitting.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -150,7 +141,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/jaco_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/shapefitting_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -176,10 +167,10 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-#catkin_install_python(PROGRAMS
-#  src/RAWitonguetalker.py
-#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+# catkin_install_python(PROGRAMS
+#   scripts/my_python_script
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -214,7 +205,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_jaco.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_shapefitting.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
@@ -222,19 +213,8 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-
-add_executable(work_scene2 src/work_scene2.cpp)
-target_link_libraries(work_scene2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
-install(TARGETS work_scene2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
-add_executable(jaco_trajectory src/jaco_trajectory.cpp include/jaco_trajectory.h)
-target_link_libraries(jaco_trajectory ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
-install(TARGETS jaco_trajectory DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
-add_executable(tester2 src/tester2.cpp)
-target_link_libraries(tester2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
-install(TARGETS tester2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
+#add_executable(Shape-Fitting main.cpp)
 add_executable(shapefitting src/shapefitting.cpp)
-target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
-install(TARGETS shapefitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+target_link_libraries( Shape-Fitting ${OpenCV_LIBS} )
+target_link_libraries( Shape-Fitting ${realsense2_LIBRARY})
+target_link_libraries( Shape-Fitting ${CGAL_LIBRARY} )

@@ -250,39 +250,48 @@ jaco_trajectory::~jaco_trajectory(){
     delete gripper_group_;
 }
 
-void jaco_trajectory::pos_callback(const jaco::positionConstPtr& msg){
-    ROS_INFO("pos_callback");
-    tf::Quaternion q; 
+void jaco_trajectory::pos_callback(const jaco::obj_posConstPtr& msg){
+    for (int i = 0; i < sizeof(msg->object)/sizeof(msg->object[0]); i++)
+    {
+        obj_vec.push_back(msg->object[i]);
+        ROS_INFO("Vector for loop");
+        ROS_INFO_STREAM(obj_vec[i].radius);
+    }
+    
 
-    // define grasp pose
-    grasp_pose_.header.frame_id = "root";
-    grasp_pose_.header.stamp  = ros::Time::now();
 
-    // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2) ---- WORKS
-    grasp_pose_.pose.position.x = msg->posx.x;
-    grasp_pose_.pose.position.y = msg->posy.y;
-    grasp_pose_.pose.position.z = msg->posz.z;
+    // ROS_INFO("pos_callback");
+    // tf::Quaternion q; 
 
-//////Doesnt work
-    q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
-    //q = EulerZYZ_to_Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z);
-    grasp_pose_.pose.orientation.x = q.x();
-    grasp_pose_.pose.orientation.y = q.y();
-    grasp_pose_.pose.orientation.z = q.z();
-    grasp_pose_.pose.orientation.w = q.w();
+    // // define grasp pose
+    // grasp_pose_.header.frame_id = "root";
+    // grasp_pose_.header.stamp  = ros::Time::now();
 
-    //ROS_INFO_STREAM(grasp_pose_.pose.orientation.z); // x, y, and z = 0.5
+    // // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2) ---- WORKS
+    // grasp_pose_.pose.position.x = msg->object[0].pos.x;
+    // grasp_pose_.pose.position.y = msg->object[0].pos.y;
+    // grasp_pose_.pose.position.z = msg->object[0].pos.z;
 
-    // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
-    grasp_pose_= generate_gripper_align_pose(grasp_pose_, 0.03999, 0, M_PI/2, M_PI/2);
-    pregrasp_pose_ = generate_gripper_align_pose(grasp_pose_, 0.1, 0, M_PI/2, M_PI/2);
-    postgrasp_pose_ = grasp_pose_;
-    postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 
-    generate_trajectory(pregrasp_pose_);
-    generate_trajectory(grasp_pose_);
-    group_->setEndEffectorLink("j2n6s300_end_effector");
-    gripper_action(msg->radius);
+    // q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
+    // //q = EulerZYZ_to_Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z);
+    // grasp_pose_.pose.orientation.x = q.x();
+    // grasp_pose_.pose.orientation.y = q.y();
+    // grasp_pose_.pose.orientation.z = q.z();
+    // grasp_pose_.pose.orientation.w = q.w();
+
+    // //ROS_INFO_STREAM(grasp_pose_.pose.orientation.z); // x, y, and z = 0.5
+
+    // // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
+    // grasp_pose_= generate_gripper_align_pose(grasp_pose_, 0.03999, 0, M_PI/2, M_PI/2);
+    // pregrasp_pose_ = generate_gripper_align_pose(grasp_pose_, 0.1, 0, M_PI/2, M_PI/2);
+    // postgrasp_pose_ = grasp_pose_;
+    // postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
+
+    // generate_trajectory(pregrasp_pose_);
+    // generate_trajectory(grasp_pose_);
+    // group_->setEndEffectorLink("j2n6s300_end_effector");
+    // gripper_action(msg->object[0].radius);
 
 }
 
@@ -471,7 +480,7 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
 
     //itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1, &jaco_trajectory::itongue_callback,this);
     //tf_sub = nh.subscribe<tf::tfMessage>("/tf", 1, &jaco_trajectory::tf_callback, this);
-    pos_sub = nh.subscribe<jaco::position>("/position", 1000, &jaco_trajectory::pos_callback, this); //EMIL
+    pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
 
     // tf2::toMsg(tf2::Transform::getIdentity(), joint_global_frame_pose_stamped.pose);
     // tf2::toMsg(tf2::Transform::getIdentity(), joint_pose_stamped.pose);
@@ -503,9 +512,9 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     //      //ros::WallDuration(0.01).sleep();10| eelchair for the first time, please observe the following precautions:1.Practice using the Itongueon a computer or tablet before using it with a wheelchair.2.Ask your wheelchair service technician to reduce the speed settings of your wheelchair.3.Practice using the Itongueto control the wheelchair indoors and with others present.4.Be aware that speaking while in control of a wheelchair may cause the wheelchair to move unexpectedly.Menu (Key-board)
     // }
     tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
-   ros::Rate rate(10.0);
-   while (nh_.ok()){
+    tf2_ros::TransformListener tfListener(tfBuffer);
+    ros::Rate rate(10.0);
+    while (nh_.ok()){
      
      try{
        
