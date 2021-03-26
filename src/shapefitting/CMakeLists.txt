@@ -4,9 +4,9 @@ project(shapefitting)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
-# set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-# set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -18,12 +18,14 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 
-# set(CMAKE_CXX_STANDARD 11)
-# set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(OpenCV REQUIRED)
+find_package(realsense2 REQUIRED)
+find_package(CGAL REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -218,9 +220,6 @@ add_executable(tester src/tester.cpp)
 target_link_libraries(tester ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS tester DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-add_executable(shapefitting2 src/shapefitting.cpp)
-target_link_libraries(shapefitting2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
-install(TARGETS shapefitting2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-# target_link_libraries( Shape-Fitting ${OpenCV_LIBS} )
-# target_link_libraries( Shape-Fitting ${realsense2_LIBRARY})
-# target_link_libraries( Shape-Fitting ${CGAL_LIBRARY} )
+add_executable(Shape-Fitting src/shapefitting.cpp)
+target_link_libraries(Shape-Fitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES} ${OpenCV_LIBS} ${realsense2_LIBRARY} ${CGAL_LIBRARY})
+install(TARGETS Shape-Fitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
