@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.0.2)
 project(shapefitting)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+# set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+# set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -17,8 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+# set(CMAKE_CXX_STANDARD 11)
+# set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -56,8 +56,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Message1.msg
-#   Message2.msg
+#     position.msg
+#     obj_pos.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -213,8 +213,10 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-#add_executable(Shape-Fitting main.cpp)
-add_executable(shapefitting src/shapefitting.cpp)
-target_link_libraries( Shape-Fitting ${OpenCV_LIBS} )
-target_link_libraries( Shape-Fitting ${realsense2_LIBRARY})
-target_link_libraries( Shape-Fitting ${CGAL_LIBRARY} )
+add_executable(ShapeFitting src/tester.cpp)
+target_link_libraries(ShapeFitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS ShapeFitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#add_executable(shapefitting src/shapefitting.cpp)
+# target_link_libraries( Shape-Fitting ${OpenCV_LIBS} )
+# target_link_libraries( Shape-Fitting ${realsense2_LIBRARY})
+# target_link_libraries( Shape-Fitting ${CGAL_LIBRARY} )
