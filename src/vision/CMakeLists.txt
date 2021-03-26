@@ -104,10 +104,7 @@ add_message_files(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES vision
-  CATKIN_DEPENDS std_msgs message_runtime roscpp sensor_msgs
-  opencv2
-  cv_bridge
-  rospy 
+  CATKIN_DEPENDS std_msgs message_runtime roscpp 
 #  DEPENDS system_lib
 )
 

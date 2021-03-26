@@ -1,0 +1,39 @@
+https://www.pyimagesearch.com/2020/02/03/how-to-use-opencvs-dnn-module-with-nvidia-gpus-cuda-and-cudnn/
+
+ wget https://bootstrap.pypa.io/get-pip.py
+sudo python3 get-pip.py
+sudo pip install virtualenv virtualenvwrapper
+sudo rm -rf ~/get-pip.py ~/.cache/pip
+
+
+nano ~/.bashrc
+
+#insert
+# virtualenv and virtualenvwrapper
+export WORKON_HOME=$HOME/.virtualenvs
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
+source /usr/local/bin/virtualenvwrapper.sh
+
+source ~/.bashrc
+
+mkvirtualenv Workspace -p python3
+
+workon Workspace
+
+
+Clone workspace
+
+
+Kør antons fil efter man har cloned
+Filen skal ligge i /usr/local/lib
+##CUDA##
+
+Jacobs bærbar understøtter ikke cuda :(
+
+Installer den version af pytorch som er krævet baseret på din CUDA version, dog mindst 1.7.1
+https://pytorch.org/get-started/previous-versions/
+
+
+Ryk pick.py ind i YoloV5 mappen efter man har hentet det :)
+
+##Pytorch##
