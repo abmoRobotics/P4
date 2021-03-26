@@ -20,6 +20,7 @@
 #include <jaco/RAWItongueOut.h>
 #include <jaco/position.h>
 #include <jaco/obj_pos.h>
+#include <jaco/sys_msg.h>
 #include <geometry_msgs/Pose.h>
 
 
@@ -42,11 +43,10 @@ private:
     void tripod_grip(double diameter);
     void pickup_object();
     void add_target();
-    void itongue_control(int test);
     void define_cartesian_pose();
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
-    void tf_callback(const tf::tfMessageConstPtr &msg1);
     void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
+    void connect_itongue();
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
     
@@ -77,6 +77,7 @@ private:
     //Shape fitting:
     ros::Subscriber pos_sub;
     ros::Publisher talker_pub;
+    ros::Publisher itongue_start_pub;
 
 
 

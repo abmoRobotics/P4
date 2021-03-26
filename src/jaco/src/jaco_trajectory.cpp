@@ -2,12 +2,8 @@
 #include <jaco_trajectory.h>
 
 #include <actionlib/client/simple_action_client.h>
-//#include <kinova_msgs/SetFingersPositionAction.h>
 #include <tf_conversions/tf_eigen.h>
 
-
-//moveit::planning_interface::MoveGroupInterface group_("arm");
-//moveit::planning_interface::MoveGroupInterface gripper_group_("gripper");
 
 const double FINGER_MAX = 6400;
 
@@ -152,9 +148,6 @@ void jaco_trajectory::add_target()
     co_.primitive_poses[0].position.x = 0.7;
     co_.primitive_poses[0].position.y = 0.0;
     co_.primitive_poses[0].position.z = 0.13/2;
-    // can_pose_.pose.position.x = co_.primitive_poses[0].position.x;
-    // can_pose_.pose.position.y = co_.primitive_poses[0].position.y;
-    // can_pose_.pose.position.z = co_.primitive_poses[0].position.z;
     pub_co_.publish(co_);
     planning_scene_msg_.world.collision_objects.push_back(co_);
     planning_scene_msg_.is_diff = true;
@@ -207,19 +200,6 @@ geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry
 void jaco_trajectory::define_cartesian_pose()
 {
     tf::Quaternion q;
-
-    // // define start pose before grasp
-    // start_pose_.header.frame_id = "root";
-    // start_pose_.header.stamp = ros::Time::now();
-    // start_pose_.pose.position.x = 0.5;
-    // start_pose_.pose.position.y = -0.5;
-    // start_pose_.pose.position.z = 0.5;
-
-    // q = EulerZYZ_to_Quaternion(-M_PI/4, M_PI/2, M_PI);
-    // start_pose_.pose.orientation.x = q.x();
-    // start_pose_.pose.orientation.y = q.y();
-    // start_pose_.pose.orientation.z = q.z();
-    // start_pose_.pose.orientation.w = q.w();
 
     // define grasp pose
     grasp_pose_.header.frame_id = "root";
@@ -295,39 +275,42 @@ void jaco_trajectory::pos_callback(const jaco::obj_posConstPtr& msg){
 
 }
 
-void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
-   // planning_scene_monitor_->waitForCurrentRobotState(ros::Time::now());
-     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-   //  geometry_msgs::PoseStamped currentpose = group_->getCurrentPose();
-   geometry_msgs::PoseStamped currentpose;
-//    ros::topic::waitForMessage('/tf', node, ros::Duration(2));
+void jaco_trajectory::connect_itongue(){
+    while (itongue_start_pub.getNumSubscribers() < 1 )
+    {
+        ROS_INFO("VENT");
+    }
+    
+    ROS_INFO("her");
+    jaco::sys_msg data;
+    data.start_tci = 1;
+    data.InHand = 1;
+    data.ContactThreshold = 0.12;
+    data.CuttingThreshold = 0.08;
+    data.tci_port = "/dev/ttyUSB0";
+    itongue_start_pub.publish(data);
 
-//         tf2_ros::Buffer tfBuffer;
-//   tf2_ros::TransformListener tfListener(tfBuffer);
-//  try{
-       
-//        current_robot_transformStamped = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
-//                                 ros::Time::now(),ros::Duration(3.0));
-//      }
-//      catch (tf2::TransformException &ex) {
-//        ROS_WARN("%s",ex.what());
-//        ros::Duration(1.0).sleep();
-//      }
+}
+
+void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
+    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+   geometry_msgs::PoseStamped currentpose;
+
 
     if (old_Sensor == msg->Sensor)
     {
         Sensor_count ++;
     }
     else Sensor_count = 0;
-    
+    old_Sensor = msg->Sensor;
 
     ROS_INFO_STREAM(msg->Sensor);
     ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.x );
-    ROS_INFO_STREAM(currentpose.pose.position.x);
+    //ROS_INFO_STREAM(currentpose.pose.position.x);
     ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.y );
-    ROS_INFO_STREAM(currentpose.pose.position.y);
+    //ROS_INFO_STREAM(currentpose.pose.position.y);
     ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.z );
-    ROS_INFO_STREAM(currentpose.pose.position.z);
+    //ROS_INFO_STREAM(currentpose.pose.position.z);
 
 
     if(current_robot_transformStamped.transform.translation.x != 0 && Sensor_count > 4){
@@ -392,78 +375,23 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     }
 }
 
-void jaco_trajectory::tf_callback(const tf::tfMessageConstPtr& msg1){
-    ROS_INFO_STREAM(msg1->transforms[6].header.frame_id);
-
-    
-
-}
-
-
-
-
-void jaco_trajectory::itongue_control(int test){
-moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-//geometry_msgs::PoseStamped currentpose = group_->getCurrentPose();
-//robot_state::RobotStatePtr fdgsfgdgfs = group_->getCurrentState();
-// switch (test)
-// {
-// case 1:
-//     currentpose.pose.position.x = currentpose.pose.position.x + 0.01;
-//     break;
-// case 2:
-//     currentpose.pose.position.x = currentpose.pose.position.x - 0.01;
-//     break;
-//  case 3:
-//     currentpose.pose.position.y = currentpose.pose.position.y + 0.01;
-//     break;
-// case 4:
-//     currentpose.pose.position.y = currentpose.pose.position.y - 0.01;
-//     break;
-// case 5:
-//     currentpose.pose.position.z = currentpose.pose.position.z + 0.01;
-//     break;
-// case 6:
-//     currentpose.pose.position.z = currentpose.pose.position.z - 0.01;
-//     break;
-// default:
-//     break;
-// }
-
-    
-    
-    
-//     group_->setPoseTarget(currentpose);
-//     bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
-//     group_->execute(my_plan);
-
-}
-
 
 jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
 
      
-    // // Before we can load the planner, we need two objects, a RobotModel and a PlanningScene.
-    // robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
-    // robot_model_ = robot_model_loader.getModel();
-
-    // // construct a `PlanningScene` that maintains the state of the world (including the robot).
-    // planning_scene_.reset(new planning_scene::PlanningScene(robot_model_));
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
     nh_.param<bool>("/robot_connected",robot_connected_,true);
-    //nh_.param<std::string>("/robot_type",robot_type_,"j2n6s300"); 
+
     
     group_ = new moveit::planning_interface::MoveGroupInterface("arm");
     gripper_group_ = new moveit::planning_interface::MoveGroupInterface("gripper");
-    //pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-    
+
         /// Functions below are replaced or moved to the pos_callback function
-    //define_cartesian_pose();
-    // generate_trajectory(pregrasp_pose_);
-    // generate_trajectory(grasp_pose_);
-    // group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
-    // robot_state::RobotStatePtr current_state;
-    // current_state = group_->getCurrentState();
+    define_cartesian_pose();
+     generate_trajectory(pregrasp_pose_);
+    generate_trajectory(grasp_pose_);
+    group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
+
     
 
     //  finger_client_ = new actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>
@@ -476,41 +404,15 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     pub_co_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10);
     pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
     itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1, &jaco_trajectory::itongue_callback,this);
-    //tf_sub = nh.subscribe<tf::tfMessage>("/tf", 1, &jaco_trajectory::tf_callback, this);
 
-    //itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1, &jaco_trajectory::itongue_callback,this);
-    //tf_sub = nh.subscribe<tf::tfMessage>("/tf", 1, &jaco_trajectory::tf_callback, this);
     pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
-
-    // tf2::toMsg(tf2::Transform::getIdentity(), joint_global_frame_pose_stamped.pose);
-    // tf2::toMsg(tf2::Transform::getIdentity(), joint_pose_stamped.pose);
-
-    //tf::TransformListener listener;
-    //tf::StampedTransform transform;
-
-//    listener.lookupTransform("j2n6s300_link_6", ros::Time(0), transform);
-    //listener.transformPose("j2n6s300_link_6", ros::Time(0), transform);
-    // add_target();
-    // gripper_action(0.5*FINGER_MAX);
-    // pickup_object();
+    itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
 
 
 
-    // for (size_t i = 0; i < 20; i++)
-    // {
-    //     itongue_control(1);
-    //      //ros::WallDuration(0.01).sleep();
-    // }
-    // for (size_t i = 0; i < 20; i++)
-    // {
-    //     itongue_control(2);
-    //      //ros::WallDuration(0.01).sleep();
-    // }
-    // for (size_t i = 0; i < 20; i++)
-    // {
-    //     itongue_control(3);
-    //      //ros::WallDuration(0.01).sleep();10| eelchair for the first time, please observe the following precautions:1.Practice using the Itongueon a computer or tablet before using it with a wheelchair.2.Ask your wheelchair service technician to reduce the speed settings of your wheelchair.3.Practice using the Itongueto control the wheelchair indoors and with others present.4.Be aware that speaking while in control of a wheelchair may cause the wheelchair to move unexpectedly.Menu (Key-board)
-    // }
+
+
+    connect_itongue();
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
     ros::Rate rate(10.0);
@@ -539,17 +441,6 @@ int main(int argc, char **argv)
 
     jaco_trajectory Jaco(node);
 
-    // ros::Rate rate(10.0);
-    // while(ros::ok()){
-
-    // }
-        //     Jaco.joint_pose_stamped.header.frame_id = "j2n6s300_link_6";
-        // Jaco.joint_pose_stamped.header.stamp = ros::Time();
-        // Jaco.tf_.transform(Jaco.joint_pose_stamped, Jaco.joint_global_frame_pose_stamped, "j2n6s300_link_base");
-        // ROS_INFO_STREAM(Jaco.joint_global_frame_pose_stamped.pose.position.x);
-                /////// Pass frame from tf ///////
-
-    //Jaco.group_->getCurrentPose();
     //ros::spin();
     ros::waitForShutdown();
     return 0;
