@@ -32,7 +32,7 @@ sudo chmod 777 /dev/ttyUSB0
 4. Download CUDNN for CUDA 10.2
 5. Put CUDNN into /usr/local/cuda
 
-6. Læg følgende ind i bashrc:
+6. Add the following to ~/.bashrc:
 ```
 # NVIDIA CUDA Toolkit
 export PATH=/usr/local/cuda-10.2/bin:$PATH
