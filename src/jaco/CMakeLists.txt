@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   std_msgs
+
   moveit_core
   #ros_controllers
   #moveit_ros_planning
@@ -249,8 +250,8 @@ install(TARGETS scenario_semi_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINA
 # add_executable(shapefitting src/shapefitting.cpp)
 # target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 # install(TARGETS shapefitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-add_dependencies(work_scene2 ${catkin_EXPORTED_TARGETS})
-add_dependencies(jaco_trajectory ${catkin_EXPORTED_TARGETS})
-add_dependencies(tester2 ${catkin_EXPORTED_TARGETS})
-add_dependencies(scenario_full_automatic ${catkin_EXPORTED_TARGETS})
-add_dependencies(scenario_semi_automatic ${catkin_EXPORTED_TARGETS})
+add_dependencies(work_scene2 jaco_generate_messages_cpp )
+add_dependencies(jaco_trajectory jaco_generate_messages_cpp kinova_msgs_generate_messages_cpp)
+add_dependencies(tester2 jaco_generate_messages_cpp)
+add_dependencies(scenario_full_automatic jaco_generate_messages_cpp)
+add_dependencies(scenario_semi_automatic jaco_generate_messages_cpp)

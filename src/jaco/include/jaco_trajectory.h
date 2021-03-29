@@ -13,7 +13,7 @@
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/robot_state/conversions.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-#include <kinova_msgs/SetFingersPositionAction.h>
+
 #include <math.h> 
 #include <geometric_shapes/solid_primitive_dims.h>
 
@@ -22,7 +22,7 @@
 #include <jaco/obj_pos.h>
 #include <jaco/sys_msg.h>
 #include <geometry_msgs/Pose.h>
-
+#include <kinova_msgs/SetFingersPositionAction.h>
 
 #include <tf/transform_listener.h>
 #include <tf/tfMessage.h>
