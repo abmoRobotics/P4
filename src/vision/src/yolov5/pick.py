@@ -11,6 +11,8 @@ import torch
 import torch.backends.cudnn as cudnn
 from numpy import random
 from vision.msg import Detection
+from vision.msg import Detection_array
+
 from sensor_msgs.msg import Image
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
@@ -22,10 +24,11 @@ from std_msgs.msg import Int16
 
 def detect(save_img=False):
 
-    CoordPub = rospy.Publisher('/Vision/ObjectDetection', Detection, queue_size=10) 
+    CoordPub = rospy.Publisher('/Vision/ObjectDetection', Detection_array, queue_size=10) 
     rospy.init_node('talker', anonymous=True)
     R = rospy.Rate(60) # tci sends 30hz
     DetectionData = Detection()
+    DetectionArray = Detection_array()
 
     source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
@@ -102,7 +105,8 @@ def detect(save_img=False):
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-	        	
+
+            ThereIsData = False	
 
             if len(det):
                 # Rescale boxes from img_size to im0 size
@@ -119,11 +123,17 @@ def detect(save_img=False):
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         line = (cls, *xyxy, conf) if opt.save_conf else (cls, *xywh)  # label format
                         #print(cls)
+                        
+
+
+                    if save_img or view_img:  # Add bbox to image
+                        label = f'{names[int(cls)]} {conf:.2f}'
+                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
                         a = str(cls)
                         #with open(txt_path + '.txt', 'a') as f:
                             #f.write(('%g ' * len(line)).rstrip() % line + '\n')
-                       
-
+                        
+                
 
 
                         Class="".join(c for c in a if  c.isdecimal())
@@ -132,27 +142,29 @@ def detect(save_img=False):
                         print(Class)
                 
                         CoordsRaw = str(torch.tensor(xyxy))
-                        CoordsString = re.findall('\d+', CoordsRaw )
+                        CoordsString = re.findall('\d+', CoordsRaw)
                         NumpyAR = np.array(CoordsString)
                         IntNumpy = NumpyAR.astype(int)
                         #Coords = int(CoordsString)
                         #CoordsAr = np.int16(Coords)
                         #print(IntNumpy)
 
-                        Detection.X1 = IntNumpy[0]
+                        DetectionData.X1 = IntNumpy[0]
                         DetectionData.Y1 = IntNumpy[1]
-                        Detection.X2 = IntNumpy[2]
-                        DetectionData.Y2 = IntNumpy[3]
-                        CoordPub.publish(DetectionData)
-
-
-
-                    if save_img or view_img:  # Add bbox to image
-                        label = f'{names[int(cls)]} {conf:.2f}'
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+                        DetectionData.X2 = IntNumpy[2]
+                        DetectionData.Y2 = IntemptyNumpy[3]
+                        
+                        DetectionArray.msg.append(DetectionData)
+                        ThereIsData = True
 
             # Print time (inference + NMS)
             print(f'{s}Done. ({t2 - t1:.3f}s)')
+
+            if ThereIsData == True:
+                CoordPub.publish(DetectionArray)
+                ThereIsData = False
+                DetectionArray.msg.clear()
+            ThereIsData = False
 
             # Stream results
             if view_img:
@@ -181,7 +193,7 @@ def detect(save_img=False):
         print(f"Results saved to {save_dir}{s}")
 
     print(f'Done. ({time.time() - t0:.3f}s)')
-
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
