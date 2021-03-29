@@ -54,7 +54,8 @@ private:
     void vision_data();
     void get_shape_data(vision::Detection DetectionData);
     void vision_data_callback(const vision::Detection_arrayConstPtr &msg);
-
+    //void semi_autonomous_control(); Not implemented
+    //void full_autonomous_control();
 
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;

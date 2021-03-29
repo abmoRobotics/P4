@@ -278,7 +278,6 @@ void jaco_trajectory::vision_data_callback(const vision::Detection_arrayConstPtr
         DetectionData = msg->msg[i];
         visionDataArray.msg.push_back(DetectionData);
     }
-    
 };
 
 void jaco_trajectory::get_shape_data(vision::Detection DetectionData){
@@ -428,7 +427,7 @@ shape_data_client("get_shape",true)
     pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
     
-    vision_data_sub = nh.subscribe<vision::Detection_array>("/Visi/Vision/ObjectDetectionon/ObjectDetection",1000,&jaco_trajectory::vision_data_callback,this);
+    vision_data_sub = nh.subscribe<vision::Detection_array>("/Vision/ObjectDetection",1000,&jaco_trajectory::vision_data_callback,this);
 
 
 
