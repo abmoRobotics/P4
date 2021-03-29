@@ -35,8 +35,8 @@ sudo chmod 777 /dev/ttyUSB0
 6. Læg følgende ind i bashrc:
 ```
 # NVIDIA CUDA Toolkit
-export PATH=/usr/local/cuda-10.0/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-10.0/lib64
+export PATH=/usr/local/cuda-10.2/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-10.2/lib64
 ```
 
 If the last line interrupts your python, try deleting it.
