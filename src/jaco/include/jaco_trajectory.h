@@ -34,7 +34,8 @@
 #include <shapefitting/shapefitting_positionAction.h>
 #include <vision/Detection.h>
 #include <vision/Detection_array.h>
- #include <actionlib/client/simple_action_client.h>
+#include <actionlib/client/simple_action_client.h>
+#include <shapefitting/s_position.h>
 
 class jaco_trajectory
 {
@@ -81,6 +82,7 @@ private:
     geometry_msgs::TransformStamped current_robot_transformStamped;
 
     vision::Detection_array visionDataArray;
+    shapefitting::s_position shapeData;
  
     int old_Sensor = 0;
     int Sensor_count;

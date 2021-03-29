@@ -288,7 +288,9 @@ shape_data_client.sendGoal(goal);
 shape_data_client.waitForResult(ros::Duration(2.0));
 if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
     ROS_INFO("SUCCESS");
+    shapeData = shape_data_client.getResult()->object;
 }
+
 }
 
 void jaco_trajectory::connect_itongue(){
