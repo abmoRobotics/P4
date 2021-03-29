@@ -29,9 +29,10 @@
 //#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_listener.h>
- #include <geometry_msgs/TransformStamped.h>
- #include <vector>
-
+#include <geometry_msgs/TransformStamped.h>
+#include <vector>
+#include <shapefitting/shapefitting_positionActionGoal.h>
+#include <vision/Detection.h>
 
 class jaco_trajectory
 {
@@ -47,6 +48,10 @@ private:
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
     void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
     void connect_itongue();
+    void vision_data();
+    void get_shape_data();
+
+
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
     
@@ -76,6 +81,7 @@ private:
     int Sensor_count;
     //Shape fitting:
     ros::Subscriber pos_sub;
+    ros::Subscriber vision_data_sub;
     ros::Publisher talker_pub;
     ros::Publisher itongue_start_pub;
 

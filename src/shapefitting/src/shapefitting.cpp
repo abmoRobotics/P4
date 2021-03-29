@@ -11,7 +11,7 @@ ros::Publisher talker_pub;
 typedef actionlib::SimpleActionServer<shapefitting::shapefitting_positionAction> ShapeFittingActionServer;
 
 void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFittingActionServer* as){
-    
+    goal->X1;
     as->setSucceeded();
 }
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv){
 
     //     //Create object. Define the values to advertise. 
     //         data.object_class.data = "test1";
-    //         data.radius = 7.0 *2; 
+    //         data.radius = 7.0 *2;
     //         data.pos.x = 0.5;
     //         data.pos.y = 0.1;
     //         data.pos.z = 0.07;

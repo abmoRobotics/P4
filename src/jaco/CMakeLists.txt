@@ -12,7 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   std_msgs
-
+  shapefitting
+  vision
   moveit_core
   #ros_controllers
   #moveit_ros_planning
@@ -69,18 +70,18 @@ add_message_files(
 #   Service2.srv
 # )
 
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+# Generate actions in the 'action' folder
+add_action_files(
+  FILES
+  shapefitting_position.action
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs
   geometry_msgs
+  actionlib_msgs
 )
 install(PROGRAMS
   src/jacoScript.py
