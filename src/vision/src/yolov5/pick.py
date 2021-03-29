@@ -27,7 +27,7 @@ def detect(save_img=False):
     CoordPub = rospy.Publisher('/Vision/ObjectDetection', Detection_array, queue_size=10) 
     rospy.init_node('talker', anonymous=True)
     R = rospy.Rate(60) # tci sends 30hz
-    DetectionData = Detection()
+    
     DetectionArray = Detection_array()
 
     source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
@@ -133,7 +133,7 @@ def detect(save_img=False):
                         #with open(txt_path + '.txt', 'a') as f:
                             #f.write(('%g ' * len(line)).rstrip() % line + '\n')
                         
-                
+                        DetectionData = Detection()
 
 
                         Class="".join(c for c in a if  c.isdecimal())
@@ -152,9 +152,12 @@ def detect(save_img=False):
                         DetectionData.X1 = IntNumpy[0]
                         DetectionData.Y1 = IntNumpy[1]
                         DetectionData.X2 = IntNumpy[2]
-                        DetectionData.Y2 = IntemptyNumpy[3]
+                        DetectionData.Y2 = IntNumpy[3]
                         
                         DetectionArray.msg.append(DetectionData)
+                        
+                        
+
                         ThereIsData = True
 
             # Print time (inference + NMS)
