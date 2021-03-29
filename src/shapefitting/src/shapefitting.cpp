@@ -10,13 +10,12 @@ ros::Publisher talker_pub;
 
 typedef actionlib::SimpleActionServer<shapefitting::shapefitting_positionAction> ShapeFittingActionServer;
 
-void execute(const shapefitting::shapefitting_positionActionPtr& goal, ShapeFittingActionServer* as){
+void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFittingActionServer* as){
     
     as->setSucceeded();
 }
 
 int main(int argc, char **argv){
-    ros::init(argc, argv, "talker");
     ros::NodeHandle node;
 
 
