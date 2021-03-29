@@ -169,6 +169,12 @@ void jaco_trajectory::generate_trajectory(geometry_msgs::PoseStamped pose){
     group_->execute(my_plan);
 }
 
+void jaco_trajectory::get_shape_data(){
+    shapefitting::shapefitting_positionGoal goal;
+ 
+    
+}
+
 geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
 {
     geometry_msgs::PoseStamped pose_msg;
@@ -407,7 +413,8 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
 
     pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
-
+    
+    vision_data_sub = nh.subscribe<>("/Visi/Vision/ObjectDetectionon/ObjectDetection",1000,)
 
 
 
