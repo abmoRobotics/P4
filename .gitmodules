@@ -7,3 +7,6 @@
 [submodule "src/kinova-ros"]
 	path = src/kinova-ros
 	url = https://github.com/Kinovarobotics/kinova-ros.git
+[submodule "src/vision/src/yolov5"]
+	path = src/vision/src/yolov5
+	url = https://github.com/ultralytics/yolov5.git
