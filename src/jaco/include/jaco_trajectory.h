@@ -34,6 +34,7 @@
 #include <shapefitting/shapefitting_positionActionGoal.h>
 #include <vision/Detection.h>
 
+
 class jaco_trajectory
 {
 private:

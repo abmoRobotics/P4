@@ -414,7 +414,7 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
     
-    vision_data_sub = nh.subscribe<>("/Visi/Vision/ObjectDetectionon/ObjectDetection",1000,)
+   //vision_data_sub = nh.subscribe<>("/Visi/Vision/ObjectDetectionon/ObjectDetection",1000,)
 
 
 
