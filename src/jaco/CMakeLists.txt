@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   moveit_core
+  #ros_controllers
   #moveit_ros_planning
   moveit_ros_planning_interface
 )
@@ -235,6 +236,15 @@ install(TARGETS jaco_trajectory DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 add_executable(tester2 src/tester2.cpp)
 target_link_libraries(tester2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS tester2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(scenario_full_automatic src/scenario_full_automatic.cpp)
+target_link_libraries(scenario_full_automatic ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS scenario_full_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(scenario_semi_automatic src/scenario_semi_automatic.cpp)
+target_link_libraries(scenario_semi_automatic ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS scenario_semi_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 
 # add_executable(shapefitting src/shapefitting.cpp)
 # target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})

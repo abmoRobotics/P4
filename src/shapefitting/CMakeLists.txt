@@ -15,6 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   jaco
+  actionlib_msgs
+  geometry_msgs
+  actionlib
+  vision
 )
 
 
@@ -57,11 +61,10 @@ find_package(CGAL REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#     position.msg
-#     obj_pos.msg
-# )
+add_message_files(
+  FILES
+    s_position.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -71,17 +74,18 @@ find_package(CGAL REQUIRED)
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  FILES
+  shapefitting_position.action
+)
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+  actionlib_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,7 +119,7 @@ find_package(CGAL REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES shapefitting
-  CATKIN_DEPENDS roscpp rospy std_msgs 
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
 )
 
@@ -155,6 +159,7 @@ include_directories(
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
