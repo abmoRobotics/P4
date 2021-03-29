@@ -11,7 +11,6 @@ ros::Publisher talker_pub;
 typedef actionlib::SimpleActionServer<shapefitting::shapefitting_positionAction> ShapeFittingActionServer;
 
 void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFittingActionServer* as){
-    goal->X1;
     as->setSucceeded();
 }
 

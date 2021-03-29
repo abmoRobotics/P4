@@ -87,9 +87,7 @@ void jaco_trajectory::spherical_grip(double diameter){
 
 }
 
-
 void jaco_trajectory::pinch_grip(double diameter){
-
 	double jointValue = (M_PI / 4.0) - asin((diameter / 87.0) - (2.0 / 3.0));
     ROS_INFO_STREAM(jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
@@ -97,6 +95,7 @@ void jaco_trajectory::pinch_grip(double diameter){
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
 
 }
+
 void jaco_trajectory::tripod_grip(double diameter){
 
 	double jointValue = (M_PI / 4.0) - asin((diameter / 77.0) - (58.0 / 77.0));
@@ -127,7 +126,6 @@ void jaco_trajectory::pickup_object(){
     aco_.touch_links.push_back("j2n6s300_link_finger_tip_3");
     pub_aco_.publish(aco_);
 }
-
 
 void jaco_trajectory::add_target()
 {
@@ -167,12 +165,6 @@ void jaco_trajectory::generate_trajectory(geometry_msgs::PoseStamped pose){
  bool   success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
 
     group_->execute(my_plan);
-}
-
-void jaco_trajectory::get_shape_data(){
-    shapefitting::shapefitting_positionGoal goal;
- 
-    
 }
 
 geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
@@ -229,8 +221,6 @@ void jaco_trajectory::define_cartesian_pose()
     postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 }
 
-
-
 jaco_trajectory::~jaco_trajectory(){
     delete group_;
     delete gripper_group_;
@@ -279,6 +269,26 @@ void jaco_trajectory::pos_callback(const jaco::obj_posConstPtr& msg){
     // group_->setEndEffectorLink("j2n6s300_end_effector");
     // gripper_action(msg->object[0].radius);
 
+}
+
+void jaco_trajectory::vision_data_callback(const vision::Detection_arrayConstPtr &msg){
+    for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
+    {
+        vision::Detection DetectionData;
+        DetectionData = msg->msg[i];
+        visionDataArray.msg.push_back(DetectionData);
+    }
+    
+};
+
+void jaco_trajectory::get_shape_data(vision::Detection DetectionData){
+shapefitting::shapefitting_positionGoal goal;
+goal.input = DetectionData;
+shape_data_client.sendGoal(goal);
+shape_data_client.waitForResult(ros::Duration(2.0));
+if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+    ROS_INFO("SUCCESS");
+}
 }
 
 void jaco_trajectory::connect_itongue(){
@@ -381,8 +391,10 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     }
 }
 
-
-jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
+jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): 
+nh_(nh),
+shape_data_client("get_shape",true) 
+{
 
      
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
@@ -414,7 +426,8 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
     pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
     
-   //vision_data_sub = nh.subscribe<>("/Visi/Vision/ObjectDetectionon/ObjectDetection",1000,)
+    vision_data_sub = nh.subscribe<vision::Detection_array>("/Visi/Vision/ObjectDetectionon/ObjectDetection",1000,&jaco_trajectory::vision_data_callback,this);
+
 
 
 
@@ -437,7 +450,6 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): nh_(nh){
      }
    }
 }
-
 
 int main(int argc, char **argv)
 {
