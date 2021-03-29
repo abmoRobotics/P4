@@ -221,7 +221,8 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-
 add_executable(Shape-Fitting src/shapefitting.cpp)
 target_link_libraries(Shape-Fitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES} ${OpenCV_LIBS} ${realsense2_LIBRARY} ${CGAL_LIBRARY})
 install(TARGETS Shape-Fitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_dependencies(Shape-Fitting ${catkin_EXPORTED_TARGETS})
