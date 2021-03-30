@@ -33,12 +33,12 @@ void full_automatic(){
         cout << "Robot have reached the object." << endl;
     }
 
+    menu();
+
 }
 
 //Automation begynder ved en bestemt distance til et objekt.
 void semi_automatic(){
-    
-    
 
 }
 
