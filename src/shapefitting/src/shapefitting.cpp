@@ -3,7 +3,7 @@
 #include <jaco/position.h>
 #include <jaco/obj_pos.h>
 
-//#include <vision/Detection.h>
+#include <vision/Detection.h>
 
 #include <std_msgs/String.h>
 #include <actionlib/server/simple_action_server.h>
@@ -90,11 +90,10 @@ void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFi
     Mat color_mat = frame_to_mat(data.get_color_frame());   //Currently not used for anything
 
 // Isolate needed values, by use of the classification
-
-    int16_t TopLeftX = goal->X1;
-    int16_t TopLeftY = goal->Y1;
-    int16_t RightButtomX = goal->X2;
-    int16_t RightButtomY = goal->Y2;
+    int16_t TopLeftX = goal->input.X1;
+    int16_t TopLeftY = goal->input.Y1;
+    int16_t RightButtomX = goal->input.X2;
+    int16_t RightButtomY = goal->input.Y2;
     // Isolate distances on region of interest
 
     Mat Blob = Mat::zeros(Size(depth_mat.cols,depth_mat.rows),CV_8UC1);
