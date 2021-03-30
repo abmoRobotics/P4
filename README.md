@@ -25,7 +25,7 @@ sudo chmod 777 /dev/ttyUSB0
 # Vision node setup
 ## CUDA setup
 
-1. Install the newest NVIDIA driver via runtime - this can be troublesome - ask Jacob if there is problems
+1. Install the newest NVIDIA driver via runtime - this can be troublesome - ask Jacob if there is problems (https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=runfilelocal)
 
 2. Download CUDA toolkit 10.2
 3. Install CUDA toolkit without driver
