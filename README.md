@@ -58,3 +58,6 @@ pip install torch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0
 ```
 rosrun vision pick.py --source 0 --weights '../../weights/Glass350E.pt' --save-txt --name John --conf 0.4
 ```
+## Labelimg
+For marking images
+exports an xml file that can be imported to roboflow
