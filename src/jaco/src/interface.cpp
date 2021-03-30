@@ -1,50 +1,40 @@
 #include <ros/ros.h>
 #include <iostream>
-//#include <vision/Detection.h>
+#include <vision/detect_srv.h>
 #include <actionlib/client/simple_action_client.h>
-//#include <shapefitting/shapefitting_positionAction.h> 
+#include <jaco/IF_fullAutoAction.h> 
 
 using namespace std;
+vector<vision::Detection> objects;
 
-ros::NodeHandle nh;
-
-vector<int16_t> objects;
-
-void fullauto_callback(const vision::Detection_arrayConstPtr& msg){
-    for (size_t i = 0; i < 10; i++){
-        objects.push_back(msg);
-    }
-}
-
-
-
-
-// Få objekter fra JJ, udvælg et, send dette objekt til Emil, send Emils data til pos_callback i jaco_trajectory.
 void full_automatic(){
-    cout << "Choose an object: " << endl;
-    for (size_t i = 0; i < sizeof(objects)/sizeof(objects[0]); i++){
-        //cout << i << objects[i].class << endl;
-    }
-    int obj_select;
-    cin >> obj_select;
-    //Send object to ShapeFitting
-    actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shapefitting_client("get_shape", true); 
-    //Check input in actionclient
-    shapefitting_client.waitForServer();
-    //shapefitting::shapefitting_positionInput input;
-    shapefitting_client.sendGoal(obj_select);
-
-    //Action for trajectory and grasping
+    ros::NodeHandle nh;
+    ros::ServiceClient dclient = nh.serviceClient<vision::detect_srv>("detection_service");
+    vision::detect_srv srv_detection;
     
-
-    //Feedback on distance to object
-
-
-
-    //Goal  = object grasped?
-
+    if (dclient.call(srv_detection)){
+        int l = srv_detection.response.msg.size();
+        for (size_t i = 0; i < l ; i++){
+            cout << "Object no." << i << "\n" << srv_detection.response.msg[i] << endl;
+        }
+    }
+    
+    cout << "Choose an Object: " << endl;
+    int select_object;
+    cin >> select_object;
+    jaco::IF_fullAutoActionPtr acPrt;
+    actionlib::SimpleActionClient<jaco::IF_fullAutoAction> aclient("IF_full_auto", true); 
+    jaco::IF_fullAutoGoal goal;
+    goal.goalObject = srv_detection.response.msg[select_object];
+    aclient.sendGoal(goal);
+    
+    aclient.waitForResult();
+    if (aclient.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+        cout << "Robot have reached the object." << endl;
+    }
 
 }
+
 //Automation begynder ved en bestemt distance til et objekt.
 void semi_automatic(){
     
@@ -54,6 +44,7 @@ void semi_automatic(){
 
 
 void menu(){
+
     int selection = 1;
 
     while (selection != 0){
@@ -61,8 +52,8 @@ void menu(){
         cout << "_____________________________" << endl;
         cout << "1. Full Automatic Control Mode" << endl;
         cout << "2. Semi Automatic Control Mode" << endl;
-        cout << "\n----------------------------" << endl;
-        cout << "Select Option" << endl;
+        cout << "Select Control Mode" << endl;
+        cout << "----------------------------" << endl;
         cin >> selection;
 
         switch (selection)
@@ -80,24 +71,16 @@ void menu(){
         selection = 0;
     }
     
+
 }
 
 
-ros::Subscriber fullauto_sub = nh.subscribe<vision::Detection_array>("/Vision/ObjectDetection", 10, fullauto_callback);
-
-
-actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shapefitting_client("get_shape", true); 
-//Check input in actionclient
-shapefitting_client.waitForServer();
-
-
-
-
-void main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
     ros::init(argc, argv, "interface");
     ros::AsyncSpinner spinner(0);
     spinner.start();
     menu();
     ros::waitForShutdown();
     //ros::spin();
+    return 0;
 }

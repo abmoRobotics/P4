@@ -1,72 +1,38 @@
  #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
  #include <geometry_msgs/TransformStamped.h>
+ #include <vision/detect_srv.h>
 
+using namespace std;
+//vector<vision::Detection> obj;
 
+class Server{
 
-int main(int argc, char** argv){
-ros::init(argc, argv, "my_tf2_listener");
-ros::NodeHandle node;
+public:
+vision::Detection obj;
+
+bool service_callback(vision::detect_srv::Request &req,
+                      vision::detect_srv::Response &res){
+  ROS_INFO("SERVICE CALLBACK");
+  //res.msg = obj;
+
+  obj.Class = 1;
+  obj.X1 = 10;
+  obj.X2 = 20;
+  obj.Y1 = 15;
+  obj.Y2 = 45;
+  res.msg.push_back(obj);
  
-tf2_ros::Buffer tfBuffer;
-tf2_ros::TransformListener tfListener(tfBuffer);
+  return 1;
+}
 
-ros::Rate rate(10.0);
-while (node.ok()){
-  geometry_msgs::TransformStamped transformStamped;
-  try{
-       
-    transformStamped = tfBuffer.lookupTransform("j2n6s300_end_effector", "world",
-                                ros::Time::now(),ros::Duration(3.0));
-      ROS_INFO_STREAM(transformStamped.transform.translation.x);
-      ROS_INFO_STREAM(transformStamped.transform.translation.y);
-      ROS_INFO_STREAM(transformStamped.transform.translation.z);
-    }
-  catch (tf2::TransformException &ex) {
-    ROS_WARN("%s",ex.what());
-    ros::Duration(1.0).sleep();
-    continue;
-  }
- 
-
- 
-     
-
-    rate.sleep();
-  }
-  return 0;
 };
 
-//  int main(int argc, char** argv){
-// ros::init(argc, argv, "my_tf2_listener");
-//    ros::NodeHandle node;
- 
-   
-//   tf2_ros::Buffer tfBuffer;
-//   tf2_ros::TransformListener tfListener(tfBuffer);
+int main(int argc, char** argv){
+  ros::init(argc, argv, "my_tf2_listener");
+  ros::NodeHandle node;
+  Server server_obj;
+  ros::ServiceServer server1 = node.advertiseService("detection_service", &Server::service_callback, &server_obj);
 
-//   ros::Rate rate(10.0);
-//    while (node.ok()){
-//      geometry_msgs::TransformStamped transformStamped;
-//      try{
-       
-//        transformStamped = tfBuffer.lookupTransform("j2n6s300_end_effector", "world",
-//                                 ros::Time::now(),ros::Duration(3.0));
-//         ROS_INFO_STREAM(transformStamped.transform.translation.x);
-//         ROS_INFO_STREAM(transformStamped.transform.translation.y);
-//         ROS_INFO_STREAM(transformStamped.transform.translation.z);
-//      }
-//      catch (tf2::TransformException &ex) {
-//        ROS_WARN("%s",ex.what());
-//        ros::Duration(1.0).sleep();
-//        continue;
-//      }
- 
-
- 
-     
-
-//     rate.sleep();
-//   }
-//   return 0;
-//  };
+  ros::spin();
+}
