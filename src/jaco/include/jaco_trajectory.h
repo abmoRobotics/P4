@@ -36,6 +36,8 @@
 #include <vision/Detection_array.h>
 #include <actionlib/client/simple_action_client.h>
 #include <shapefitting/s_position.h>
+#include <jaco/IF_fullAutoAction.h>
+#include <actionlib/server/simple_action_server.h>
 
 class jaco_trajectory
 {
@@ -59,12 +61,12 @@ private:
 
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
-    
     moveit::planning_interface::MoveGroupInterface* gripper_group_;
     robot_model::RobotModelPtr robot_model_;
     planning_scene::PlanningScenePtr planning_scene_;
     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
     ros::NodeHandle nh_;
+    //actionlib::SimpleActionServer<jaco::IF_fullAutoAction> interface_server;
     ros::Publisher pub_planning_scene_diff_;
     bool robot_connected_;
     ros::Publisher pub_co_;
@@ -84,6 +86,7 @@ private:
 
     vision::Detection_array visionDataArray;
     shapefitting::s_position shapeData;
+    
  
     int old_Sensor = 0;
     int Sensor_count;
