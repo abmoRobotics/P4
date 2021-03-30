@@ -61,3 +61,7 @@ rosrun vision pick.py --source 0 --weights '../../weights/Glass350E.pt' --save-t
 ## Labelimg
 For marking images
 exports an xml and image file that can be imported to roboflow.
+
+## AutoRotate for rotating pictures
+
+
