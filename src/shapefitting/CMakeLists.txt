@@ -63,7 +63,7 @@ find_package(CGAL REQUIRED)
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-    s_position.msg
+  shape_data.msg
 )
 
 ## Generate services in the 'srv' folder

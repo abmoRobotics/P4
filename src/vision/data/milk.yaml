@@ -1,0 +1,5 @@
+train: ../../MalkImages/train/images
+val: ../../MalkImages/valid/images
+
+nc: 2
+names: ['Deform', 'Normal']
