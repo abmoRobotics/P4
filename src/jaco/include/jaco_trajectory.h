@@ -29,9 +29,13 @@
 //#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_listener.h>
- #include <geometry_msgs/TransformStamped.h>
- #include <vector>
-
+#include <geometry_msgs/TransformStamped.h>
+#include <vector>
+#include <shapefitting/shapefitting_positionAction.h>
+#include <vision/Detection.h>
+#include <vision/Detection_array.h>
+#include <actionlib/client/simple_action_client.h>
+#include <shapefitting/s_position.h>
 
 class jaco_trajectory
 {
@@ -47,6 +51,12 @@ private:
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
     void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
     void connect_itongue();
+    void vision_data();
+    void get_shape_data(vision::Detection DetectionData);
+    void vision_data_callback(const vision::Detection_arrayConstPtr &msg);
+    //void semi_autonomous_control(); Not implemented
+    //void full_autonomous_control();
+
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
     
@@ -71,14 +81,18 @@ private:
     ros::Subscriber itongue_sub_;
     ros::Subscriber tf_sub;
     geometry_msgs::TransformStamped current_robot_transformStamped;
+
+    vision::Detection_array visionDataArray;
+    shapefitting::s_position shapeData;
  
     int old_Sensor = 0;
     int Sensor_count;
     //Shape fitting:
     ros::Subscriber pos_sub;
+    ros::Subscriber vision_data_sub;
     ros::Publisher talker_pub;
     ros::Publisher itongue_start_pub;
-
+    actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shape_data_client;
 
 
 public: 

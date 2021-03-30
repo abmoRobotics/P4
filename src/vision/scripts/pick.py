@@ -11,6 +11,8 @@ import torch
 import torch.backends.cudnn as cudnn
 from numpy import random
 from vision.msg import Detection
+from vision.msg import Detection_array
+
 from sensor_msgs.msg import Image
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
@@ -22,10 +24,11 @@ from std_msgs.msg import Int16
 
 def detect(save_img=False):
 
-    CoordPub = rospy.Publisher('/Vision/ObjectDetection', Detection, queue_size=10) 
+    CoordPub = rospy.Publisher('/Vision/ObjectDetection', Detection_array, queue_size=10) 
     rospy.init_node('talker', anonymous=True)
     R = rospy.Rate(60) # tci sends 30hz
     DetectionData = Detection()
+    DetectionArray = Detection_array()
 
     source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
@@ -122,13 +125,13 @@ def detect(save_img=False):
                         a = str(cls)
                         #with open(txt_path + '.txt', 'a') as f:
                             #f.write(('%g ' * len(line)).rstrip() % line + '\n')
-                       
+                        
 
 
 
                         Class="".join(c for c in a if  c.isdecimal())
                         #Class = Class[:-1]
-                        DetectionData.Class = int(Class)
+                        DetectionData.Class[conf] = int(Class)
                         print(Class)
                 
                         CoordsRaw = str(torch.tensor(xyxy))
@@ -143,7 +146,8 @@ def detect(save_img=False):
                         DetectionData.Y1 = IntNumpy[1]
                         Detection.X2 = IntNumpy[2]
                         DetectionData.Y2 = IntNumpy[3]
-                        CoordPub.publish(DetectionData)
+                        
+                        DetectionArray[cls] = Detection
 
 
 
@@ -153,6 +157,7 @@ def detect(save_img=False):
 
             # Print time (inference + NMS)
             print(f'{s}Done. ({t2 - t1:.3f}s)')
+            CoordPub.publish(DetectionArray)
 
             # Stream results
             if view_img:
@@ -181,7 +186,7 @@ def detect(save_img=False):
         print(f"Results saved to {save_dir}{s}")
 
     print(f'Done. ({time.time() - t0:.3f}s)')
-
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
