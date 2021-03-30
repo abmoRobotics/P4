@@ -394,7 +394,8 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
 
 jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): 
 nh_(nh),
-shape_data_client("get_shape",true) 
+shape_data_client("get_shape",true) //,
+//interface_server(nh_,"get_shape", boost::bind(&execute,_1,&interface_server),false)
 {
 
      
