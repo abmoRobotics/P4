@@ -23,6 +23,11 @@ sudo chmod 777 /dev/ttyUSB0
 
 
 # Vision node setup
+
+## Update pip
+sudo python3 -m pip install -U pip
+sudo python3 -m pip install -U setuptools
+
 ## CUDA setup
 
 1. Install the newest NVIDIA driver via runtime - this can be troublesome - ask Jacob if there is problems (https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=runfilelocal)
