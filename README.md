@@ -78,3 +78,8 @@ cd /usr/local/lib/
 ./installPackagesForShapefitting.sh
 ```
 4. Install should finish after 10 minuttes.
+
+## Install ROS Wrapper for Intel® RealSense™ Devices 
+1. export ROS_VER=melodic 
+2. sudo apt-get install ros-$ROS_VER-realsense2-camera
+3. 
