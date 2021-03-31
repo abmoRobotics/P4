@@ -25,8 +25,8 @@ sudo chmod 777 /dev/ttyUSB0
 # Vision node setup
 
 ## Update pip
-sudo python3 -m pip install -U pip
-sudo python3 -m pip install -U setuptools
+1. sudo python3 -m pip install -U pip
+2. sudo python3 -m pip install -U setuptools
 
 ## CUDA setup
 
