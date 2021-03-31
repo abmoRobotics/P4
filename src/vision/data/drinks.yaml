@@ -1,0 +1,5 @@
+train: ../../drinks/train/images
+val: ../../drinks/valid/images
+
+nc: 6
+names: ['150clSoda', '50clSoda', 'Minimaelk', 'Roedvin', 'RoseVin', 'Skummetmaelk']
