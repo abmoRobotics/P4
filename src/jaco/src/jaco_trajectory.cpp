@@ -154,7 +154,7 @@ void jaco_trajectory::add_target()
     ros::WallDuration(0.1).sleep();
 }
 
-void jaco_trajectory::generate_trajectory(geometry_msgs::PoseStamped pose){
+void jaco_trajectory::trajectory_plan(geometry_msgs::PoseStamped pose){
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
     ROS_INFO("Starting");
@@ -167,7 +167,7 @@ void jaco_trajectory::generate_trajectory(geometry_msgs::PoseStamped pose){
     group_->execute(my_plan);
 }
 
-geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
+geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
 {
     geometry_msgs::PoseStamped pose_msg;
 
@@ -182,9 +182,9 @@ geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry
     // computer the orientation of gripper w.r.t. fixed world (root) reference frame. The gripper (z axis) should point(open) to the grasp_pose.
     tf::Quaternion q = EulerZYZ_to_Quaternion(azimuth, polar, rot_gripper_z);
 
-    pose_msg.pose.position.x = targetpose_msg.pose.position.x+ delta_x;
-    pose_msg.pose.position.y = targetpose_msg.pose.position.y+ delta_y;
-    pose_msg.pose.position.z = targetpose_msg.pose.position.z+ delta_z;
+    pose_msg.pose.position.x = targetpose_msg.x+ delta_x;
+    pose_msg.pose.position.y = targetpose_msg.y+ delta_y;
+    pose_msg.pose.position.z = targetpose_msg.z+ delta_z;
     pose_msg.pose.orientation.x = q.x();
     pose_msg.pose.orientation.y = q.y();
     pose_msg.pose.orientation.z = q.z();
@@ -197,26 +197,17 @@ geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry
 
 void jaco_trajectory::define_cartesian_pose()
 {
-    tf::Quaternion q;
 
-    // define grasp pose
-    grasp_pose_.header.frame_id = "root";
-    grasp_pose_.header.stamp  = ros::Time::now();
-
+    geometry_msgs::Point a;
     // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2)
-    grasp_pose_.pose.position.x = 0.7;
-    grasp_pose_.pose.position.y = 0.0;
-    grasp_pose_.pose.position.z = 0.13/2;
+    a.x = 0.7;
+    a.y = 0.0;
+    a.z = 0.13/2;
 
-    q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
-    grasp_pose_.pose.orientation.x = q.x();
-    grasp_pose_.pose.orientation.y = q.y();
-    grasp_pose_.pose.orientation.z = q.z();
-    grasp_pose_.pose.orientation.w = q.w();
 
     // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
-    grasp_pose_= generate_gripper_align_pose(grasp_pose_, 0.03999, 0, M_PI/2, M_PI/2);
-    pregrasp_pose_ = generate_gripper_align_pose(grasp_pose_, 0.1, 0, M_PI/2, M_PI/2);
+    grasp_pose_= generate_gripper_align_pose(a, 0.03999, 0, M_PI/2, M_PI/2);
+    pregrasp_pose_ = generate_gripper_align_pose(a, 0.1, 0, M_PI/2, M_PI/2);
     postgrasp_pose_ = grasp_pose_;
     postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 }
@@ -226,13 +217,13 @@ jaco_trajectory::~jaco_trajectory(){
     delete gripper_group_;
 }
 
-void jaco_trajectory::pos_callback(const jaco::obj_posConstPtr& msg){
-    for (int i = 0; i < sizeof(msg->object)/sizeof(msg->object[0]); i++)
-    {
-        obj_vec.push_back(msg->object[i]);
-        ROS_INFO("Vector for loop");
-        ROS_INFO_STREAM(obj_vec[i].radius);
-    }
+// void jaco_trajectory::pos_callback(const jaco::obj_posConstPtr& msg){
+//     for (int i = 0; i < sizeof(msg->object)/sizeof(msg->object[0]); i++)
+//     {
+//         obj_vec.push_back(msg->object[i]);
+//         ROS_INFO("Vector for loop");
+//         ROS_INFO_STREAM(obj_vec[i].radius);
+//     }
     
 
 
@@ -264,12 +255,12 @@ void jaco_trajectory::pos_callback(const jaco::obj_posConstPtr& msg){
     // postgrasp_pose_ = grasp_pose_;
     // postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 
-    // generate_trajectory(pregrasp_pose_);
-    // generate_trajectory(grasp_pose_);
+    // trajectory_plan(pregrasp_pose_);
+    // trajectory_plan(grasp_pose_);
     // group_->setEndEffectorLink("j2n6s300_end_effector");
     // gripper_action(msg->object[0].radius);
 
-}
+//}
 
 void jaco_trajectory::vision_data_callback(const vision::Detection_arrayConstPtr &msg){
     for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
@@ -280,14 +271,14 @@ void jaco_trajectory::vision_data_callback(const vision::Detection_arrayConstPtr
     }
 };
 
-void jaco_trajectory::get_shape_data(vision::Detection DetectionData){
+shapefitting::shape_data jaco_trajectory::get_shape_data(vision::Detection DetectionData){
 shapefitting::shapefitting_positionGoal goal;
 goal.input = DetectionData;
 shape_data_client.sendGoal(goal);
 shape_data_client.waitForResult(ros::Duration(2.0));
 if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
     ROS_INFO("SUCCESS");
-    shapeData = shape_data_client.getResult()->object;
+    return shape_data_client.getResult()->object;
 }
 
 }
@@ -392,10 +383,37 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     }
 }
 
+void jaco_trajectory::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goal){
+    interface_result_.success = true;
+
+    //Get position and shape of object
+    shapeData = get_shape_data(goal->goalObject);
+    
+    //Check if object is a cylinder
+    if (1==1)
+    {
+        pregrasp_pose_ = generate_gripper_align_pose(shapeData.pos, 0.1, 0, M_PI/2, M_PI/2);
+        grasp_pose_= generate_gripper_align_pose(shapeData.pos, 0.03999, 0, M_PI/2, M_PI/2);
+        //Generate and execute pregrasp trajectory
+        trajectory_plan(pregrasp_pose_);
+        //Generate and execute grasp trajectory
+        trajectory_plan(grasp_pose_);
+        //Close gripper
+        spherical_grip(shapeData.radius*2);
+    }
+    
+
+    interface_as_.setSucceeded(interface_result_);
+};
+
+
 jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): 
 nh_(nh),
-shape_data_client("get_shape",true) 
+shape_data_client("get_shape",true),
+interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_execute, this, _1), false)
+
 {
+
 
      
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
@@ -407,8 +425,8 @@ shape_data_client("get_shape",true)
 
         /// Functions below are replaced or moved to the pos_callback function
     define_cartesian_pose();
-     generate_trajectory(pregrasp_pose_);
-    generate_trajectory(grasp_pose_);
+     trajectory_plan(pregrasp_pose_);
+    trajectory_plan(grasp_pose_);
     group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
 
     
@@ -424,7 +442,7 @@ shape_data_client("get_shape",true)
     pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
     itongue_sub_ = nh.subscribe<jaco::RAWItongueOut>("/RAWItongueOut", 1, &jaco_trajectory::itongue_callback,this);
 
-    pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
+    // pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
     
     vision_data_sub = nh.subscribe<vision::Detection_array>("/Vision/ObjectDetection",1000,&jaco_trajectory::vision_data_callback,this);
@@ -456,11 +474,12 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "test");
     ros::NodeHandle node;
+
     ros::AsyncSpinner spinner(4);
     spinner.start();
 
     jaco_trajectory Jaco(node);
-
+    
     //ros::spin();
     ros::waitForShutdown();
     return 0;

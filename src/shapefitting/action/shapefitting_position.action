@@ -2,6 +2,6 @@
 vision/Detection input
 ---
 #result definition
-shapefitting/s_position object
+shapefitting/shape_data object
 ---
 #feedback

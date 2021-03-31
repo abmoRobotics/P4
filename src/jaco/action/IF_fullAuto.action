@@ -1,0 +1,8 @@
+#goal definition
+vision/Detection goalObject
+---
+#result definition
+bool success    
+---
+#feedback
+#kommer senere

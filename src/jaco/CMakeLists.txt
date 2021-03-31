@@ -14,7 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   shapefitting
   vision
+  actionlib_msgs
   moveit_core
+  actionlib
   #ros_controllers
   #moveit_ros_planning
   moveit_ros_planning_interface
@@ -58,7 +60,7 @@ add_message_files(
   FILES
    RAWItongueOut.msg
    sys_msg.msg
-       position.msg
+  position.msg
     obj_pos.msg
 
 )
@@ -71,10 +73,10 @@ add_message_files(
 # )
 
 # Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-
-# )
+add_action_files(
+  FILES
+  IF_fullAuto.action
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -82,6 +84,7 @@ generate_messages(
   std_msgs
   geometry_msgs
   actionlib_msgs
+  vision
 )
 install(PROGRAMS
   src/jacoScript.py
@@ -239,6 +242,10 @@ add_executable(tester2 src/tester2.cpp)
 target_link_libraries(tester2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS tester2 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+add_executable(interface src/interface.cpp)
+target_link_libraries(interface ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS interface DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 add_executable(scenario_full_automatic src/scenario_full_automatic.cpp)
 target_link_libraries(scenario_full_automatic ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS scenario_full_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
@@ -254,5 +261,6 @@ install(TARGETS scenario_semi_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINA
 add_dependencies(work_scene2 jaco_generate_messages_cpp )
 add_dependencies(jaco_trajectory jaco_generate_messages_cpp kinova_msgs_generate_messages_cpp)
 add_dependencies(tester2 jaco_generate_messages_cpp)
+add_dependencies(interface jaco_generate_messages_cpp)
 add_dependencies(scenario_full_automatic jaco_generate_messages_cpp)
 add_dependencies(scenario_semi_automatic jaco_generate_messages_cpp)

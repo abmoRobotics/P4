@@ -35,36 +35,47 @@
 #include <vision/Detection.h>
 #include <vision/Detection_array.h>
 #include <actionlib/client/simple_action_client.h>
-#include <shapefitting/s_position.h>
+#include <shapefitting/shape_data.h>
+#include <jaco/IF_fullAutoAction.h>
+#include <actionlib/server/simple_action_server.h>
 
 class jaco_trajectory
 {
 private:
-    void generate_trajectory(geometry_msgs::PoseStamped pose);
+    void trajectory_plan(geometry_msgs::PoseStamped pose);
     void spherical_grip(double diameter);
     //void hook_grip();
     void pinch_grip(double diameter);
     void tripod_grip(double diameter);
     void pickup_object();
     void add_target();
+    // Test function delete later
     void define_cartesian_pose();
+    // Define the presgrasp postion 
+    //void define_pregrasp_pose(geometry_msgs::Point pose_point);
+    // Define the grasp position
+    //void define_grasp_pose(geometry_msgs::Point pose_point);
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
-    void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
+    //void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
     void connect_itongue();
     void vision_data();
-    void get_shape_data(vision::Detection DetectionData);
+    //Get shape data from shapefitting node
+    shapefitting::shape_data get_shape_data(vision::Detection DetectionData);
     void vision_data_callback(const vision::Detection_arrayConstPtr &msg);
+    void IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goal);
     //void semi_autonomous_control(); Not implemented
     //void full_autonomous_control();
 
-    geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::PoseStamped targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
+    geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
-    
     moveit::planning_interface::MoveGroupInterface* gripper_group_;
     robot_model::RobotModelPtr robot_model_;
     planning_scene::PlanningScenePtr planning_scene_;
     planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
     ros::NodeHandle nh_;
+    actionlib::SimpleActionServer<jaco::IF_fullAutoAction> interface_as_;
+    jaco::IF_fullAutoFeedback interface_feedback_;
+    jaco::IF_fullAutoResult interface_result_;
     ros::Publisher pub_planning_scene_diff_;
     bool robot_connected_;
     ros::Publisher pub_co_;
@@ -83,7 +94,8 @@ private:
     geometry_msgs::TransformStamped current_robot_transformStamped;
 
     vision::Detection_array visionDataArray;
-    shapefitting::s_position shapeData;
+    shapefitting::shape_data shapeData;
+    
  
     int old_Sensor = 0;
     int Sensor_count;
@@ -102,7 +114,7 @@ public:
     geometry_msgs::PoseStamped joint_global_frame_pose_stamped;
     geometry_msgs::PoseStamped joint_pose_stamped;
     tf2_ros::Buffer tf_;
-    std::vector<jaco::position> obj_vec;
+    //std::vector<jaco::position> obj_vec;
 
     
     ~jaco_trajectory();
