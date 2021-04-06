@@ -64,10 +64,9 @@ static cv::Mat depth_frame_to_meters( const rs2::depth_frame & f );
 static cv::Mat frame_to_mat(const rs2::frame& f);
 
 void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFittingActionServer* as){
+    // Create config object, and enable stream of deoth data.
     rs2::config cfg;
     cfg.enable_stream(RS2_STREAM_DEPTH);
-    //cfg.enable_stream(RS2_STREAM_INFRARED, 2);
-
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Start streaming with default recommended configuration
