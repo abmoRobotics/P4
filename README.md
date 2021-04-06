@@ -69,4 +69,17 @@ exports an xml and image file that can be imported to roboflow.
 
 ## AutoRotate for rotating pictures
 
+# Shape Fitting
+1. Download the file installPackagesForShapefitting.sh from P4/dependencies
+2. Move the file to /usr/local/lib/
+3. Open a terminal, and run:
+```
+cd /usr/local/lib/
+./installPackagesForShapefitting.sh
+```
+4. Install should finish after 10 minuttes.
 
+## Install ROS Wrapper for Intel® RealSense™ Devices 
+1. export ROS_VER=melodic 
+2. sudo apt-get install ros-$ROS_VER-realsense2-camera
+3. 
