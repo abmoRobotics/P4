@@ -80,7 +80,7 @@ moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 void jaco_trajectory::spherical_grip(double diameter){
 
 	double jointValue = (M_PI / 4.0) - asin((diameter / 44.0) - (29.0 / 22.0));
-    ROS_INFO_STREAM(jointValue);
+    //ROS_INFO_STREAM(jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
@@ -89,7 +89,7 @@ void jaco_trajectory::spherical_grip(double diameter){
 
 void jaco_trajectory::pinch_grip(double diameter){
 	double jointValue = (M_PI / 4.0) - asin((diameter / 87.0) - (2.0 / 3.0));
-    ROS_INFO_STREAM(jointValue);
+    //ROS_INFO_STREAM(jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
@@ -312,12 +312,12 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     else Sensor_count = 0;
     old_Sensor = msg->Sensor;
 
-    ROS_INFO_STREAM(msg->Sensor);
-    ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.x );
+    // ROS_INFO_STREAM(msg->Sensor);
+    // ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.x );
     //ROS_INFO_STREAM(currentpose.pose.position.x);
-    ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.y );
+    //ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.y );
     //ROS_INFO_STREAM(currentpose.pose.position.y);
-    ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.z );
+    //ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.z );
     //ROS_INFO_STREAM(currentpose.pose.position.z);
 
 
@@ -373,9 +373,9 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         default:
             break;
         }
-        ROS_INFO_STREAM(currentpose.pose.position.x);
-        ROS_INFO_STREAM(currentpose.pose.position.y);
-        ROS_INFO_STREAM(currentpose.pose.position.z);
+        // ROS_INFO_STREAM(currentpose.pose.position.x);
+        // ROS_INFO_STREAM(currentpose.pose.position.y);
+        // ROS_INFO_STREAM(currentpose.pose.position.z);
         group_->setPoseTarget(currentpose);
         group_->move();
         bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
@@ -384,8 +384,10 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
 }
 
 void jaco_trajectory::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goal){
+    ROS_INFO("Action recieved");
+    ROS_INFO_STREAM(goal->goalObject.X1);
     interface_result_.success = true;
-
+    
     //Get position and shape of object
     shapeData = get_shape_data(goal->goalObject);
     
@@ -414,7 +416,7 @@ interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_ex
 
 {
 
-
+    interface_as_.start();
      
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
     nh_.param<bool>("/robot_connected",robot_connected_,true);
@@ -425,8 +427,8 @@ interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_ex
 
         /// Functions below are replaced or moved to the pos_callback function
     define_cartesian_pose();
-     trajectory_plan(pregrasp_pose_);
-    trajectory_plan(grasp_pose_);
+    //  trajectory_plan(pregrasp_pose_);
+    // trajectory_plan(grasp_pose_);
     group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
 
     
@@ -470,6 +472,29 @@ interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_ex
    }
 }
 
+
+void testemil(){
+    ROS_INFO("BEGYNDT");
+    vision::Detection DetectionData;
+    DetectionData.Class = 1;
+    DetectionData.X1 = 100;
+    DetectionData.X2 = 200;
+    DetectionData.Y1 = 100;
+    DetectionData.Y2 = 200;
+
+    shapefitting::shapefitting_positionGoal goal;
+    goal.input = DetectionData;
+    actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shape_data_client("get_shape",true);
+     ROS_INFO("1");
+    shape_data_client.waitForServer();
+     ROS_INFO("2");
+    shape_data_client.sendGoal(goal);
+    shape_data_client.waitForResult(ros::Duration(2.0));
+    if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+        ROS_INFO("SUCCESS");
+    }
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "test");
@@ -478,8 +503,8 @@ int main(int argc, char **argv)
     ros::AsyncSpinner spinner(4);
     spinner.start();
 
-    jaco_trajectory Jaco(node);
-    
+    //jaco_trajectory Jaco(node);
+        testemil();
     //ros::spin();
     ros::waitForShutdown();
     return 0;
