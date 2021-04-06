@@ -503,8 +503,8 @@ int main(int argc, char **argv)
     ros::AsyncSpinner spinner(4);
     spinner.start();
 
-    //jaco_trajectory Jaco(node);
-        testemil();
+    jaco_trajectory Jaco(node);
+      //  testemil();
     //ros::spin();
     ros::waitForShutdown();
     return 0;

@@ -64,11 +64,14 @@ static cv::Mat depth_frame_to_meters( const rs2::depth_frame & f );
 static cv::Mat frame_to_mat(const rs2::frame& f);
 
 void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFittingActionServer* as){
-    
+    rs2::config cfg;
+    cfg.enable_stream(RS2_STREAM_DEPTH);
+    //cfg.enable_stream(RS2_STREAM_INFRARED, 2);
+
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Start streaming with default recommended configuration
-    pipe.start();
+    pipe.start(cfg);
     // Point cloud for storring received data
     pointcloud pc;
     // Define align object. Will be used to align depth to color.
@@ -76,6 +79,7 @@ void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFi
 
 // Initiate Return variables
     shapefitting::shapefitting_positionActionResult resultreturn;
+
 
 // Import new data, and create Color and depth data
     // Wait for next set of frames from the camera
@@ -87,7 +91,7 @@ void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFi
     // Convert frame to Mat with distances
     Mat depth_mat = depth_frame_to_meters(depth);   //Function in cv-helpers.hpp
     // Create color_mat from input
-    Mat color_mat = frame_to_mat(data.get_color_frame());   //Currently not used for anything
+    // Mat color_mat = frame_to_mat(data.get_color_frame());   //Currently not used for anything
 
 // Isolate needed values, by use of the classification
     int16_t TopLeftX = goal->input.X1;

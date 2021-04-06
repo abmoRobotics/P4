@@ -62,6 +62,7 @@ def detect(save_img=False):
         view_img = check_imshow()
         cudnn.benchmark = True  # set True to speed up constant image size inference
         dataset = LoadStreams(source, img_size=imgsz, stride=stride)
+        print(type(dataset))
     else:
         save_img = True
         dataset = LoadImages(source, img_size=imgsz, stride=stride)
@@ -122,7 +123,7 @@ def detect(save_img=False):
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         line = (cls, *xyxy, conf) if opt.save_conf else (cls, *xywh)  # label format
-                        #print(cls)
+                   #print(cls)
                         
 
 
