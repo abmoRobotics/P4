@@ -62,6 +62,9 @@ pip install torch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0
 ## Start vision node 
 ```
 rosrun vision pick.py --source 0 --weights '../../weights/Glass350E.pt' --save-txt --name John --conf 0.4
+python train.py  # train a model
+python test.py --weights yolov5s.pt  # test a model for Precision, Recall and mAP
+python detect.py --weights yolov5s.pt --source path/to/images  # run inference on images and videos
 ```
 ## Labelimg
 For marking images
