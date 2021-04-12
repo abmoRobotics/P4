@@ -36,14 +36,14 @@ void full_automatic(){
     
 
     if (aclient.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-        cout << "Robot have reached the object." << endl;
+        cout << "Robot has reached the object." << endl;
     }
 
 }
 
 //Automation begynder ved en bestemt distance til et objekt.
 void semi_automatic(){
-
+    
 }
 
 void itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
@@ -77,15 +77,11 @@ void vision_callback(const vision::Detection_arrayConstPtr& msg){
 
 
 void menu(){
-
-   // int selection = 1;
-
-    // while (selection != 0){
         system("clear");
         cout << "_____________________________" << endl;
-        cout << "1. Full Automatic Control Mode" << endl;
-        cout << "2. Semi Automatic Control Mode" << endl;
-        cout << "Select Control Mode" << endl;
+        cout << "1. Remote Setting" << endl;
+        cout << "2. Non-remote Setting" << endl;
+        cout << "Select Setting" << endl;
         cout << "----------------------------" << endl;
         if (itongue_sensor == 1)
         {
@@ -101,27 +97,6 @@ void menu(){
             sleep(2);
             itongue_sensor = 0;
         }
-        
-        
-
-        // cin >> selection;
-
-        // switch (selection)
-        // {
-        // case 1:
-        //     full_automatic();
-        //     break;
-        // case 2:
-        //     semi_automatic();
-        //     break;
-
-        // default:
-        //     break;
-        // }
-    //     selection = 0;
-    // }
-    
-
 }
 
 

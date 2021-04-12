@@ -78,7 +78,7 @@ moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 }
 
 void jaco_trajectory::spherical_grip(double diameter){
-
+    //Joint values found from palm to mid-finger
 	double jointValue = (M_PI / 4.0) - asin((diameter / 44.0) - (29.0 / 22.0));
     //ROS_INFO_STREAM(jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
@@ -88,6 +88,7 @@ void jaco_trajectory::spherical_grip(double diameter){
 }
 
 void jaco_trajectory::pinch_grip(double diameter){
+    //Joint values found from palm to end of finger
 	double jointValue = (M_PI / 4.0) - asin((diameter / 87.0) - (2.0 / 3.0));
     //ROS_INFO_STREAM(jointValue);
 	gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
@@ -97,7 +98,7 @@ void jaco_trajectory::pinch_grip(double diameter){
 }
 
 void jaco_trajectory::tripod_grip(double diameter){
-
+    //Joint values found from palm to mid end of finger (Little before pinch)
 	double jointValue = (M_PI / 4.0) - asin((diameter / 77.0) - (58.0 / 77.0));
     ROS_INFO_STREAM(diameter);
     ROS_INFO("TRIPOD");
@@ -162,15 +163,15 @@ void jaco_trajectory::trajectory_plan(geometry_msgs::PoseStamped pose){
     group_->setPoseTarget(pose);
     //group_->setNamedTarget("Home");
     
- bool   success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
-
+    //If plan succeded, then execute plan.
+    bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
     group_->execute(my_plan);
 }
 
 geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
 {
     geometry_msgs::PoseStamped pose_msg;
-
+    //Set reference frame
     pose_msg.header.frame_id = "root";
     pose_msg.header.stamp = ros::Time::now();
 
@@ -190,9 +191,7 @@ geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry
     pose_msg.pose.orientation.z = q.z();
     pose_msg.pose.orientation.w = q.w();
 
-
     return pose_msg;
-
 }
 
 void jaco_trajectory::define_cartesian_pose()
@@ -225,8 +224,6 @@ jaco_trajectory::~jaco_trajectory(){
 //         ROS_INFO_STREAM(obj_vec[i].radius);
 //     }
     
-
-
     // ROS_INFO("pos_callback");
     // tf::Quaternion q; 
 
@@ -238,7 +235,6 @@ jaco_trajectory::~jaco_trajectory(){
     // grasp_pose_.pose.position.x = msg->object[0].pos.x;
     // grasp_pose_.pose.position.y = msg->object[0].pos.y;
     // grasp_pose_.pose.position.z = msg->object[0].pos.z;
-
 
     // q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
     // //q = EulerZYZ_to_Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z);
@@ -276,14 +272,60 @@ shapefitting::shapefitting_positionGoal goal;
 goal.input = DetectionData;
 shape_data_client.sendGoal(goal);
 shape_data_client.waitForResult(ros::Duration(2.0));
-if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-    ROS_INFO("SUCCESS");
-    return shape_data_client.getResult()->object;
-}
 
+//Broadcast for new frames
+tf2_ros::TransformBroadcaster tfb;
+geometry_msgs::TransformStamped Transform_camera, Transform_obj;
+
+    if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+        ROS_INFO("SUCCESS");
+        shapefitting::shape_data tf_Cam_Obj = shape_data_client.getResult()->object;
+
+        //tf from end effector to camera
+        Transform_camera.header.frame_id = "j2n6s300_end_effector";
+        Transform_camera.child_frame_id = "Realsense";
+        Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
+        Transform_camera.transform.translation.y = 0;
+        Transform_camera.transform.translation.z = -0.182;
+        tf2::Quaternion q;
+            q.setRPY(0, 0, M_PI/2);
+        Transform_camera.transform.rotation.x = q.x();
+        Transform_camera.transform.rotation.y = q.y();
+        Transform_camera.transform.rotation.z = q.z();
+        Transform_camera.transform.rotation.w = q.w();
+
+        //tf from camera to object
+        Transform_obj.header.frame_id = "Realsense";
+        Transform_obj.child_frame_id = "ObjectOfInterest";
+        Transform_obj.transform.translation.x = tf_Cam_Obj.pos.x;
+        Transform_obj.transform.translation.y = tf_Cam_Obj.pos.y;
+        Transform_obj.transform.translation.z = tf_Cam_Obj.pos.z;
+        // tf2::Quaternion q;
+        //     q.setRPY(0,0,0);
+        // Transform_obj.transform.rotation.x = q.x();
+        // Transform_obj.transform.rotation.y = q.y();
+        // Transform_obj.transform.rotation.z = q.z();
+        // Transform_obj.transform.rotation.w = q.w();
+      
+        //Change tf_Cam_Obj coordinates to world reference frame
+        tf2_ros::Buffer tfBuffer;
+        tf2_ros::TransformListener tfListener(tfBuffer);
+
+        geometry_msgs::TransformStamped object_Transform = tfBuffer.lookupTransform("world", "ObjectOfInterest",
+                                                                    ros::Time::now(),ros::Duration(3.0));
+
+        shapefitting::shape_data tf_World_Obj = tf_Cam_Obj;
+        tf_World_Obj.pos.x = object_Transform.transform.translation.x;
+        tf_World_Obj.pos.y = object_Transform.transform.translation.y;
+        tf_World_Obj.pos.z = object_Transform.transform.translation.z;
+        
+        return tf_World_Obj;
+        //return shape_data_client.getResult()->object;
+    }
 }
 
 void jaco_trajectory::connect_itongue(){
+    //Initiate connection with iTongue
     while (itongue_start_pub.getNumSubscribers() < 1 )
     {
         ROS_INFO("VENT");
@@ -302,9 +344,9 @@ void jaco_trajectory::connect_itongue(){
 
 void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-   geometry_msgs::PoseStamped currentpose;
+    geometry_msgs::PoseStamped currentpose;
 
-
+    //Count amount of same sensor number
     if (old_Sensor == msg->Sensor)
     {
         Sensor_count ++;
@@ -320,54 +362,55 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     //ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.z );
     //ROS_INFO_STREAM(currentpose.pose.position.z);
 
-
+    //To prevent noise in data, sensor count must be above 4.
     if(current_robot_transformStamped.transform.translation.x != 0 && Sensor_count > 4){
         currentpose.header = current_robot_transformStamped.header;
-        currentpose.pose.orientation=current_robot_transformStamped.transform.rotation;
+        currentpose.pose.orientation = current_robot_transformStamped.transform.rotation;
         currentpose.pose.position.x = current_robot_transformStamped.transform.translation.x;
         currentpose.pose.position.y = current_robot_transformStamped.transform.translation.y;
         currentpose.pose.position.z = current_robot_transformStamped.transform.translation.z;
+        //Switch statement to move robot in relation to sensor
         switch (msg->Sensor)
         {
         case 17: //Z forwards  - away from oneself
         ROS_INFO("Z forwards  - away from oneself");
-            currentpose.pose.position.z = currentpose.pose.position.z - 0.050000;
+            currentpose.pose.position.z = currentpose.pose.position.z - 0.05;
             break;
         case 12: //Z backwards -- towards oneself
-            currentpose.pose.position.z = currentpose.pose.position.z + 0.050000;
+            currentpose.pose.position.z = currentpose.pose.position.z + 0.05;
             break; 
         case 11: // cross up-left
         ROS_INFO("cross up-left");
-            currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-            currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+            currentpose.pose.position.y = currentpose.pose.position.y + 0.05;
+            currentpose.pose.position.x = currentpose.pose.position.x - 0.05;
             break;
         case 8:// Y upwards
         ROS_INFO("Y upwards");
-            currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
+            currentpose.pose.position.y = currentpose.pose.position.y + 0.05;
             break;
         case 13: // Cross up-right
         ROS_INFO("Cross up-right");
-            currentpose.pose.position.y = currentpose.pose.position.y + 0.050000;
-            currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+            currentpose.pose.position.y = currentpose.pose.position.y + 0.05;
+            currentpose.pose.position.x = currentpose.pose.position.x + 0.05;
             break;
         case 14: //x left
         ROS_INFO("x left");
-            currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+            currentpose.pose.position.x = currentpose.pose.position.x - 0.05;
             break;
         case 15: //x right
         ROS_INFO("x right");
-            currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+            currentpose.pose.position.x = currentpose.pose.position.x + 0.05;
             break;
         case 16: // Cross down-left
-            currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-            currentpose.pose.position.x = currentpose.pose.position.x - 0.050000;
+            currentpose.pose.position.y = currentpose.pose.position.y - 0.05;
+            currentpose.pose.position.x = currentpose.pose.position.x - 0.05;
             break;
         case 9: // y downwards
-            currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
+            currentpose.pose.position.y = currentpose.pose.position.y - 0.05;
             break;
         case 18: // Cross down-right
-            currentpose.pose.position.y = currentpose.pose.position.y - 0.050000;
-            currentpose.pose.position.x = currentpose.pose.position.x + 0.050000;
+            currentpose.pose.position.y = currentpose.pose.position.y - 0.05;
+            currentpose.pose.position.x = currentpose.pose.position.x + 0.05;
             break;
 
         default:
@@ -410,18 +453,15 @@ void jaco_trajectory::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &
 
 
 jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): 
-nh_(nh),
-shape_data_client("get_shape",true),
-interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_execute, this, _1), false)
-
+    nh_(nh),
+    shape_data_client("get_shape",true),
+    interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_execute, this, _1), false)
 {
-
     interface_as_.start();
-     
+    
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
     nh_.param<bool>("/robot_connected",robot_connected_,true);
 
-    
     group_ = new moveit::planning_interface::MoveGroupInterface("arm");
     gripper_group_ = new moveit::planning_interface::MoveGroupInterface("gripper");
 
@@ -430,8 +470,6 @@ interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_ex
     //  trajectory_plan(pregrasp_pose_);
     // trajectory_plan(grasp_pose_);
     group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
-
-    
 
     //  finger_client_ = new actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>
     //          ("/j2n6s300_driver/fingers_action/finger_positions", false);
@@ -446,18 +484,17 @@ interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_trajectory::IF_full_auto_ex
 
     // pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_trajectory::pos_callback, this); //EMIL
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
-    
     vision_data_sub = nh.subscribe<vision::Detection_array>("/Vision/ObjectDetection",1000,&jaco_trajectory::vision_data_callback,this);
 
-
-
-
-
     connect_itongue();
+
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
     ros::Rate rate(10.0);
     while (nh_.ok()){
+        //Publishes frame
+        // Transform_camera.header.stamp = ros::Time::now();
+        // tfb.sendTransform(Transform_camera);
      
      try{
        
