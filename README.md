@@ -1,3 +1,6 @@
+## ToDo
+Slet det github pakker vi ikke bruger
+
 ## Requirements
 ** Install ubuntu 18.04
 
