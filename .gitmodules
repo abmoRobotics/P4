@@ -1,12 +1,9 @@
-[submodule "src/ds4drv"]
-	path = src/ds4drv
-	url = https://github.com/chrippa/ds4drv.git
-[submodule "src/ds4_driver"]
-	path = src/ds4_driver
-	url = https://github.com/naoki-mizuno/ds4_driver.git
 [submodule "src/kinova-ros"]
 	path = src/kinova-ros
 	url = https://github.com/Kinovarobotics/kinova-ros.git
 [submodule "src/vision/src/yolov5"]
 	path = src/vision/src/yolov5
 	url = https://github.com/ultralytics/yolov5.git
+[submodule "src/realsense-ros"]
+	path = src/realsense-ros
+	url = https://github.com/IntelRealSense/realsense-ros.git
