@@ -10,3 +10,9 @@
 [submodule "src/vision/src/yolov5"]
 	path = src/vision/src/yolov5
 	url = https://github.com/ultralytics/yolov5.git
+[submodule "src/realsense-ros"]
+	path = src/realsense-ros
+	url = https://github.com/IntelRealSense/realsense-ros.git
+[submodule "src/vision_opencv"]
+	path = src/vision_opencv
+	url = https://github.com/ros-perception/vision_opencv.git

@@ -1,3 +1,6 @@
+## ToDo
+Slet det github pakker vi ikke bruger
+
 ## Requirements
 ** Install ubuntu 18.04
 
@@ -44,7 +47,7 @@ export PATH=/usr/local/cuda-10.2/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-10.2/lib64
 ```
 
-If the last line interrupts your python, try deleting it.
+If the last line interrupts your roscore from running, try deleting it.
 
 ## YoloV5
 1. cd /P4/src/vision/src/YoloV5
