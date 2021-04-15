@@ -26,11 +26,11 @@
 
 #include <tf/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <tf/tfMessage.h>
-//#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
+
 #include <vector>
 #include <shapefitting/shapefitting_positionAction.h>
 #include <vision/Detection.h>
@@ -39,6 +39,7 @@
 #include <shapefitting/shape_data.h>
 #include <jaco/IF_fullAutoAction.h>
 #include <actionlib/server/simple_action_server.h>
+
 
 class jaco_trajectory
 {
@@ -66,6 +67,8 @@ private:
     void IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goal);
     //void semi_autonomous_control(); Not implemented
     //void full_autonomous_control();
+    void testemil();
+    
 
     geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
@@ -96,8 +99,16 @@ private:
 
     vision::Detection_array visionDataArray;
     shapefitting::shape_data shapeData;
+
+    //Frames
+    shapefitting::shape_data tf_Cam_Obj;
+    shapefitting::shapefitting_positionActionResult tf_World_Obj;
+    tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    tf2_ros::TransformBroadcaster br;
+    geometry_msgs::TransformStamped obj_ee_transformStamped;
+    geometry_msgs::TransformStamped Transform_camera, Transform_obj, object_Transform;
+   
     
- 
     int old_Sensor = 0;
     int Sensor_count;
     //Shape fitting:

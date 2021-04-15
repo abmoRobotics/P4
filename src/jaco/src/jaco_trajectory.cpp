@@ -6,6 +6,7 @@
 
 
 const double FINGER_MAX = 6400;
+std::string Camera_name;
 
 tf::Quaternion EulerZYZ_to_Quaternion(double tz1, double ty, double tz2)
 {
@@ -196,17 +197,16 @@ geometry_msgs::PoseStamped jaco_trajectory::generate_gripper_align_pose(geometry
 
 void jaco_trajectory::define_cartesian_pose()
 {
-
     geometry_msgs::Point a;
     // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2)
     a.x = 0.7;
     a.y = 0.0;
     a.z = 0.13/2;
-
-
     // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
     grasp_pose_= generate_gripper_align_pose(a, 0.03999, 0, M_PI/2, M_PI/2);
+    trajectory_plan(pregrasp_pose_);
     pregrasp_pose_ = generate_gripper_align_pose(a, 0.1, 0, M_PI/2, M_PI/2);
+    trajectory_plan(grasp_pose_);
     postgrasp_pose_ = grasp_pose_;
     postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 }
@@ -223,40 +223,32 @@ jaco_trajectory::~jaco_trajectory(){
 //         ROS_INFO("Vector for loop");
 //         ROS_INFO_STREAM(obj_vec[i].radius);
 //     }
-    
-    // ROS_INFO("pos_callback");
-    // tf::Quaternion q; 
-
-    // // define grasp pose
-    // grasp_pose_.header.frame_id = "root";
-    // grasp_pose_.header.stamp  = ros::Time::now();
-
-    // // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2) ---- WORKS
-    // grasp_pose_.pose.position.x = msg->object[0].pos.x;
-    // grasp_pose_.pose.position.y = msg->object[0].pos.y;
-    // grasp_pose_.pose.position.z = msg->object[0].pos.z;
-
-    // q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
-    // //q = EulerZYZ_to_Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z);
-    // grasp_pose_.pose.orientation.x = q.x();
-    // grasp_pose_.pose.orientation.y = q.y();
-    // grasp_pose_.pose.orientation.z = q.z();
-    // grasp_pose_.pose.orientation.w = q.w();
-
-    // //ROS_INFO_STREAM(grasp_pose_.pose.orientation.z); // x, y, and z = 0.5
-
-    // // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
-    // grasp_pose_= generate_gripper_align_pose(grasp_pose_, 0.03999, 0, M_PI/2, M_PI/2);
-    // pregrasp_pose_ = generate_gripper_align_pose(grasp_pose_, 0.1, 0, M_PI/2, M_PI/2);
-    // postgrasp_pose_ = grasp_pose_;
-    // postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
-
-    // trajectory_plan(pregrasp_pose_);
-    // trajectory_plan(grasp_pose_);
-    // group_->setEndEffectorLink("j2n6s300_end_effector");
-    // gripper_action(msg->object[0].radius);
-
-//}
+//     ROS_INFO("pos_callback");
+//     tf::Quaternion q; 
+//     // define grasp pose
+//     grasp_pose_.header.frame_id = "root";
+//     grasp_pose_.header.stamp  = ros::Time::now();
+//     // Euler_ZYZ (-M_PI/4, M_PI/2, M_PI/2) ---- WORKS
+//     grasp_pose_.pose.position.x = msg->object[0].pos.x;
+//     grasp_pose_.pose.position.y = msg->object[0].pos.y;
+//     grasp_pose_.pose.position.z = msg->object[0].pos.z;
+//     q = EulerZYZ_to_Quaternion(0, M_PI/2, M_PI/2);
+//     //q = EulerZYZ_to_Quaternion(msg->orientation.x, msg->orientation.y, msg->orientation.z);
+//     grasp_pose_.pose.orientation.x = q.x();
+//     grasp_pose_.pose.orientation.y = q.y();
+//     grasp_pose_.pose.orientation.z = q.z();
+//     grasp_pose_.pose.orientation.w = q.w();
+//     //ROS_INFO_STREAM(grasp_pose_.pose.orientation.z); // x, y, and z = 0.5
+//     // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
+//     grasp_pose_= generate_gripper_align_pose(grasp_pose_, 0.03999, 0, M_PI/2, M_PI/2);
+//     pregrasp_pose_ = generate_gripper_align_pose(grasp_pose_, 0.1, 0, M_PI/2, M_PI/2);
+//     postgrasp_pose_ = grasp_pose_;
+//     postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
+//     trajectory_plan(pregrasp_pose_);
+//     trajectory_plan(grasp_pose_);
+//     group_->setEndEffectorLink("j2n6s300_end_effector");
+//     gripper_action(msg->object[0].radius);
+// }
 
 void jaco_trajectory::vision_data_callback(const vision::Detection_arrayConstPtr &msg){
     for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
@@ -268,58 +260,61 @@ void jaco_trajectory::vision_data_callback(const vision::Detection_arrayConstPtr
 };
 
 shapefitting::shape_data jaco_trajectory::get_shape_data(vision::Detection DetectionData){
-shapefitting::shapefitting_positionGoal goal;
-goal.input = DetectionData;
-shape_data_client.sendGoal(goal);
-shape_data_client.waitForResult(ros::Duration(2.0));
-
-//Broadcast for new frames
-tf2_ros::TransformBroadcaster tfb;
-geometry_msgs::TransformStamped Transform_camera, Transform_obj;
+    shapefitting::shapefitting_positionGoal goal;
+    goal.input = DetectionData;
+    shape_data_client.sendGoal(goal);
+    shape_data_client.waitForResult(ros::Duration(2.0));
+    ROS_INFO("Get shape data function");
 
     if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
         ROS_INFO("SUCCESS");
-        shapefitting::shape_data tf_Cam_Obj = shape_data_client.getResult()->object;
+        shape_data_client.getResult()->object;
+        //shapefitting::shape_data tf_Cam_Obj = shape_data_client.getResult()->object;
 
+        //Initialize result  
+        shapefitting::shapefitting_positionActionResult result;
+        result.result.object = tf_Cam_Obj;
+        
+        //Set up frames:
         //tf from end effector to camera
+        Transform_camera.header.stamp = ros::Time::now();
         Transform_camera.header.frame_id = "j2n6s300_end_effector";
-        Transform_camera.child_frame_id = "Realsense";
+        Transform_camera.child_frame_id = "Realsense_Camera";
         Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
         Transform_camera.transform.translation.y = 0;
         Transform_camera.transform.translation.z = -0.182;
-        tf2::Quaternion q;
-            q.setRPY(0, 0, M_PI/2);
-        Transform_camera.transform.rotation.x = q.x();
-        Transform_camera.transform.rotation.y = q.y();
-        Transform_camera.transform.rotation.z = q.z();
-        Transform_camera.transform.rotation.w = q.w();
+        tf2::Quaternion q1;
+            q1.setRPY(-0.26, 0, M_PI/2);
+        Transform_camera.transform.rotation.x = q1.x();
+        Transform_camera.transform.rotation.y = q1.y();
+        Transform_camera.transform.rotation.z = q1.z();
+        Transform_camera.transform.rotation.w = q1.w();
 
         //tf from camera to object
-        Transform_obj.header.frame_id = "Realsense";
-        Transform_obj.child_frame_id = "ObjectOfInterest";
+        Transform_obj.header.stamp = ros::Time::now();
+        Transform_obj.header.frame_id = "Realsense_Camera";
+        Transform_obj.child_frame_id = tf_Cam_Obj.object_class.data;
         Transform_obj.transform.translation.x = tf_Cam_Obj.pos.x;
         Transform_obj.transform.translation.y = tf_Cam_Obj.pos.y;
         Transform_obj.transform.translation.z = tf_Cam_Obj.pos.z;
-        // tf2::Quaternion q;
-        //     q.setRPY(0,0,0);
-        // Transform_obj.transform.rotation.x = q.x();
-        // Transform_obj.transform.rotation.y = q.y();
-        // Transform_obj.transform.rotation.z = q.z();
-        // Transform_obj.transform.rotation.w = q.w();
-      
-        //Change tf_Cam_Obj coordinates to world reference frame
-        tf2_ros::Buffer tfBuffer;
-        tf2_ros::TransformListener tfListener(tfBuffer);
+        tf2::Quaternion q2;
+            //q2.setRPY(0,0,0);
+            q2.setRPY(tf_Cam_Obj.orientation.x, tf_Cam_Obj.orientation.y, tf_Cam_Obj.orientation.z);
+        Transform_obj.transform.rotation.x = q2.x();
+        Transform_obj.transform.rotation.y = q2.y();
+        Transform_obj.transform.rotation.z = q2.z();
+        Transform_obj.transform.rotation.w = q2.w();
+ 
+        //From world to object data. tf from world to object is found by listener function.
+        tf_World_Obj.result.object = tf_Cam_Obj;
+        tf_World_Obj.result.object.pos.x = obj_ee_transformStamped.transform.translation.x;
+        tf_World_Obj.result.object.pos.y = obj_ee_transformStamped.transform.translation.y;
+        tf_World_Obj.result.object.pos.z = obj_ee_transformStamped.transform.translation.z;
+        tf_World_Obj.result.object.orientation.x = obj_ee_transformStamped.transform.rotation.x;
+        tf_World_Obj.result.object.orientation.y = obj_ee_transformStamped.transform.rotation.y;
+        tf_World_Obj.result.object.orientation.z = obj_ee_transformStamped.transform.rotation.z;       
 
-        geometry_msgs::TransformStamped object_Transform = tfBuffer.lookupTransform("world", "ObjectOfInterest",
-                                                                    ros::Time::now(),ros::Duration(3.0));
-
-        shapefitting::shape_data tf_World_Obj = tf_Cam_Obj;
-        tf_World_Obj.pos.x = object_Transform.transform.translation.x;
-        tf_World_Obj.pos.y = object_Transform.transform.translation.y;
-        tf_World_Obj.pos.z = object_Transform.transform.translation.z;
-        
-        return tf_World_Obj;
+        return tf_World_Obj.result.object;
         //return shape_data_client.getResult()->object;
     }
 }
@@ -339,7 +334,6 @@ void jaco_trajectory::connect_itongue(){
     data.CuttingThreshold = 0.08;
     data.tci_port = "/dev/ttyUSB0";
     itongue_start_pub.publish(data);
-
 }
 
 void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
@@ -427,14 +421,15 @@ void jaco_trajectory::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
 }
 
 void jaco_trajectory::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goal){
-    ROS_INFO("Action recieved");
-    ROS_INFO_STREAM(goal->goalObject.X1);
+    ROS_INFO("Full-auto Action received");
     interface_result_.success = true;
     
-    //Get position and shape of object
+    //Get position and shape of object by calling get_shape_data with goalObject.
     shapeData = get_shape_data(goal->goalObject);
-    
-    //Check if object is a cylinder
+    ROS_INFO("Shapedata received");
+
+    //Check if object is a cylinder. Use shapeData to 
+
     if (1==1)
     {
         pregrasp_pose_ = generate_gripper_align_pose(shapeData.pos, 0.1, 0, M_PI/2, M_PI/2);
@@ -446,11 +441,8 @@ void jaco_trajectory::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &
         //Close gripper
         spherical_grip(shapeData.radius*2);
     }
-    
-
     interface_as_.setSucceeded(interface_result_);
 };
-
 
 jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh): 
     nh_(nh),
@@ -466,9 +458,10 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh):
     gripper_group_ = new moveit::planning_interface::MoveGroupInterface("gripper");
 
         /// Functions below are replaced or moved to the pos_callback function
-    define_cartesian_pose();
+    //define_cartesian_pose();
     //  trajectory_plan(pregrasp_pose_);
     // trajectory_plan(grasp_pose_);
+
     group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
 
     //  finger_client_ = new actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>
@@ -476,7 +469,7 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh):
     //  while(robot_connected_ && !finger_client_->waitForServer(ros::Duration(5.0))){
     //    ROS_INFO("Waiting for the finger action server to come up");
     //  }moveit::planning_interface::MoveGroupInterface
-    
+
     pub_aco_ = nh_.advertise<moveit_msgs::AttachedCollisionObject>("/attached_collision_object", 10);
     pub_co_ = nh_.advertise<moveit_msgs::CollisionObject>("/collision_object", 10);
     pub_planning_scene_diff_ = nh_.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
@@ -486,51 +479,114 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh):
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
     vision_data_sub = nh.subscribe<vision::Detection_array>("/Vision/ObjectDetection",1000,&jaco_trajectory::vision_data_callback,this);
 
-    connect_itongue();
+    //connect_itongue();
 
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
     ros::Rate rate(10.0);
-    while (nh_.ok()){
-        //Publishes frame
-        // Transform_camera.header.stamp = ros::Time::now();
-        // tfb.sendTransform(Transform_camera);
-     
-     try{
-       
-       current_robot_transformStamped = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
-                                ros::Time::now(),ros::Duration(3.0));
-     }
-     catch (tf2::TransformException &ex) {
-       ROS_WARN("%s",ex.what());
-       ros::Duration(1.0).sleep();
-       continue;
-     }
-   }
-}
+    
 
+    while (nh_.ok()){      
+        testemil();      
 
-void testemil(){
-    ROS_INFO("BEGYNDT");
-    vision::Detection DetectionData;
-    DetectionData.Class = 1;
-    DetectionData.X1 = 100;
-    DetectionData.X2 = 200;
-    DetectionData.Y1 = 100;
-    DetectionData.Y2 = 200;
+        try{    
+            //Send tf:
+            static_broadcaster.sendTransform(Transform_camera);
+            br.sendTransform(Transform_obj);  
+            obj_ee_transformStamped = tfBuffer.lookupTransform("world", tf_Cam_Obj.object_class.data,
+                                    ros::Time(0),ros::Duration(3.0));
 
-    shapefitting::shapefitting_positionGoal goal;
-    goal.input = DetectionData;
-    actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shape_data_client("get_shape",true);
-     ROS_INFO("1");
-    shape_data_client.waitForServer();
-     ROS_INFO("2");
-    shape_data_client.sendGoal(goal);
-    shape_data_client.waitForResult(ros::Duration(2.0));
-    if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-        ROS_INFO("SUCCESS");
+            current_robot_transformStamped = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
+                                    ros::Time(0),ros::Duration(3.0));
+        }
+        catch (tf2::TransformException &ex) {
+             //First call might not pass through, as the frame may not have existed, when the transform is requested the transform may not exist yet and fails the first time.
+             //After the first transform all the transforms exist and the transforms should work.
+            ROS_WARN("%s",ex.what());
+            ros::Duration(1.0).sleep();
+            continue;
+        }
     }
 }
+    
+    
+void jaco_trajectory::testemil(){
+    ROS_INFO("BEGYNDT");
+    // vision::Detection DetectionData;
+    // DetectionData.Class = 1;
+    // DetectionData.X1 = 100;
+    // DetectionData.X2 = 200;
+    // DetectionData.Y1 = 100;
+    // DetectionData.Y2 = 200;
+
+    // shapefitting::shape_data test = jaco_trajectory::get_shape_data(DetectionData);
+
+        
+        tf_Cam_Obj.object_class.data = "Vin"; 
+        tf_Cam_Obj.pos.x = 0.6;
+        tf_Cam_Obj.pos.y = 0.6;
+        tf_Cam_Obj.pos.z = 0.6;
+        tf_Cam_Obj.orientation.x = -1.2;
+        tf_Cam_Obj.orientation.y = 0;
+        tf_Cam_Obj.orientation.z = 2.3;
+        
+
+        Transform_camera.header.stamp = ros::Time::now();
+        Transform_camera.header.frame_id = "j2n6s300_end_effector";
+        Transform_camera.child_frame_id = "Realsense_Camera";
+        Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
+        Transform_camera.transform.translation.y = 0;
+        Transform_camera.transform.translation.z = -0.182;
+        tf2::Quaternion q1;
+            q1.setRPY(-0.26, 0, M_PI/2);
+        Transform_camera.transform.rotation.x = q1.x();
+        Transform_camera.transform.rotation.y = q1.y();
+        Transform_camera.transform.rotation.z = q1.z();
+        Transform_camera.transform.rotation.w = q1.w();
+
+        //tf from camera to object
+        Transform_obj.header.stamp = ros::Time::now();
+        Transform_obj.header.frame_id = "Realsense_Camera";
+        Transform_obj.child_frame_id = tf_Cam_Obj.object_class.data;
+        Transform_obj.transform.translation.x = tf_Cam_Obj.pos.x;
+        Transform_obj.transform.translation.y = tf_Cam_Obj.pos.y;
+        Transform_obj.transform.translation.z = tf_Cam_Obj.pos.z;
+        tf2::Quaternion q2;
+            //q2.setRPY(0,0,0);
+            q2.setRPY(tf_Cam_Obj.orientation.x, tf_Cam_Obj.orientation.y, tf_Cam_Obj.orientation.z);
+        Transform_obj.transform.rotation.x = q2.x();
+        Transform_obj.transform.rotation.y = q2.y();
+        Transform_obj.transform.rotation.z = q2.z();
+        Transform_obj.transform.rotation.w = q2.w();
+
+
+    // shapefitting::shapefitting_positionGoal goal;
+    // goal.input = DetectionData;
+    // actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shape_data_client("get_shape",true);
+    //  ROS_INFO("1");
+    // shape_data_client.waitForServer();
+    //  ROS_INFO("2");
+    // shape_data_client.sendGoal(goal);
+    // shape_data_client.waitForResult(ros::Duration(2.0));
+    // if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+    //     ROS_INFO("SUCCESS");
+    // }
+
+    // shapefitting::shape_data Shape_Data_Test;
+    // Shape_Data_Test.object_class.data = "Sodavand";
+    // Shape_Data_Test.radius = 0.12;
+    // Shape_Data_Test.pos.x = 0.2;
+    // Shape_Data_Test.pos.y = -0.5;
+    // Shape_Data_Test.pos.z = 1.3;
+    // Shape_Data_Test.orientation.x = 0;
+    // Shape_Data_Test.orientation.y = 1;
+    // Shape_Data_Test.orientation.z = 0;
+
+    // shapefitting::shapefitting_positionActionResult result;
+    // result.result.object = Shape_Data_Test;
+    
+}
+
 
 int main(int argc, char **argv)
 {
@@ -539,9 +595,8 @@ int main(int argc, char **argv)
 
     ros::AsyncSpinner spinner(4);
     spinner.start();
-
+    
     jaco_trajectory Jaco(node);
-      //  testemil();
     //ros::spin();
     ros::waitForShutdown();
     return 0;
