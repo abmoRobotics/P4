@@ -1,5 +1,5 @@
-train: ../Glasses/train/images
-val: ../Glasses/valid/images
+train: ../../Glasses/train/images
+val: ../../Glasses/valid/images
 
 nc: 7
 names: ['Champagne', 'Krus', 'Olglas', 'Olkrus', 'Shotglas', 'Sodaglas', 'Termokande']

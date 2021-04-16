@@ -13,27 +13,38 @@ int itongue_sensor;
 int menu_selection = 0;
 vector<vision::Detection> visionDataArray;
 
+//For keyboard
+int input = 0;
+
 void full_automatic(){
     system("clear");
-   // int length = sizeof(visionDataArray.msg)/sizeof(visionDataArray.msg[0]);
-    
-    //ROS_INFO_STREAM(visionDataArray.size());
+
         for (size_t i = 0; i < visionDataArray.size(); i++){
             cout << "Object no." << i  << endl;
         }
     
     cout << "Choose an Object: " << endl;
+    
+    //Keyboard
+    cin >> input;
+
     jaco::IF_fullAutoActionPtr acPrt;
     actionlib::SimpleActionClient<jaco::IF_fullAutoAction> aclient("IF_full_auto", true); 
     jaco::IF_fullAutoGoal goal;
     for (size_t i = 0; i < visionDataArray.size(); i++) {
-        if (itongue_sensor == i+1){
+        //if (itongue_sensor == i+1){
+            
+            //Keyboard
+            if (input == i+1){
+                //Fjern ovenstående
+
         goal.goalObject = visionDataArray[i];
         aclient.waitForServer();
         aclient.sendGoal(goal);
         aclient.waitForResult();
-    }   }
-    
+        }
+    }      
+
 
     if (aclient.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
         cout << "Robot has reached the object." << endl;
@@ -67,8 +78,9 @@ void itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
 
 void vision_callback(const vision::Detection_arrayConstPtr& msg){
     visionDataArray.clear();
-    for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
-    {
+
+    for (size_t i = 0; i < msg->msg.size(); i++)
+    {      
         vision::Detection DetectionData;
         DetectionData = msg->msg[i];
         visionDataArray.push_back(DetectionData);
@@ -83,7 +95,7 @@ void menu(){
         cout << "2. Non-remote Setting" << endl;
         cout << "Select Setting" << endl;
         cout << "----------------------------" << endl;
-        if (itongue_sensor == 1)
+        if (/*itongue_sensor ==*/ 1)
         {
             menu_selection = 1;
             system("clear");
@@ -149,7 +161,6 @@ int main(int argc, char *argv[]){
         //     semi_automatic();
         // }
 
-        //FUll_automatic() hvis vi har valgt en kategori
         loop_rate.sleep();
     }
     
