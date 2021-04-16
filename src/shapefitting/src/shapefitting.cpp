@@ -147,48 +147,60 @@ void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFi
         InfoStream << ransac.shapes().end() - ransac.shapes().begin()
             << " detected shapes, "
             << ransac.number_of_unassigned_points()
-            << " unassigned points.";
-
+            << " unassigned points, "
+            << points.size()
+            << " available points.";
+        
         std::string INFO = InfoStream.str();
         ROS_INFO_STREAM(INFO);
 
         // Print details of shape
         Efficient_ransac::Shape_range shapes = ransac.shapes();         //Shapes detected by ransac
         Efficient_ransac::Shape_range::iterator it = shapes.begin();    //Itterator for going through all points
-        while (it != shapes.end()) {
-            // Get parameters depending on the detected shape.
-            if (Cylinder* cyl = dynamic_cast<Cylinder*>(it->get())) {
-                Kernel::Line_3 axis = cyl->axis();
-                FT radius = cyl->radius();
-                //Print result
-                std::cout << "Cylinder with center "
-                    << axis.point() << " axis " << axis.direction() << " and radius " << radius << std::endl;
-                    
-                resultreturn.result.object.pos.x = axis.point().x();
-                resultreturn.result.object.pos.y = axis.point().y();
-                resultreturn.result.object.pos.z = axis.point().z();
+        if (shapes.size() == 0){
+            ROS_WARN("No shapes detected");
+            as->setAborted();
+        } else {  
 
-                resultreturn.result.object.orientation.x = axis.direction().dx();
-                resultreturn.result.object.orientation.y = axis.direction().dy();
-                resultreturn.result.object.orientation.z = axis.direction().dz();
+            while (it != shapes.end()) {
+                // Get parameters depending on the detected shape.
+                if (Cylinder* cyl = dynamic_cast<Cylinder*>(it->get())) {
+                    Kernel::Line_3 axis = cyl->axis();
+                    FT radius = cyl->radius();
+                    //Print result
+                    std::cout << "Cylinder with center "
+                        << axis.point() << " axis " << axis.direction() << " and radius " << radius << std::endl;
+                        
+                    resultreturn.result.object.pos.x = axis.point().x();
+                    resultreturn.result.object.pos.y = axis.point().y();
+                    resultreturn.result.object.pos.z = axis.point().z();
 
-                resultreturn.result.object.radius = radius;
-                                
+                    resultreturn.result.object.orientation.x = axis.direction().dx();
+                    resultreturn.result.object.orientation.y = axis.direction().dy();
+                    resultreturn.result.object.orientation.z = axis.direction().dz();
+
+                    resultreturn.result.object.radius = radius;
+                                    
+                }
+                // Proceed with the next detected shape.
+                it++;
             }
-            // Proceed with the next detected shape.
-            it++;
+            as->setSucceeded();
         }
     } else {
-        ROS_ERROR("Not enogh data points");
+        ROS_ERROR("Point cloud empty");
+        as->setAborted();
     }
 
-    as->setSucceeded();
+    
 }
 
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "get_shape");
     ros::NodeHandle node;
+    
+    ROS_INFO("Shape fittingup and running");
 
     ShapeFittingActionServer server(node,"get_shape", boost::bind(&execute,_1,&server),false);
 

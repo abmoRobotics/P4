@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<launch>
+    
+    <node name="interface" pkg="jaco" type="interface" output="screen" />
+    <node name="jaco_trajectory" pkg="jaco" type="jaco_trajectory" output="screen" />
+    <node name="shapefitting" pkg="shapefitting" type="Shape-Fitting" output="screen" />
+    
+
+</launch>
