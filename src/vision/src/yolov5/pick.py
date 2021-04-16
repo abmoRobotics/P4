@@ -55,7 +55,7 @@ def detect(save_img=False):
     if classify:
         modelc = load_classifier(name='resnet101', n=2)  # initialize
         modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=device)['model']).to(device).eval()
-
+    print("SOURCE!!!!!!!:::::::" + source)
     # Set Dataloader
     vid_path, vid_writer = None, None
     if webcam:
@@ -217,6 +217,8 @@ if __name__ == '__main__':
     parser.add_argument('--project', default='runs/detect', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
+    parser.add_argument('__name')
+    parser.add_argument('__log')
     opt = parser.parse_args()
     print(opt)
     check_requirements(exclude=('pycocotools', 'thop'))

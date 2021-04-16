@@ -17,6 +17,7 @@
 #include <sstream>
 #include <exception>
 
+cv::Mat hej; 
 // For Shape fitting
 #include <CGAL/property_map.h>
 #include <CGAL/IO/read_xyz_points.h>
@@ -57,6 +58,7 @@ typedef Kernel::FT                                          FT;
 using namespace cv;
 using namespace rs2;
 
+
 Mat Overlap(Mat depth, Mat filter);
 Pwn_list DepthMat_to_Pwn_list(Mat DepthMat);
 Pwn_vector List2Vector(Pwn_list list);
@@ -91,7 +93,7 @@ void execute(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFi
     Mat depth_mat = depth_frame_to_meters(depth);   //Function in cv-helpers.hpp
     // Create color_mat from input
     // Mat color_mat = frame_to_mat(data.get_color_frame());   //Currently not used for anything
-
+    
 // Isolate needed values, by use of the classification
     int16_t TopLeftX = goal->input.X1;
     int16_t TopLeftY = goal->input.Y1;

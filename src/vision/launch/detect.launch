@@ -1,0 +1,16 @@
+<launch>
+  <arg name="source" default="HEJ"/>
+  <arg name="weights"/>
+  <arg name="name" default="Test"/>
+  <arg name="conf" default="0.6" />
+  <arg name="res" default="680" />
+
+  <node pkg="vision" name="Detect" type="pick.py" output="screen" args="$(arg source)">
+        
+        <param name="--source" value=" HEJ"/>
+        <param name="--weights" value="$(arg weights)"/>
+        <param name="--name" value="$(arg name)"/>
+        <param name="--conf" value="$(arg conf)"/>
+        <param name="--img" value="$(arg res)"/>
+  </node>
+</launch>

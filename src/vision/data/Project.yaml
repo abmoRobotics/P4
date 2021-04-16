@@ -1,0 +1,5 @@
+train: ../../Project_images/train/images
+val: ../../Project_images/valid/images
+
+nc: 9
+names: ['150clSoda', '50clSoda', 'Juice', 'Minimaelk', 'Roedvin', 'RoseVin', 'Saftevand', 'Skummetmaelk', 'Termokrus']
