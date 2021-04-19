@@ -1,0 +1,7 @@
+#goal definition
+vision/Detection_array input
+---
+#result definition
+shapefitting/shape_data_array object
+---
+#feedback
