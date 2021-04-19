@@ -185,15 +185,13 @@ void jaco_control::add_target()
 
 // Skal konverteres
 void jaco_control::trajectory_plan(geometry_msgs::PoseStamped pose){
-    kinova_comm.SelfCollisionAvoidanceInCartesianMode()
+	//kinova_comm.SelfCollisionAvoidanceInCartesianMode();
+	//kinova_comm.SingularityAvoidanceInCartesianMode();
 
+		//moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-
-
-    //moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-    ROS_INFO("Starting");
-    //group_->clearPathConstraints();
+		ROS_INFO("Starting");
+	//group_->clearPathConstraints();
     //group_->setPoseTarget(pose);
          //group_->setNamedTarget("Home");
     
