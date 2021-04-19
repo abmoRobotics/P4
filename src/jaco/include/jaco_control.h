@@ -44,10 +44,11 @@
 #include <kinova/KinovaTypes.h>
 #include <kinova_driver/kinova_ros_types.h>
 #include "kinova_driver/kinova_api.h"
+#include <kinova_msgs/AddPoseToCartesianTrajectory.h>
 class jaco_control
 {
 private:
-    void trajectory_plan(geometry_msgs::PoseStamped pose);
+    //void trajectory_plan(geometry_msgs::PoseStamped pose);
     void spherical_grip(double diameter);
     //void hook_grip();
     void pinch_grip(double diameter);
@@ -73,7 +74,7 @@ private:
     void testemil();
     
 
-    geometry_msgs::PoseStamped generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
+    kinova::KinovaPose generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
     moveit::planning_interface::MoveGroupInterface* gripper_group_;
     robot_model::RobotModelPtr robot_model_;
@@ -92,9 +93,10 @@ private:
     moveit_msgs::AttachedCollisionObject aco_;
     moveit_msgs::PlanningScene planning_scene_msg_;
 
-    geometry_msgs::PoseStamped grasp_pose_;
-    geometry_msgs::PoseStamped pregrasp_pose_;
-    geometry_msgs::PoseStamped postgrasp_pose_;
+    
+    kinova::KinovaPose grasp_pose_;
+    kinova::KinovaPose pregrasp_pose_;
+    kinova::KinovaPose postgrasp_pose_;
     geometry_msgs::PoseStamped object_pose_;
     ros::Subscriber itongue_sub_;
     ros::Subscriber tf_sub;
@@ -127,6 +129,7 @@ private:
     kinova::KinovaComm kinova_comm; 
 
     kinova_msgs::SetFingersPositionGoal finger_goal;
+    kinova::KinovaAPI kinova_api_;
     
 
 

@@ -27,7 +27,7 @@ tf::Quaternion EulerZYZ_to_Quaternion(double tz1, double ty, double tz2)
     return q;
 }
 
-// Skal konverteres
+// Værdier skal justeres
 bool jaco_control::gripper_action(double finger_turn){
  //moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     ROS_INFO("GRIPPER_ACTION");
@@ -80,7 +80,7 @@ bool jaco_control::gripper_action(double finger_turn){
     }
 }
 
-// Skal konverteres
+// Værdier skal justeres
 void jaco_control::spherical_grip(double diameter){
 	//Joint values found from palm to mid-finger
 	double jointValue = (M_PI / 4.0) - asin((diameter / 44.0) - (29.0 / 22.0));
@@ -92,13 +92,20 @@ void jaco_control::spherical_grip(double diameter){
     finger_goal.fingers.finger3 = finger_goal.fingers.finger1;
     finger_client_->sendGoal(finger_goal);
 
+    if (finger_client_->waitForResult(ros::Duration(5.0))){
+        finger_client_->getResult();
+    } else {
+        finger_client_->cancelAllGoals();
+        ROS_WARN_STREAM("The gripper action timed-out");
+    }
+
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_3", jointValue);
 
 }
 
-// Skal konverteres
+// Værdier skal justeres
 void jaco_control::pinch_grip(double diameter){
     //Joint values found from palm to end of finger
 	double jointValue = (M_PI / 4.0) - asin((diameter / 87.0) - (2.0 / 3.0));
@@ -109,13 +116,19 @@ void jaco_control::pinch_grip(double diameter){
     finger_goal.fingers.finger2 = finger_goal.fingers.finger1;
     finger_client_->sendGoal(finger_goal);
 
+    if (finger_client_->waitForResult(ros::Duration(5.0))){
+        finger_client_->getResult();
+    } else {
+        finger_client_->cancelAllGoals();
+        ROS_WARN_STREAM("The gripper action timed-out");
+    }
 
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
 
 }
 
-// Skal konverteres
+// Værdier skal justeres
 void jaco_control::tripod_grip(double diameter){
     //Joint values found from palm to mid end of finger (Little before pinch)
 	double jointValue = (M_PI / 4.0) - asin((diameter / 77.0) - (58.0 / 77.0));
@@ -127,6 +140,13 @@ void jaco_control::tripod_grip(double diameter){
     finger_goal.fingers.finger2 = finger_goal.fingers.finger1;
     finger_goal.fingers.finger3 = finger_goal.fingers.finger1;
     finger_client_->sendGoal(finger_goal);
+
+    if (finger_client_->waitForResult(ros::Duration(5.0))){
+        finger_client_->getResult();
+    } else {
+        finger_client_->cancelAllGoals();
+        ROS_WARN_STREAM("The gripper action timed-out");
+    }
 
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
@@ -183,31 +203,12 @@ void jaco_control::add_target()
     ros::WallDuration(0.1).sleep();
 }
 
-// Skal konverteres
-void jaco_control::trajectory_plan(geometry_msgs::PoseStamped pose){
-	//kinova_comm.SelfCollisionAvoidanceInCartesianMode();
-	//kinova_comm.SingularityAvoidanceInCartesianMode();
 
-		//moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-		ROS_INFO("Starting");
-	//group_->clearPathConstraints();
-    //group_->setPoseTarget(pose);
-         //group_->setNamedTarget("Home");
-    
-        //If plan succeded, then execute plan.
-    //bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
-    //group_->execute(my_plan);
-}
-
-// Skal retunerer kinova::kinova_pose
-geometry_msgs::PoseStamped jaco_control::generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
+// DONE
+kinova::KinovaPose jaco_control::generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
 {
-    geometry_msgs::PoseStamped pose_msg;
-    //Set reference frame
-    pose_msg.header.frame_id = "root";
-    pose_msg.header.stamp = ros::Time::now();
-
+    kinova::KinovaPose pose_msg;
+    
     // computer pregrasp position w.r.t. location of grasp_pose in spherical coordinate. Orientation is w.r.t. fixed world (root) reference frame.
     double delta_x = -dist * cos(azimuth) * sin(polar);
     double delta_y = -dist * sin(azimuth) * sin(polar);
@@ -216,19 +217,19 @@ geometry_msgs::PoseStamped jaco_control::generate_gripper_align_pose(geometry_ms
     // computer the orientation of gripper w.r.t. fixed world (root) reference frame. The gripper (z axis) should point(open) to the grasp_pose.
     tf::Quaternion q = EulerZYZ_to_Quaternion(azimuth, polar, rot_gripper_z);
 
-    pose_msg.pose.position.x = targetpose_msg.x+ delta_x;
-    pose_msg.pose.position.y = targetpose_msg.y+ delta_y;
-    pose_msg.pose.position.z = targetpose_msg.z+ delta_z;
-    pose_msg.pose.orientation.x = q.x();
-    pose_msg.pose.orientation.y = q.y();
-    pose_msg.pose.orientation.z = q.z();
-    pose_msg.pose.orientation.w = q.w();
-
+    pose_msg.X = targetpose_msg.x + delta_x;
+    pose_msg.Y = targetpose_msg.y+ delta_y;
+    pose_msg.Z = targetpose_msg.z+ delta_z;
+    //XYZ euler angles
+    pose_msg.ThetaX = azimuth;
+    pose_msg.ThetaY = polar;
+    pose_msg.ThetaZ = rot_gripper_z;
+    
     return pose_msg;
 }
 
 
-// Skal måske konverteres
+// DONE
 void jaco_control::define_cartesian_pose()
 {
     geometry_msgs::Point a;
@@ -238,11 +239,11 @@ void jaco_control::define_cartesian_pose()
     a.z = 0.13/2;
     // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
     grasp_pose_= generate_gripper_align_pose(a, 0.03999, 0, M_PI/2, M_PI/2);
-    trajectory_plan(pregrasp_pose_);
+    kinova_comm.setCartesianPosition(pregrasp_pose_);
     pregrasp_pose_ = generate_gripper_align_pose(a, 0.1, 0, M_PI/2, M_PI/2);
-    trajectory_plan(grasp_pose_);
-    postgrasp_pose_ = grasp_pose_;
-    postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
+    kinova_comm.setCartesianPosition(grasp_pose_);
+    //postgrasp_pose_ = grasp_pose_;
+    //postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 }
 
 jaco_control::~jaco_control(){
@@ -284,7 +285,7 @@ jaco_control::~jaco_control(){
 //     gripper_action(msg->object[0].radius);
 // }
 
-// Skal ikke konverteres
+// DONE
 void jaco_control::vision_data_callback(const vision::Detection_arrayConstPtr &msg){
     for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
     {
@@ -294,7 +295,7 @@ void jaco_control::vision_data_callback(const vision::Detection_arrayConstPtr &m
     }
 };
 
-// ?????
+// DONE
 shapefitting::shape_data jaco_control::get_shape_data(vision::Detection DetectionData){
     shapefitting::shapefitting_positionGoal goal;
     goal.input = DetectionData;
@@ -355,7 +356,7 @@ shapefitting::shape_data jaco_control::get_shape_data(vision::Detection Detectio
     }
 }
 
-// Skal ikke konverteres
+// DONE
 void jaco_control::connect_itongue(){
     //Initiate connection with iTongue
     while (itongue_start_pub.getNumSubscribers() < 1 )
@@ -373,10 +374,8 @@ void jaco_control::connect_itongue(){
     itongue_start_pub.publish(data);
 }
 
-// Skal konverteres
+// DONE
 void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
-    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-    geometry_msgs::PoseStamped currentpose;
 
     //Count amount of same sensor number
     if (old_Sensor == msg->Sensor)
@@ -393,56 +392,58 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     //ROS_INFO_STREAM(currentpose.pose.position.y);
     //ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.z );
     //ROS_INFO_STREAM(currentpose.pose.position.z);
-
+    kinova::KinovaPose velocity;
+    velocity.ThetaX = 0;
+    velocity.ThetaY = 0;
+    velocity.ThetaZ = 0;
+    velocity.X = 0;
+    velocity.Y = 0;
+    velocity.Z = 0;
     //To prevent noise in data, sensor count must be above 4.
-    if(current_robot_transformStamped.transform.translation.x != 0 && Sensor_count > 4){
-        currentpose.header = current_robot_transformStamped.header;
-        currentpose.pose.orientation = current_robot_transformStamped.transform.rotation;
-        currentpose.pose.position.x = current_robot_transformStamped.transform.translation.x;
-        currentpose.pose.position.y = current_robot_transformStamped.transform.translation.y;
-        currentpose.pose.position.z = current_robot_transformStamped.transform.translation.z;
+    if(Sensor_count > 4){
+
         //Switch statement to move robot in relation to sensor
         switch (msg->Sensor)
         {
         case 17: //Z forwards  - away from oneself
         ROS_INFO("Z forwards  - away from oneself");
-            currentpose.pose.position.z = currentpose.pose.position.z - 0.05;
+            velocity.Z = -0.05;
             break;
         case 12: //Z backwards -- towards oneself
-            currentpose.pose.position.z = currentpose.pose.position.z + 0.05;
+            velocity.Z = 0.05;
             break; 
         case 11: // cross up-left
         ROS_INFO("cross up-left");
-            currentpose.pose.position.y = currentpose.pose.position.y + 0.05;
-            currentpose.pose.position.x = currentpose.pose.position.x - 0.05;
+            velocity.Y  = 0.05;
+            velocity.X  = -0.05;
             break;
         case 8:// Y upwards
         ROS_INFO("Y upwards");
-            currentpose.pose.position.y = currentpose.pose.position.y + 0.05;
+            velocity.Y = 0.05;
             break;
         case 13: // Cross up-right
         ROS_INFO("Cross up-right");
-            currentpose.pose.position.y = currentpose.pose.position.y + 0.05;
-            currentpose.pose.position.x = currentpose.pose.position.x + 0.05;
+            velocity.Y = 0.05;
+            velocity.X = 0.05;
             break;
         case 14: //x left
         ROS_INFO("x left");
-            currentpose.pose.position.x = currentpose.pose.position.x - 0.05;
+            velocity.X  = -0.05;
             break;
         case 15: //x right
         ROS_INFO("x right");
-            currentpose.pose.position.x = currentpose.pose.position.x + 0.05;
+            velocity.X = 0.05;
             break;
         case 16: // Cross down-left
-            currentpose.pose.position.y = currentpose.pose.position.y - 0.05;
-            currentpose.pose.position.x = currentpose.pose.position.x - 0.05;
+            velocity.Y = -0.05;
+            velocity.X = -0.05;
             break;
         case 9: // y downwards
-            currentpose.pose.position.y = currentpose.pose.position.y - 0.05;
+            velocity.Y = -0.05;
             break;
         case 18: // Cross down-right
-            currentpose.pose.position.y = currentpose.pose.position.y - 0.05;
-            currentpose.pose.position.x = currentpose.pose.position.x + 0.05;
+            velocity.Y = -0.05;
+            velocity.X = 0.05;
             break;
 
         default:
@@ -451,11 +452,20 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         // ROS_INFO_STREAM(currentpose.pose.position.x);
         // ROS_INFO_STREAM(currentpose.pose.position.y);
         // ROS_INFO_STREAM(currentpose.pose.position.z);
-        group_->setPoseTarget(currentpose);
-        group_->move();
-        bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
-        group_->execute(my_plan);
+        // group_->setPoseTarget(currentpose);
+        // group_->move();
+        // bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
+        // group_->execute(my_plan);
+        kinova_comm.setCartesianVelocities(velocity);
+    } else
+    {
+        // Set velocity to zero if no command is recived.
+        velocity.X = 0;
+        velocity.Y = 0;
+        velocity.Z = 0;
+        kinova_comm.setCartesianVelocities(velocity);
     }
+    
 }
 
 // Skal konverteres
@@ -471,15 +481,22 @@ void jaco_control::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goa
 
     if (1==1)
     {
+        //Calculate grasp positions. Must be KinovaPose type.
         pregrasp_pose_ = generate_gripper_align_pose(shapeData.pos, 0.1, 0, M_PI/2, M_PI/2);
         grasp_pose_= generate_gripper_align_pose(shapeData.pos, 0.03999, 0, M_PI/2, M_PI/2);
         //Generate and execute pregrasp trajectory
-        trajectory_plan(pregrasp_pose_);
+
+		kinova_comm.setCartesianPosition(pregrasp_pose_, 0, false);
+        
+        kinova_comm.setCartesianPosition(grasp_pose_, 0, false);
+		//kinova_api_.sendBasicTrajectory(pregrasp_pose_);
+
+		//trajectory_plan(pregrasp_pose_); //
+
         //Generate and execute grasp trajectory
-        trajectory_plan(grasp_pose_);
-        //Close gripper
-        spherical_grip(shapeData.radius*2);
-    }
+
+		spherical_grip(shapeData.radius*2);
+	}
     interface_as_.setSucceeded(interface_result_);
 };
 
@@ -534,7 +551,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     
 
     while (nh_.ok()){      
-        testemil();      
+        //testemil();      
 
         try{    
             //Send tf:
@@ -549,7 +566,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         catch (tf2::TransformException &ex) {
              //First call might not pass through, as the frame may not have existed, when the transform is requested the transform may not exist yet and fails the first time.
              //After the first transform all the transforms exist and the transforms should work.
-            ROS_WARN("%s",ex.what());
+            //ROS_WARN("%s",ex.what());
             ros::Duration(1.0).sleep();
             continue;
         }
