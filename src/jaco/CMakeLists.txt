@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   moveit_core
   actionlib
+  kinova_driver
   #ros_controllers
   #moveit_ros_planning
   moveit_ros_planning_interface
@@ -125,9 +126,8 @@ install(PROGRAMS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
-#  LIBRARIES jaco
+  #LIBRARIES kinova_driver
 CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_interface 
-#  DEPENDS system_lib
 )
 
 #find_package(Eigen REQUIRED)
@@ -141,7 +141,6 @@ CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_i
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  
 )
 
 ## Declare a C++ library
@@ -253,6 +252,10 @@ install(TARGETS scenario_full_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINA
 add_executable(scenario_semi_automatic src/scenario_semi_automatic.cpp)
 target_link_libraries(scenario_semi_automatic ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS scenario_semi_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(jaco_control src/jaco_control.cpp include/jaco_control.h)
+target_link_libraries(jaco_control ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
+install(TARGETS jaco_control DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 
 # add_executable(shapefitting src/shapefitting.cpp)

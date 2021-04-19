@@ -58,7 +58,7 @@ private:
     // Define the grasp position
     //void define_grasp_pose(geometry_msgs::Point pose_point);
     void itongue_callback(const jaco::RAWItongueOutConstPtr &msg);
-    //void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
+    void pos_callback(const jaco::obj_posConstPtr &msg); //Shape fitting
     void connect_itongue();
     void vision_data();
     //Get shape data from shapefitting node
