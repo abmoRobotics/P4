@@ -122,9 +122,11 @@ private:
     actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shape_data_client;
 
     //Physical robot
-    kinova_msgs::SetFingersPositionGoal finger_goal;
+    
     boost::recursive_mutex mutexer;
     kinova::KinovaComm kinova_comm; 
+
+    kinova_msgs::SetFingersPositionGoal finger_goal;
     
 
 
