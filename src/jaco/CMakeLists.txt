@@ -127,7 +127,7 @@ install(PROGRAMS
 catkin_package(
  INCLUDE_DIRS include
   #LIBRARIES kinova_driver
-CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_interface 
+CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_interface kinova_driver
 )
 
 #find_package(Eigen REQUIRED)
