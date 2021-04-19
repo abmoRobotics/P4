@@ -6,7 +6,7 @@ add_compile_options(-std=c++11)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+#      include(CPack)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -22,8 +22,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+#   set(CMAKE_CXX_STANDARD 11)
+#   set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -64,6 +64,7 @@ find_package(CGAL REQUIRED)
 add_message_files(
   FILES
   shape_data.msg
+  shape_data_array.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -76,6 +77,7 @@ add_message_files(
 ## Generate actions in the 'action' folder
 add_action_files(
   FILES
+  shapefitting_position_array.action
   shapefitting_position.action
 )
 
@@ -118,7 +120,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES shapefitting
   CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
@@ -132,6 +134,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
+  include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS} 
 )
