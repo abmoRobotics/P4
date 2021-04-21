@@ -6,7 +6,7 @@
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
 #include <moveit_msgs/DisplayTrajectory.h>
-
+#include <array>
 #include <moveit/planning_interface/planning_interface.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
@@ -113,6 +113,24 @@ private:
     geometry_msgs::TransformStamped obj_ee_transformStamped;
     geometry_msgs::TransformStamped Transform_camera, Transform_obj, object_Transform;
    
+
+    
+    struct ObjectInScene{
+        double distObject;                          // Afstand til objekt
+        geometry_msgs::Point directionVector;       //Vektorer med retning til de forskellige objekter (normaliseret)
+    };
+    
+
+
+
+    //Semi automation
+
+    // Input bevægelsesretning fra itongue
+    std::array<double,3> EndEffDirVec(geometry_msgs::Point iTongueDirection); //Enheds retnings vektor (skal normaliseres)
+
+
+    std::vector<ObjectInScene> ObjDirectionVectors(std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose);
+    
     
     int old_Sensor = 0;
     int Sensor_count;

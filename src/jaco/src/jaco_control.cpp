@@ -203,7 +203,6 @@ void jaco_control::add_target()
     ros::WallDuration(0.1).sleep();
 }
 
-
 // DONE
 kinova::KinovaPose jaco_control::generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z)
 {
@@ -227,7 +226,6 @@ kinova::KinovaPose jaco_control::generate_gripper_align_pose(geometry_msgs::Poin
     
     return pose_msg;
 }
-
 
 // DONE
 void jaco_control::define_cartesian_pose()
@@ -305,12 +303,16 @@ shapefitting::shape_data jaco_control::get_shape_data(vision::Detection Detectio
 
     if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
         ROS_INFO("SUCCESS");
-        shape_data_client.getResult()->object;
+        //shape_data_client.getResult()->object;
+
+        shapefitting::shape_data tf_Cam_Obj = shape_data_client.getResult()->object;
         //shapefitting::shape_data tf_Cam_Obj = shape_data_client.getResult()->object;
 
+
+
         //Initialize result  
-        shapefitting::shapefitting_positionActionResult result;
-        result.result.object = tf_Cam_Obj;
+        // shapefitting::shapefitting_positionActionResult result;
+        // result.result.object = tf_Cam_Obj;
         
         //Set up frames:
         //tf from end effector to camera
@@ -551,8 +553,11 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     
 
     while (nh_.ok()){      
-        //testemil();      
-
+        //testemil();  
+        vision::Detection tester;
+        tester.Class = 1;
+        tester.X1 = tester.X2 = tester.Y1 = tester.Y2 = 0;
+        ROS_INFO_STREAM(get_shape_data(tester));
         try{    
             //Send tf:
             static_broadcaster.sendTransform(Transform_camera);
@@ -572,8 +577,53 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         }
     }
 }
+       
+geometry_msgs::Point jaco_control::EndEffDirVec(geometry_msgs::Point iTongueDirection)
+{
+    geometry_msgs::Point EndEffDirVec, EndEffDirNormVec;
+    EndEffDirVec.x = iTongueDirection.x;
+    EndEffDirVec.y = iTongueDirection.y;
+    EndEffDirVec.z = iTongueDirection.z;
     
+    double lenghtA = sqrt((std::pow(EndEffDirVec.x,2))+(std::pow(EndEffDirVec.y,2))+(std::pow(EndEffDirVec.z,2)));
+    EndEffDirNormVec.x = EndEffDirVec.x/lenghtA;
+    EndEffDirNormVec.y = EndEffDirVec.y/lenghtA;
+    EndEffDirNormVec.z = EndEffDirVec.z/lenghtA;
+
+    return EndEffDirNormVec;
+
+} //Enheds retnings vektor (skal normaliseres)
+
+std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose){
+    std::vector<jaco_control::ObjectInScene> objectDataVec;
+
+
+    for (shapefitting::shape_data obj : objects){
+        jaco_control::ObjectInScene objectData;
+        geometry_msgs::Point vec;
+        //Bergn vektor mellem to punkter
+        vec.x = obj.pos.x - endEffPose.position.x;
+        vec.y = obj.pos.y - endEffPose.position.y;
+        vec.z = obj.pos.z - endEffPose.position.z;
+        //Beregn afstand
+        objectData.distObject = std::sqrt(std::pow(vec.x,2) + std::pow(vec.y,2) + std::pow(vec.z,2));
+        
+        //Normaliser retningsvector
+        vec.x = vec.x/objectData.distObject;
+        vec.y = vec.y/objectData.distObject;
+        vec.z = vec.z/objectData.distObject;
+
+        //Save vector
+        objectData.directionVector = vec;
+
+        //Push til vector
+        objectDataVec.push_back(objectData);
+    }
     
+    return objectDataVec;
+
+}
+
 void jaco_control::testemil(){
     ROS_INFO("BEGYNDT");
     // vision::Detection DetectionData;
@@ -650,7 +700,6 @@ void jaco_control::testemil(){
     // result.result.object = Shape_Data_Test;
     
 }
-
 
 int main(int argc, char **argv)
 {

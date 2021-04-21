@@ -268,12 +268,12 @@ shapefitting::shape_data jaco_trajectory::get_shape_data(vision::Detection Detec
 
     if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
         ROS_INFO("SUCCESS");
-        shape_data_client.getResult()->object;
-        //shapefitting::shape_data tf_Cam_Obj = shape_data_client.getResult()->object;
-
+        //shape_data_client.getResult()->object;
+        shapefitting::shape_data tf_Cam_Obj = shape_data_client.getResult()->object;
+        //tf_Cam_Obj.object_class.data = "Ver";
         //Initialize result  
-        shapefitting::shapefitting_positionActionResult result;
-        result.result.object = tf_Cam_Obj;
+        // shapefitting::shapefitting_positionActionResult result;
+        // result.result.object = tf_Cam_Obj;
         
         //Set up frames:
         //tf from end effector to camera
@@ -487,8 +487,11 @@ jaco_trajectory::jaco_trajectory(ros::NodeHandle &nh):
     
 
     while (nh_.ok()){      
-        testemil();      
-
+        //testemil();      
+        vision::Detection tester;
+        tester.Class = 1;
+        tester.X1 = tester.X2 = tester.Y1 = tester.Y2 = 0;
+        ROS_INFO_STREAM(get_shape_data(tester));
         try{    
             //Send tf:
             static_broadcaster.sendTransform(Transform_camera);
