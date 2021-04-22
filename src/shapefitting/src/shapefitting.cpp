@@ -390,7 +390,7 @@ Efficient_ransac::Shape_range PerformShapeDetection(Efficient_ransac *ransac, Pw
     // Set Ransac parameters
     CGAL::Shape_detection_3::Efficient_RANSAC<Traits>::Parameters parameters;
     parameters.probability = 0.005;         // Sets probability to miss the largest primitive at each iteration.
-    parameters.min_points = 0.51*input.size();            // Min amount of points within each detected cylinder
+    parameters.min_points = 0.65*input.size();            // Min amount of points within each detected cylinder
     parameters.epsilon = 0.005;             // Maximum acceptable euclidian distance between a point and a shape
     parameters.cluster_epsilon = 0.01;     // Maximum acceptable euclidian distance between points which are assumed to be neighbors
     parameters.normal_threshold = 0.8;      // Sets maximum normal deviation. // 0.9 < dot(surface_normal, point_normal); 
