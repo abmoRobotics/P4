@@ -116,21 +116,33 @@ private:
 
     
     struct ObjectInScene{
-        double distObject;                          // Afstand til objekt
+        double dist;                          // Afstand til objekt
         geometry_msgs::Point directionVector;       //Vektorer med retning til de forskellige objekter (normaliseret)
+        geometry_msgs::Point position;
     };
     
 
-
+    
 
     //Semi automation
 
     // Input bevægelsesretning fra itongue
-    std::array<double,3> EndEffDirVec(geometry_msgs::Point iTongueDirection); //Enheds retnings vektor (skal normaliseres)
-
+    geometry_msgs::Point EndEffDirVec(geometry_msgs::Point iTongueDirection); //Enheds retnings vektor (skal normaliseres)
 
     std::vector<ObjectInScene> ObjDirectionVectors(std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose);
     
+    // Function that determines level of automation
+    geometry_msgs::Point assistiveControl(geometry_msgs::Point iTongueDir, std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose);
+
+    // Eventuelt PID controller til at styre retning
+
+    // Beregn trajectory retuner hastighed og retning på hastighed
+
+    // geometry_msgs::Point trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose);
+    
+    
+
+
     
     int old_Sensor = 0;
     int Sensor_count;

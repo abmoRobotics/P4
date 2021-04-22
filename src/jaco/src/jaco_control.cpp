@@ -451,13 +451,15 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         default:
             break;
         }
-        // ROS_INFO_STREAM(currentpose.pose.position.x);
+        // ROS_INFO_STREAM(currentpose.pose.position.x)
         // ROS_INFO_STREAM(currentpose.pose.position.y);
         // ROS_INFO_STREAM(currentpose.pose.position.z);
         // group_->setPoseTarget(currentpose);
         // group_->move();
         // bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
         // group_->execute(my_plan);
+        kinova::KinovaPose ee_pose; //end effectpr åpse
+        kinova_comm.getCartesianPosition(ee_pose);
         kinova_comm.setCartesianVelocities(velocity);
     } else
     {
@@ -575,6 +577,8 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             ros::Duration(1.0).sleep();
             continue;
         }
+        //Check if previous goal is finished
+        //if Finished send new goal using sendGoal(goal,doneCb,activeCb,feedbackCb)
     }
 }
        
@@ -606,15 +610,16 @@ std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::
         vec.y = obj.pos.y - endEffPose.position.y;
         vec.z = obj.pos.z - endEffPose.position.z;
         //Beregn afstand
-        objectData.distObject = std::sqrt(std::pow(vec.x,2) + std::pow(vec.y,2) + std::pow(vec.z,2));
+        objectData.dist = std::sqrt(std::pow(vec.x,2) + std::pow(vec.y,2) + std::pow(vec.z,2));
         
         //Normaliser retningsvector
-        vec.x = vec.x/objectData.distObject;
-        vec.y = vec.y/objectData.distObject;
-        vec.z = vec.z/objectData.distObject;
+        vec.x = vec.x/objectData.dist;
+        vec.y = vec.y/objectData.dist;
+        vec.z = vec.z/objectData.dist;
 
         //Save vector
         objectData.directionVector = vec;
+        objectData.position = obj.pos;
 
         //Push til vector
         objectDataVec.push_back(objectData);
@@ -623,6 +628,103 @@ std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::
     return objectDataVec;
 
 }
+
+geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point iTongueDir, std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose)
+{
+    std::vector<float> Assist; 
+
+    geometry_msgs::Point EndEffDir = EndEffDirVec(iTongueDir);
+
+    std::vector<jaco_control::ObjectInScene> ObjDirVec = ObjDirectionVectors(objects,endEffPose);
+
+    for(size_t i = 0; i < ObjDirVec.size(); i++)
+    {
+        float Angle = acos((iTongueDir.x * ObjDirVec[i].directionVector.x) + (iTongueDir.y * ObjDirVec[i].directionVector.y) + (iTongueDir.z * ObjDirVec[i].directionVector.z) * M_PI / 180);
+        float dist = ObjDirVec[i].dist;
+        //Find på nogle parametre
+        float Assitability = dist * dist * Angle; // Skal måske justeres
+        Assist.push_back(Assitability);
+    }
+    int id = *min_element(Assist.begin(), Assist.end());//HER
+    double thresh_auto = 0.2;
+    double thresh_semi = 0.5;
+    geometry_msgs::Point newTraj;
+    if (Assist[id] < thresh_auto) // full auto den har du lavet
+    {
+
+        
+        std::cout << "Going towards object " << id << std::endl;
+        newTraj.x = ObjDirVec[id].position.x;
+        newTraj.y = ObjDirVec[id].position.y;
+        newTraj.z = ObjDirVec[id].position.z;
+
+    }
+    else if (Assist[id] > thresh_auto && Assist[id] < thresh_semi) // semi auto 
+    {
+        // beregn percent assistance
+        double p_manual = Assist[id]-thresh_auto/(thresh_semi-thresh_auto);
+        double p_assist = 1-p_manual;
+
+        // Vægt manual hastighed 
+        newTraj.x = EndEffDir.x*p_manual;
+        newTraj.y = EndEffDir.y*p_manual;
+        newTraj.z = EndEffDir.z*p_manual;
+
+        // Vægt auto hastighed
+        newTraj.x = newTraj.x + ObjDirVec[id].position.x*p_assist;
+        newTraj.y = newTraj.y + ObjDirVec[id].position.y*p_assist;
+        newTraj.z = newTraj.z + ObjDirVec[id].position.z*p_assist;
+        
+    }else // full manual
+    {
+        std::cout << "not close enough to assist" << std::endl;
+        newTraj.x = EndEffDir.x;
+        newTraj.y = EndEffDir.y;
+        newTraj.z = EndEffDir.z;
+    }
+    
+    
+    // Juster vektorer afhængigt af hastighed. 
+    double vel = 0.05; // m/s
+    newTraj.x = newTraj.x * vel;
+    newTraj.y = newTraj.y * vel;
+    newTraj.z = newTraj.z * vel;
+
+    return newTraj;
+}
+
+// geometry_msgs::Point jaco_control::trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose){
+//     std::array<double,3> startPos {endEffPose.position.x, endEffPose.position.y, endEffPose.position.z};
+//     std::array<double,3> endPos {obj.position.x, obj.position.y, obj.position.z};
+//     double vel = 5.0; // m/s
+//     double tf = obj.dist/vel;
+    
+    
+//     std::array<double,3> a0 = startPos; // start pos
+//     std::array<double,3> a1 {0,0,0} ; // start vel
+//     std::array<double,3> a2;
+//     std::array<double,3> a3;
+//     for (size_t i = 0; i < startPos.size(); i++)
+//     {
+//         a2[i] = 3/(tf*tf)*(endPos[i]-startPos[i]);
+//     }
+//     for (size_t i = 0; i < startPos.size(); i++)
+//     {
+//         a3[i] = -2/(tf*tf)*(endPos[i]-startPos[i]);
+//     }
+    
+//     double tf = 0.5;
+//     // calculate pos 0.5 sec in the future
+//     std::array<double,3> futurePos;
+//     for (size_t i = 0; i < futurePos.size(); i++)
+//     {
+//         futurePos[i] = a0[i]+a1[i]*tf+a2[i]*std::pow(tf,2)+a3[i]*std::pow(tf,3);
+//     }
+    
+//     // calculate velocity
+    
+// }
+    
 
 void jaco_control::testemil(){
     ROS_INFO("BEGYNDT");
