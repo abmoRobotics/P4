@@ -237,9 +237,15 @@ void jaco_control::define_cartesian_pose()
     a.z = 0.13/2;
     // generate_pregrasp_pose(double dist, double azimuth, double polar, double rot_gripper_z)
     grasp_pose_= generate_gripper_align_pose(a, 0.03999, 0, M_PI/2, M_PI/2);
-    kinova_comm.setCartesianPosition(pregrasp_pose_);
+    if (robot_connected_)
+    {
+    //kinova_comm.setCartesianPosition(pregrasp_pose_);
+    }
     pregrasp_pose_ = generate_gripper_align_pose(a, 0.1, 0, M_PI/2, M_PI/2);
-    kinova_comm.setCartesianPosition(grasp_pose_);
+    if (robot_connected_)
+    {
+    //kinova_comm.setCartesianPosition(grasp_pose_);
+    }
     //postgrasp_pose_ = grasp_pose_;
     //postgrasp_pose_.pose.position.z = grasp_pose_.pose.position.z + 0.05;
 }
@@ -285,6 +291,7 @@ jaco_control::~jaco_control(){
 
 // DONE
 void jaco_control::vision_data_callback(const vision::Detection_arrayConstPtr &msg){
+    visionDataArray.msg.clear();
     for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
     {
         vision::Detection DetectionData;
@@ -299,7 +306,7 @@ shapefitting::shape_data jaco_control::get_shape_data(vision::Detection Detectio
     goal.input = DetectionData;
     shape_data_client.sendGoal(goal);
     shape_data_client.waitForResult(ros::Duration(2.0));
-    ROS_INFO("Get shape data function");
+    ROS_INFO("Get shape data function1");
 
     if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
         ROS_INFO("SUCCESS");
@@ -459,15 +466,21 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         // bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
         // group_->execute(my_plan);
         kinova::KinovaPose ee_pose; //end effectpr åpse
-        kinova_comm.getCartesianPosition(ee_pose);
-        kinova_comm.setCartesianVelocities(velocity);
+        if (robot_connected_)
+        {
+            //kinova_comm.getCartesianPosition(ee_pose);
+            //kinova_comm.setCartesianVelocities(velocity);
+        }
     } else
     {
         // Set velocity to zero if no command is recived.
         velocity.X = 0;
         velocity.Y = 0;
         velocity.Z = 0;
-        kinova_comm.setCartesianVelocities(velocity);
+        if (robot_connected_)
+        {
+        //kinova_comm.setCartesianVelocities(velocity);
+        }
     }
     
 }
@@ -478,7 +491,7 @@ void jaco_control::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goa
     interface_result_.success = true;
     
     //Get position and shape of object by calling get_shape_data with goalObject.
-    shapeData = get_shape_data(goal->goalObject);
+    //shapeData = get_shape_data(goal->goalObject);
     ROS_INFO("Shapedata received");
 
     //Check if object is a cylinder. Use shapeData to 
@@ -490,9 +503,18 @@ void jaco_control::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goa
         grasp_pose_= generate_gripper_align_pose(shapeData.pos, 0.03999, 0, M_PI/2, M_PI/2);
         //Generate and execute pregrasp trajectory
 
-		kinova_comm.setCartesianPosition(pregrasp_pose_, 0, false);
+        if (robot_connected_)
+        {
+            //kinova_comm.setCartesianPosition(pregrasp_pose_, 0, false);
         
-        kinova_comm.setCartesianPosition(grasp_pose_, 0, false);
+            //kinova_comm.setCartesianPosition(grasp_pose_, 0, false);
+        } else
+        {
+            ROS_INFO_STREAM("Robot not connected");
+        }
+        
+        
+
 		//kinova_api_.sendBasicTrajectory(pregrasp_pose_);
 
 		//trajectory_plan(pregrasp_pose_); //
@@ -504,13 +526,94 @@ void jaco_control::IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goa
     interface_as_.setSucceeded(interface_result_);
 };
 
+void jaco_control::setCameraPos(){
+        //tf from end effector to camera
+        Transform_camera.header.stamp = ros::Time::now();
+        Transform_camera.header.frame_id = "j2n6s300_end_effector";
+        Transform_camera.child_frame_id = "Realsense_Camera";
+        Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
+        Transform_camera.transform.translation.y = 0;
+        Transform_camera.transform.translation.z = -0.182;
+        tf2::Quaternion q1;
+            q1.setRPY(-0.26, 0, M_PI/2);
+        Transform_camera.transform.rotation.x = q1.x();
+        Transform_camera.transform.rotation.y = q1.y();
+        Transform_camera.transform.rotation.z = q1.z();
+        Transform_camera.transform.rotation.w = q1.w();
+}
+
+void jaco_control::shapefitting_activeCb(){
+    ROS_INFO("Goal just went active");
+}
+
+void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_position_arrayResultConstPtr& result){
+    // Clear previous object position data
+    tf_cam_to_object.clear();
+    geometry_msgs::TransformStamped Transform_obj;
+    ROS_INFO_STREAM("shapefitting_doneCB");
+    // Map every object to the camera, since the position is measured from the camera
+    for (size_t i = 0; i < result->object.size(); i++)
+    {
+        ROS_INFO_STREAM("shapefitting_doneCB_LOOP");
+        //tf from camera to object
+        Transform_obj.header.stamp = ros::Time::now();
+        Transform_obj.header.frame_id = "Realsense_Camera";
+        Transform_obj.child_frame_id = result->object[i].object_class.data + "object";
+        Transform_obj.transform.translation.x = result->object[i].pos.x;
+        Transform_obj.transform.translation.y = result->object[i].pos.y;
+        Transform_obj.transform.translation.z = result->object[i].pos.z;
+        tf2::Quaternion q2;
+            //q2.setRPY(0,0,0);
+        q2.setRPY(result->object[i].orientation.x, result->object[i].orientation.y, result->object[i].orientation.z);
+        Transform_obj.transform.rotation.x = q2.x();
+        Transform_obj.transform.rotation.y = q2.y();
+        Transform_obj.transform.rotation.z = q2.z();
+        Transform_obj.transform.rotation.w = q2.w();
+
+        tf_cam_to_object.push_back(Transform_obj);
+    }
+    
+    
+    
+}
+// bool goalActive =0;
+// void activeCb(){
+//     goalActive = 1;
+//     ROS_INFO("Goal just went active");
+// }
+
+// void doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_position_arrayResultConstPtr& result){
+//     // Clear previous object position data
+//     geometry_msgs::TransformStamped Transform_obj;
+//     ROS_INFO_STREAM("shapefitting_doneCB");
+//    goalActive = false;
+    
+    
+    
+// }
+
+// void feedbackCb(const shapefitting::shapefitting_position_arrayFeedbackConstPtr& feedback){
+//     ROS_INFO("Got Feedback of length ");
+// }
+
+
+void jaco_control::doStuff(){}
+
+typedef actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction> Client;
+
 jaco_control::jaco_control(ros::NodeHandle &nh): 
     nh_(nh),
     shape_data_client("get_shape",true),
     interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_control::IF_full_auto_execute, this, _1), false),
-    kinova_comm(nh_,mutexer,true,"j2n6s300")
+    //kinova_comm(nh_,mutexer,true,"j2n6s300"),
+    shapefitting_ac("get_shape_array",true)
 {
+    
+    
     interface_as_.start();
+    ROS_INFO("Waiting for action server to start.");
+    shapefitting_ac.waitForServer();
+    ROS_INFO("Waiting for action server to start.");
     
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
     nh_.param<bool>("/robot_connected",robot_connected_,true);
@@ -525,9 +628,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     
     //group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
     //kinova::KinovaPose::CartesianInfo a;
-    //kinova_comm.setCartesianPosition
-    
-    //kinova_comm.setCartesianVelocities()
+
      finger_client_ = new actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>
              ("/j2n6s300_driver/fingers_action/finger_positions", false);
      while(robot_connected_ && !finger_client_->waitForServer(ros::Duration(5.0))){
@@ -551,29 +652,81 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     ros::Rate rate(10.0);
 
 
-    
-    
 
-    while (nh_.ok()){      
-        //testemil();  
-        vision::Detection tester;
-        tester.Class = 1;
-        tester.X1 = tester.X2 = tester.Y1 = tester.Y2 = 0;
-        ROS_INFO_STREAM(get_shape_data(tester));
+
+    while (nh_.ok()){     
+         
+        
+        // shapefitting::shapefitting_position_arrayGoal goal;
+        // vision::Detection data;
+        // data.X1 = 0.654125;
+        // data.X2 = 0.928125;
+        // data.Y1 = 0.191667;
+        // data.Y2 = 0.991667;
+        // data.Class = 10;
+
+        
+
+        //Update camera with respect to end effector
+        setCameraPos();
+        shapefitting::shapefitting_position_arrayGoal goal;
+
+        for (vision::Detection data : visionDataArray.msg){
+            goal.input.msg.push_back(data);
+        }
+
+
+        actionlib::SimpleClientGoalState shapefitting_ac_state = shapefitting_ac.getState();
+   
+        
+        if (shapefitting_ac_state.isDone())
+        {
+                //shapefitting_ac.sendGoal(goal, &doneCb, &activeCb, &feedbackCb)
+            if (visionDataArray.msg.size() > 0)
+            {
+                    shapefitting_ac.sendGoal(goal,
+                    boost::bind(&jaco_control::shapefitting_doneCb,this,_1,_2),
+                        boost::bind(&jaco_control::shapefitting_activeCb,this),
+            //actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction>::SimpleActiveCallback(),
+            actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction>::SimpleFeedbackCallback());
+            }
+        }
+
+        // if (visionDataArray.msg.size() > 0)
+        // {
+        // //            shapefitting_ac.sendGoal(goal,
+        // //            boost::bind(&jaco_control::shapefitting_doneCb,this,_1,_2),
+        // //             boost::bind(&jaco_control::shapefitting_activeCb,this),
+        // //  //actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction>::SimpleActiveCallback(),
+        // //  actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction>::SimpleFeedbackCallback());
+        // }
+        
+
+
+        
         try{    
-            //Send tf:
+            //Send transforms to /tf:
             static_broadcaster.sendTransform(Transform_camera);
-            br.sendTransform(Transform_obj);  
-            obj_ee_transformStamped = tfBuffer.lookupTransform("world", tf_Cam_Obj.object_class.data,
-                                    ros::Time(0),ros::Duration(3.0));
+            for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
+                ROS_INFO_STREAM("JAJA");
+                br.sendTransform(camData);
+            }
+
 
             current_robot_transformStamped = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
                                     ros::Time(0),ros::Duration(3.0));
+            
+            // Transform each camData into world frame and save
+            for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
+                obj_ee_array.push_back(tfBuffer.lookupTransform("world", camData.child_frame_id,
+                                    ros::Time(0),ros::Duration(3.0)));
+            }
+
         }
         catch (tf2::TransformException &ex) {
              //First call might not pass through, as the frame may not have existed, when the transform is requested the transform may not exist yet and fails the first time.
              //After the first transform all the transforms exist and the transforms should work.
-            //ROS_WARN("%s",ex.what());
+            ROS_WARN("%s",ex.what());
             ros::Duration(1.0).sleep();
             continue;
         }
@@ -581,7 +734,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         //if Finished send new goal using sendGoal(goal,doneCb,activeCb,feedbackCb)
     }
 }
-       
+
 geometry_msgs::Point jaco_control::EndEffDirVec(geometry_msgs::Point iTongueDirection)
 {
     geometry_msgs::Point EndEffDirVec, EndEffDirNormVec;
@@ -788,7 +941,7 @@ void jaco_control::testemil(){
     //     ROS_INFO("SUCCESS");
     // }
 
-    // shapefitting::shape_data Shape_Data_Test;
+    // shapefitting::shape_data Shakinova_commpe_Data_Test;
     // Shape_Data_Test.object_class.data = "Sodavand";
     // Shape_Data_Test.radius = 0.12;
     // Shape_Data_Test.pos.x = 0.2;
@@ -803,16 +956,19 @@ void jaco_control::testemil(){
     
 }
 
+
+
+
+
 int main(int argc, char **argv)
 {
     
     ros::init(argc, argv, "test");
     ros::NodeHandle node;
-
     ros::AsyncSpinner spinner(4);
     spinner.start();
-    
     jaco_control Jaco(node);
+    //Jaco.doStuff();
     //ros::spin();
     ros::waitForShutdown();
     return 0;

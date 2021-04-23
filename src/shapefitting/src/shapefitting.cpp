@@ -1,5 +1,6 @@
 #include <shapefitting.h>
 
+
 typedef actionlib::SimpleActionServer<shapefitting::shapefitting_positionAction> ShapeFittingActionServer;
 typedef actionlib::SimpleActionServer<shapefitting::shapefitting_position_arrayAction> ShapeFittingArrayActionServer;
 
@@ -70,6 +71,7 @@ void single(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFit
                 // Proceed with the next detected shape.
                 it++;
             }
+
             as->setSucceeded();
         }
     } else {
@@ -83,11 +85,10 @@ void single(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFit
 
 void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, ShapeFittingArrayActionServer* as){
     // Initiate Return variables
-    shapefitting::shapefitting_position_arrayActionResult resultreturn;
-
+    shapefitting::shapefitting_position_arrayResult resultreturn;
+    shapefitting::shape_data result_temp;
     // Initiate the Realsense sensor and pipeline
     rs2::pipeline pipe = InitiateRealsense();
-
     // Get depth data from pipeline
     Mat depth_mat = GetDepthData(&pipe);
 
@@ -100,7 +101,6 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
 
         // Convert depth_mat to Pwn_list:
         Pwn_list points = DepthMat_to_Pwn_list(ROI);
-
         if(points.size() > 1){
             //Estimate point normals
             Pwn_vector vector = EstimateNormals(points, 18);
@@ -135,16 +135,29 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
                             << radius;
                         std::string INFO = InfoStream.str();
                         ROS_INFO_STREAM(INFO);    
+                    result_temp.pos.x = axis.point().x();
+                    result_temp.pos.y = axis.point().y();
+                    result_temp.pos.z = axis.point().z();
 
-                        resultreturn.result.object.msg[i].pos.x;
-                        resultreturn.result.object.msg[i].pos.x;
-                        resultreturn.result.object.msg[i].pos.x;
+                    result_temp.orientation.x = axis.direction().dx();
+                    result_temp.orientation.y = axis.direction().dy();
+                    result_temp.orientation.z = axis.direction().dz();
 
-                        resultreturn.result.object.msg[i].orientation.x;
-                        resultreturn.result.object.msg[i].orientation.x;
-                        resultreturn.result.object.msg[i].orientation.x;
-                        resultreturn.result.object.msg[i].radius;     
+                    result_temp.radius = radius;
+                        // resultreturn.object[i].pos.x;
+                        // resultreturn.object[i].pos.x;
+                        // resultreturn.object[i].pos.x;
 
+                        // resultreturn.object[i].orientation.x;
+                        // resultreturn.object[i].orientation.x;
+                        // resultreturn.object[i].orientation.x;
+                        // resultreturn.object[i].radius;     
+                        ROS_INFO_STREAM(element.X1);
+                        resultreturn.object.push_back(result_temp);
+                        ROS_INFO_STREAM(element.X2);
+                        ROS_INFO_STREAM(element.Y1);
+                        ROS_INFO_STREAM(element.Y2);
+                    //ROS_INFO_STREAM(resultreturn.object[i].radius);
                                                        
                     }
                     // Proceed with the next detected shape.
@@ -157,7 +170,8 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
             ROS_WARN("Pointcloud empty");            
         }        
     }
-    as->setSucceeded();
+    ROS_INFO_STREAM("DONE");
+    as->setSucceeded(resultreturn);
     
 }
 
@@ -217,8 +231,8 @@ Pwn_list DepthMat_to_Pwn_list(Mat DepthMat)
     Point_with_normal Data; //Data to pushback in Pwn_list
   
     // // For visualization with Mathlab function
-    // std::ofstream myfile;
-    // myfile.open(location);
+     std::ofstream myfile;
+     myfile.open("tests.txt");
 
     // For all pixels in depth-image(+= other than 1 to export fewer points -> Fewer calculations -> faster runtime)
     for (int x = 0; x < DepthMat.cols; x+=2) {
@@ -254,12 +268,12 @@ Pwn_list DepthMat_to_Pwn_list(Mat DepthMat)
                 Data.second = {0,0,0};// Normalvektor til punktet
                 Out.push_back(Data);
 
-                // myfile << x << " " << y << " " << Data.first << "\n" ;
+                 myfile << x << " " << y << " " << Data.first << "\n" ;
             }
         }
     }
 
-    // myfile.close();
+     myfile.close();
 
     return Out;
 }
@@ -329,7 +343,7 @@ Pwn_vector VectorTest() {
 rs2::pipeline InitiateRealsense(){
     // Create config object, and enable stream of depth data.
     rs2::config cfg;
-    cfg.enable_stream(RS2_STREAM_DEPTH, 480, 270, RS2_FORMAT_Z16, 90);
+    cfg.enable_stream(RS2_STREAM_DEPTH, 480, 270, RS2_FORMAT_Z16, 60);
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Start streaming with default recommended configuration
@@ -361,7 +375,7 @@ cv::Mat IsolateROI(Mat depth_mat, double X1, double X2, double Y1, double Y2){
                     Scalar(255),FILLED); 
     //Keep only depths where Blob was white
     depth_mat = Overlap(depth_mat, Blob);
-
+    cv::imshow("s", Blob);
     return depth_mat;
 }
 
@@ -389,11 +403,11 @@ Efficient_ransac::Shape_range PerformShapeDetection(Efficient_ransac *ransac, Pw
 
     // Set Ransac parameters
     CGAL::Shape_detection_3::Efficient_RANSAC<Traits>::Parameters parameters;
-    parameters.probability = 0.005;         // Sets probability to miss the largest primitive at each iteration.
-    parameters.min_points = 0.65*input.size();            // Min amount of points within each detected cylinder
-    parameters.epsilon = 0.005;             // Maximum acceptable euclidian distance between a point and a shape
-    parameters.cluster_epsilon = 0.01;     // Maximum acceptable euclidian distance between points which are assumed to be neighbors
-    parameters.normal_threshold = 0.8;      // Sets maximum normal deviation. // 0.9 < dot(surface_normal, point_normal); 
+    parameters.probability = 0.005;             // Sets probability to miss the largest primitive at each iteration.
+    parameters.min_points = 0.35*input.size();   // Min amount of points within each detected cylinder
+    parameters.epsilon = 0.005;                 // Maximum acceptable euclidian distance between a point and a shape
+    parameters.cluster_epsilon = 0.01;          // Maximum acceptable euclidian distance between points which are assumed to be neighbors
+    parameters.normal_threshold = 0.85;          // Sets maximum normal deviation. // 0.9 < dot(surface_normal, point_normal); 
 
     // Detect registered shapes with the customized parameters.
     ransac->detect(parameters);

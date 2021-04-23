@@ -16,7 +16,7 @@
 
 #include <math.h> 
 #include <geometric_shapes/solid_primitive_dims.h>
-
+#include <string>
 #include <jaco/RAWItongueOut.h>
 #include <jaco/position.h>
 #include <jaco/obj_pos.h>
@@ -35,7 +35,10 @@
 #include <shapefitting/shapefitting_positionAction.h>
 #include <vision/Detection.h>
 #include <vision/Detection_array.h>
+
 #include <actionlib/client/simple_action_client.h>
+#include <shapefitting/shapefitting_position_arrayAction.h>
+
 #include <shapefitting/shape_data.h>
 #include <jaco/IF_fullAutoAction.h>
 #include <actionlib/server/simple_action_server.h>
@@ -71,8 +74,10 @@ private:
     void IF_full_auto_execute(const jaco::IF_fullAutoGoalConstPtr &goal);
     //void semi_autonomous_control(); Not implemented
     //void full_autonomous_control();
+    void setCameraPos();
     void testemil();
-    
+    void shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_position_arrayResultConstPtr& result);
+    void shapefitting_activeCb();
 
     kinova::KinovaPose generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
@@ -111,8 +116,10 @@ private:
     tf2_ros::StaticTransformBroadcaster static_broadcaster;
     tf2_ros::TransformBroadcaster br;
     geometry_msgs::TransformStamped obj_ee_transformStamped;
+    std::vector<geometry_msgs::TransformStamped> obj_ee_array;
     geometry_msgs::TransformStamped Transform_camera, Transform_obj, object_Transform;
    
+    actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction> shapefitting_ac;
 
     
     struct ObjectInScene{
@@ -142,7 +149,7 @@ private:
     
     
 
-
+    std::vector<geometry_msgs::TransformStamped> tf_cam_to_object;
     
     int old_Sensor = 0;
     int Sensor_count;
@@ -156,7 +163,7 @@ private:
     //Physical robot
     
     boost::recursive_mutex mutexer;
-    kinova::KinovaComm kinova_comm; 
+    // kinova::KinovaComm kinova_comm; 
 
     kinova_msgs::SetFingersPositionGoal finger_goal;
     kinova::KinovaAPI kinova_api_;
@@ -170,7 +177,7 @@ public:
     geometry_msgs::PoseStamped joint_global_frame_pose_stamped;
     geometry_msgs::PoseStamped joint_pose_stamped;
     tf2_ros::Buffer tf_;
-
+    void doStuff();
     //std::vector<jaco::position> obj_vec;
 
     

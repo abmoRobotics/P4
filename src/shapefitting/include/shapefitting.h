@@ -7,6 +7,7 @@
 
 #include <std_msgs/String.h>
 #include <actionlib/server/simple_action_server.h>
+#include <shapefitting/shape_data.h>
 #include <shapefitting/shapefitting_positionAction.h>
 #include <shapefitting/shapefitting_position_arrayAction.h>
 
@@ -19,19 +20,19 @@
 #include <exception>
 
 // For Shape fitting
-#include <CGAL/property_map.h>
-#include <CGAL/IO/read_xyz_points.h>
-#include <CGAL/Point_with_normal_3.h>
+#include <CGAL/property_map.h>                  
+#include <CGAL/IO/read_xyz_points.h>            
+#include <CGAL/Point_with_normal_3.h>           
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Shape_detection_3/Efficient_RANSAC.h>
-#include <CGAL/Shape_detection_3.h>
+#include <CGAL/Shape_detection_3.h>             
 
 // For calculating Point normals
-#include <CGAL/compute_average_spacing.h>
-#include <CGAL/pca_estimate_normals.h>
-#include <CGAL/mst_orient_normals.h>
-#include <CGAL/property_map.h>
-#include <list>
+#include <CGAL/compute_average_spacing.h>       
+#include <CGAL/pca_estimate_normals.h>          
+#include <CGAL/mst_orient_normals.h>            
+#include <CGAL/property_map.h>                  
+#include <list>                                 
 
 using namespace cv;
 using namespace rs2;
@@ -57,6 +58,7 @@ typedef std::list<Point_with_normal>                        Pwn_list;
 typedef Kernel::FT                                          FT;
 
 Mat Overlap(Mat depth, Mat filter);
+
 Pwn_list DepthMat_to_Pwn_list(Mat DepthMat);
 Pwn_vector List2Vector(Pwn_list list);
 static cv::Mat depth_frame_to_meters( const rs2::depth_frame & f );

@@ -149,12 +149,16 @@ def detect(save_img=False):
                         #Coords = int(CoordsString)
                         #CoordsAr = np.int16(Coords)
                         #print(IntNumpy)
-
-                        DetectionData.X1 = IntNumpy[0]
-                        DetectionData.Y1 = IntNumpy[1]
-                        DetectionData.X2 = IntNumpy[2]
-                        DetectionData.Y2 = IntNumpy[3]
-                        
+                        w = 640
+                        h = 480
+                        DetectionData.X1 = IntNumpy[0]/w
+                        DetectionData.Y1 = IntNumpy[1]/h
+                        DetectionData.X2 = IntNumpy[2]/w
+                        DetectionData.Y2 = IntNumpy[3]/h
+                        print(DetectionData.X1)
+                        print(DetectionData.X2)
+                        print(DetectionData.Y1)
+                        print(DetectionData.Y2)
                         DetectionArray.msg.append(DetectionData)
                         
                         
@@ -217,8 +221,8 @@ if __name__ == '__main__':
     parser.add_argument('--project', default='runs/detect', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('__name')
-    parser.add_argument('__log')
+    #parser.add_argument('__name')
+    #parser.add_argument('__log')
     opt = parser.parse_args()
     print(opt)
     check_requirements(exclude=('pycocotools', 'thop'))
