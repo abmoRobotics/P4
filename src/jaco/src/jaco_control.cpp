@@ -657,25 +657,30 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     while (nh_.ok()){     
          
         
-        // shapefitting::shapefitting_position_arrayGoal goal;
-        // vision::Detection data;
-        // data.X1 = 0.654125;
-        // data.X2 = 0.928125;
-        // data.Y1 = 0.191667;
-        // data.Y2 = 0.991667;
-        // data.Class = 10;
+        shapefitting::shapefitting_position_arrayGoal goal;
+        vision::Detection data;
+        // data.X1 = 0.492;
+        // data.X2 = 0.634;
+        // data.Y1 = 0.207;
+        // data.Y2 = 0.823;
+         data.X1 = 0.492;
+        data.X2 = 0.634;
+        data.Y1 = 0.3;
+        data.Y2 = 0.8;
+        data.Class = 10;
 
         
 
         //Update camera with respect to end effector
         setCameraPos();
-        shapefitting::shapefitting_position_arrayGoal goal;
+        //shapefitting::shapefitting_position_arrayGoal goal;
 
-        for (vision::Detection data : visionDataArray.msg){
-            goal.input.msg.push_back(data);
-        }
+        // for (vision::Detection data : visionDataArray.msg){
+        //     goal.input.msg.push_back(data);
+        // }
 
 
+        goal.input.msg.push_back(data);
         actionlib::SimpleClientGoalState shapefitting_ac_state = shapefitting_ac.getState();
    
         

@@ -98,6 +98,11 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
     {
         // Isolate distances on region of interest
         Mat ROI = IsolateROI(depth_mat, element.X1, element.X2, element.Y1, element.Y2);
+        ROS_INFO_STREAM(element.X1);
+        ROS_INFO_STREAM(element.X2);
+        ROS_INFO_STREAM(element.Y1);
+        ROS_INFO_STREAM(element.Y2);
+
 
         // Convert depth_mat to Pwn_list:
         Pwn_list points = DepthMat_to_Pwn_list(ROI);
@@ -235,8 +240,8 @@ Pwn_list DepthMat_to_Pwn_list(Mat DepthMat)
      myfile.open("tests.txt");
 
     // For all pixels in depth-image(+= other than 1 to export fewer points -> Fewer calculations -> faster runtime)
-    for (int x = 0; x < DepthMat.cols; x+=2) {
-        for (int y = 0; y < DepthMat.rows; y+=2) {
+    for (int x = 0; x < DepthMat.cols; x+=1) {
+        for (int y = 0; y < DepthMat.rows; y+=1) {
             // If data is legal(Not 0) and below 3(Sometimes noise is present) - Export depth
             if (DepthMat.at<double>(cv::Point(x, y)) != 0 && DepthMat.at<double>(cv::Point(x, y)) < 2.5 ) {//&& DepthMat.at<double>(cv::Point(x, y)) < 3
                 double X, Y, Z;
@@ -375,7 +380,7 @@ cv::Mat IsolateROI(Mat depth_mat, double X1, double X2, double Y1, double Y2){
                     Scalar(255),FILLED); 
     //Keep only depths where Blob was white
     depth_mat = Overlap(depth_mat, Blob);
-    cv::imshow("s", Blob);
+    //cv::imshow("s", Blob);
     return depth_mat;
 }
 
@@ -403,8 +408,8 @@ Efficient_ransac::Shape_range PerformShapeDetection(Efficient_ransac *ransac, Pw
 
     // Set Ransac parameters
     CGAL::Shape_detection_3::Efficient_RANSAC<Traits>::Parameters parameters;
-    parameters.probability = 0.005;             // Sets probability to miss the largest primitive at each iteration.
-    parameters.min_points = 0.35*input.size();   // Min amount of points within each detected cylinder
+    parameters.probability = 0.001;             // Sets probability to miss the largest primitive at each iteration.
+    parameters.min_points = 0.25*input.size();   // Min amount of points within each detected cylinder
     parameters.epsilon = 0.005;                 // Maximum acceptable euclidian distance between a point and a shape
     parameters.cluster_epsilon = 0.01;          // Maximum acceptable euclidian distance between points which are assumed to be neighbors
     parameters.normal_threshold = 0.85;          // Sets maximum normal deviation. // 0.9 < dot(surface_normal, point_normal); 
