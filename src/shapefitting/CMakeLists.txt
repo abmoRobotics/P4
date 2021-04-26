@@ -79,6 +79,7 @@ add_action_files(
   FILES
   shapefitting_position_array.action
   shapefitting_position.action
+  shapefitting_simple_position_array.action
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -229,4 +230,9 @@ add_executable(Shape-Fitting src/shapefitting.cpp)
 target_link_libraries(Shape-Fitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES} ${OpenCV_LIBS} ${realsense2_LIBRARY} ${CGAL_LIBRARY})
 install(TARGETS Shape-Fitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+add_executable(Shape-Simple src/shapefitting_simple.cpp)
+target_link_libraries(Shape-Simple ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES} ${OpenCV_LIBS} ${realsense2_LIBRARY} ${CGAL_LIBRARY})
+install(TARGETS Shape-Simple DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 add_dependencies(Shape-Fitting shapefitting_generate_messages_cpp)
+add_dependencies(Shape-Simple shapefitting_generate_messages_cpp)

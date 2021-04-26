@@ -38,6 +38,7 @@
 
 #include <actionlib/client/simple_action_client.h>
 #include <shapefitting/shapefitting_position_arrayAction.h>
+#include <shapefitting/shapefitting_simple_position_arrayAction.h>
 
 #include <shapefitting/shape_data.h>
 #include <jaco/IF_fullAutoAction.h>
@@ -76,7 +77,7 @@ private:
     //void full_autonomous_control();
     void setCameraPos();
     void testemil();
-    void shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_position_arrayResultConstPtr& result);
+    void shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_simple_position_arrayResultConstPtr& result);
     void shapefitting_activeCb();
 
     kinova::KinovaPose generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
@@ -119,7 +120,7 @@ private:
     std::vector<geometry_msgs::TransformStamped> obj_ee_array;
     geometry_msgs::TransformStamped Transform_camera, Transform_obj, object_Transform;
    
-    actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction> shapefitting_ac;
+    actionlib::SimpleActionClient<shapefitting::shapefitting_simple_position_arrayAction> shapefitting_ac;
 
     
     struct ObjectInScene{

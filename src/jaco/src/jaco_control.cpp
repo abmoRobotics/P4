@@ -546,11 +546,12 @@ void jaco_control::shapefitting_activeCb(){
     ROS_INFO("Goal just went active");
 }
 
-void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_position_arrayResultConstPtr& result){
+void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_simple_position_arrayResultConstPtr& result){
     // Clear previous object position data
     tf_cam_to_object.clear();
     geometry_msgs::TransformStamped Transform_obj;
     ROS_INFO_STREAM("shapefitting_doneCB");
+    
     // Map every object to the camera, since the position is measured from the camera
     for (size_t i = 0; i < result->object.size(); i++)
     {
@@ -606,7 +607,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     shape_data_client("get_shape",true),
     interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_control::IF_full_auto_execute, this, _1), false),
     //kinova_comm(nh_,mutexer,true,"j2n6s300"),
-    shapefitting_ac("get_shape_array",true)
+    shapefitting_ac("get_simple_shape_array",true)
 {
     
     
@@ -656,31 +657,37 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
 
     while (nh_.ok()){     
          
-        
-        shapefitting::shapefitting_position_arrayGoal goal;
         vision::Detection data;
+        
         // data.X1 = 0.492;
         // data.X2 = 0.634;
         // data.Y1 = 0.207;
         // data.Y2 = 0.823;
-         data.X1 = 0.492;
-        data.X2 = 0.634;
-        data.Y1 = 0.3;
-        data.Y2 = 0.8;
-        data.Class = 10;
 
+
+    //MANUEL
+        // shapefitting::shapefitting_position_arrayGoal goal;
+        
+        // data.X1 = 0.492;
+        // data.X2 = 0.634;
+        // data.Y1 = 0.3;
+        // data.Y2 = 0.8;
+        // data.Class = 10;
+        // goal.input.msg.push_back(data);
         
 
         //Update camera with respect to end effector
         setCameraPos();
-        //shapefitting::shapefitting_position_arrayGoal goal;
 
-        // for (vision::Detection data : visionDataArray.msg){
-        //     goal.input.msg.push_back(data);
-        // }
+    //AUTOMATISK
+        shapefitting::shapefitting_simple_position_arrayGoal goal;
+
+        for (vision::Detection data : visionDataArray.msg){
+            goal.input.msg.push_back(data);
+        }
 
 
-        goal.input.msg.push_back(data);
+        
         actionlib::SimpleClientGoalState shapefitting_ac_state = shapefitting_ac.getState();
    
         
@@ -693,7 +700,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
                     boost::bind(&jaco_control::shapefitting_doneCb,this,_1,_2),
                         boost::bind(&jaco_control::shapefitting_activeCb,this),
             //actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction>::SimpleActiveCallback(),
-            actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction>::SimpleFeedbackCallback());
+            actionlib::SimpleActionClient<shapefitting::shapefitting_simple_position_arrayAction>::SimpleFeedbackCallback());
             }
         }
 

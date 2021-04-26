@@ -98,14 +98,10 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
     {
         // Isolate distances on region of interest
         Mat ROI = IsolateROI(depth_mat, element.X1, element.X2, element.Y1, element.Y2);
-        ROS_INFO_STREAM(element.X1);
-        ROS_INFO_STREAM(element.X2);
-        ROS_INFO_STREAM(element.Y1);
-        ROS_INFO_STREAM(element.Y2);
-
 
         // Convert depth_mat to Pwn_list:
         Pwn_list points = DepthMat_to_Pwn_list(ROI);
+
         if(points.size() > 1){
             //Estimate point normals
             Pwn_vector vector = EstimateNormals(points, 18);
@@ -132,7 +128,7 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
                         InfoStream 
                             << "Class "
                             << element.Class
-                            << "is cylinder with center "
+                            << " is cylinder with center "
                             << axis.point() 
                             << " axis " 
                             << axis.direction() 
@@ -140,29 +136,17 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
                             << radius;
                         std::string INFO = InfoStream.str();
                         ROS_INFO_STREAM(INFO);    
-                    result_temp.pos.x = axis.point().x();
-                    result_temp.pos.y = axis.point().y();
-                    result_temp.pos.z = axis.point().z();
+                        result_temp.pos.x = axis.point().x();
+                        result_temp.pos.y = axis.point().y();
+                        result_temp.pos.z = axis.point().z();
 
-                    result_temp.orientation.x = axis.direction().dx();
-                    result_temp.orientation.y = axis.direction().dy();
-                    result_temp.orientation.z = axis.direction().dz();
+                        result_temp.orientation.x = axis.direction().dx();
+                        result_temp.orientation.y = axis.direction().dy();
+                        result_temp.orientation.z = axis.direction().dz();
 
-                    result_temp.radius = radius;
-                        // resultreturn.object[i].pos.x;
-                        // resultreturn.object[i].pos.x;
-                        // resultreturn.object[i].pos.x;
+                        result_temp.radius = radius;
 
-                        // resultreturn.object[i].orientation.x;
-                        // resultreturn.object[i].orientation.x;
-                        // resultreturn.object[i].orientation.x;
-                        // resultreturn.object[i].radius;     
-                        ROS_INFO_STREAM(element.X1);
                         resultreturn.object.push_back(result_temp);
-                        ROS_INFO_STREAM(element.X2);
-                        ROS_INFO_STREAM(element.Y1);
-                        ROS_INFO_STREAM(element.Y2);
-                    //ROS_INFO_STREAM(resultreturn.object[i].radius);
                                                        
                     }
                     // Proceed with the next detected shape.
@@ -237,11 +221,11 @@ Pwn_list DepthMat_to_Pwn_list(Mat DepthMat)
   
     // // For visualization with Mathlab function
      std::ofstream myfile;
-     myfile.open("tests.txt");
+     myfile.open("test.txt");
 
     // For all pixels in depth-image(+= other than 1 to export fewer points -> Fewer calculations -> faster runtime)
-    for (int x = 0; x < DepthMat.cols; x+=1) {
-        for (int y = 0; y < DepthMat.rows; y+=1) {
+    for (int x = 0; x < DepthMat.cols; x++) {
+        for (int y = 0; y < DepthMat.rows; y++) {
             // If data is legal(Not 0) and below 3(Sometimes noise is present) - Export depth
             if (DepthMat.at<double>(cv::Point(x, y)) != 0 && DepthMat.at<double>(cv::Point(x, y)) < 2.5 ) {//&& DepthMat.at<double>(cv::Point(x, y)) < 3
                 double X, Y, Z;
@@ -278,7 +262,7 @@ Pwn_list DepthMat_to_Pwn_list(Mat DepthMat)
         }
     }
 
-     myfile.close();
+    myfile.close();
 
     return Out;
 }
@@ -360,13 +344,25 @@ rs2::pipeline InitiateRealsense(){
 cv::Mat GetDepthData(rs2::pipeline *pipe){
 // Wait for next set of frames from the camera
     frameset data = pipe->wait_for_frames();
-    // Align depth-map to RGB channel
-    rs2::align align_to_color(RS2_STREAM_COLOR);
-    data = align_to_color.process(data);
     // Import depth
     depth_frame depth = data.get_depth_frame();
     // Convert frame to Mat with distances
-    Mat depth_mat = depth_frame_to_meters(depth);   //Function in cv-helpers.hpp
+    Mat depth_mat = depth_frame_to_meters(depth);
+
+
+    // Manually align depth data to RGB data
+    // D435i depth FOV: 86*57
+    // D435i RGB FOV: 64*41
+    double w = 0.777;
+    double h = 0.734;
+
+    cv::Rect roi;
+    roi.x = depth_mat.cols * ((1-w)/2);
+    roi.y = depth_mat.rows * ((1-h)/2);
+    roi.width = depth_mat.cols * w;
+    roi.height = depth_mat.rows * h;
+    
+    depth_mat = depth_mat(roi);
 
     return depth_mat;
 }
@@ -375,9 +371,14 @@ cv::Mat IsolateROI(Mat depth_mat, double X1, double X2, double Y1, double Y2){
     //Black image
     Mat Blob = Mat::zeros(Size(depth_mat.cols,depth_mat.rows),CV_8UC1); 
     //Put white square at region of interest
-    rectangle(Blob, Point(depth_mat.cols*0.125+(X1*0.75*depth_mat.cols),Y1*depth_mat.rows), 
-                    Point(depth_mat.cols*0.125+(X2*0.75*depth_mat.cols),Y2*depth_mat.rows),
+    // rectangle(Blob, Point(depth_mat.cols*0.125+(X1*0.75*depth_mat.cols)-0.05,Y1*depth_mat.rows-0.05), 
+    //                 Point(depth_mat.cols*0.125+(X2*0.75*depth_mat.cols)+0.05,Y2*depth_mat.rows+0.05),
+    //                 Scalar(255),FILLED); 
+
+    rectangle(Blob, Point(X1*depth_mat.cols,Y1*depth_mat.rows), 
+                    Point(X2*depth_mat.cols,Y2*depth_mat.rows),
                     Scalar(255),FILLED); 
+
     //Keep only depths where Blob was white
     depth_mat = Overlap(depth_mat, Blob);
     //cv::imshow("s", Blob);
@@ -408,10 +409,10 @@ Efficient_ransac::Shape_range PerformShapeDetection(Efficient_ransac *ransac, Pw
 
     // Set Ransac parameters
     CGAL::Shape_detection_3::Efficient_RANSAC<Traits>::Parameters parameters;
-    parameters.probability = 0.001;             // Sets probability to miss the largest primitive at each iteration.
-    parameters.min_points = 0.25*input.size();   // Min amount of points within each detected cylinder
-    parameters.epsilon = 0.005;                 // Maximum acceptable euclidian distance between a point and a shape
-    parameters.cluster_epsilon = 0.01;          // Maximum acceptable euclidian distance between points which are assumed to be neighbors
+    parameters.probability = 0.0000005;          // Sets probability to miss the largest primitive at each iteration.
+    parameters.min_points = 0.5*input.size();   // Min amount of points within each detected cylinder
+    parameters.epsilon = 0.005;                  // Maximum acceptable euclidian distance between a point and a shape
+    parameters.cluster_epsilon = 0.01;           // Maximum acceptable euclidian distance between points which are assumed to be neighbors
     parameters.normal_threshold = 0.85;          // Sets maximum normal deviation. // 0.9 < dot(surface_normal, point_normal); 
 
     // Detect registered shapes with the customized parameters.
