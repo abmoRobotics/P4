@@ -48,6 +48,13 @@
 #include <kinova/KinovaTypes.h>
 #include <kinova_driver/kinova_ros_types.h>
 #include "kinova_driver/kinova_api.h"
+#include "kinova_driver/kinova_arm.h"
+#include "kinova_driver/kinova_tool_pose_action.h"
+#include "kinova_driver/kinova_joint_angles_action.h"
+#include "kinova_driver/kinova_fingers_action.h"
+#include "kinova_driver/kinova_joint_trajectory_controller.h"
+
+
 #include <kinova_msgs/AddPoseToCartesianTrajectory.h>
 class jaco_control
 {
@@ -137,10 +144,10 @@ private:
     // Input bevægelsesretning fra itongue
     geometry_msgs::Point EndEffDirVec(geometry_msgs::Point iTongueDirection); //Enheds retnings vektor (skal normaliseres)
 
-    std::vector<ObjectInScene> ObjDirectionVectors(std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose);
+    std::vector<ObjectInScene> ObjDirectionVectors(std::vector<geometry_msgs::TransformStamped> &objects, geometry_msgs::TransformStamped &endEffPose);
     
     // Function that determines level of automation
-    geometry_msgs::Point assistiveControl(geometry_msgs::Point iTongueDir, std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose);
+    geometry_msgs::Point assistiveControl(geometry_msgs::Point &iTongueDir, std::vector<geometry_msgs::TransformStamped> &objects, geometry_msgs::TransformStamped &endEffPose);
 
     // Eventuelt PID controller til at styre retning
 
@@ -164,7 +171,12 @@ private:
     //Physical robot
     
     boost::recursive_mutex mutexer;
-    // kinova::KinovaComm kinova_comm; 
+    kinova::KinovaComm kinova_comm; 
+    kinova::KinovaArm kinova_arm;
+    kinova::KinovaPoseActionServer pose_server;
+    kinova::KinovaAnglesActionServer angles_server;
+    kinova::KinovaFingersActionServer fingers_server;
+    kinova::JointTrajectoryController joint_trajectory_controller;
 
     kinova_msgs::SetFingersPositionGoal finger_goal;
     kinova::KinovaAPI kinova_api_;
