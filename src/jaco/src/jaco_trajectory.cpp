@@ -280,11 +280,11 @@ shapefitting::shape_data jaco_trajectory::get_shape_data(vision::Detection Detec
         Transform_camera.header.stamp = ros::Time::now();
         Transform_camera.header.frame_id = "j2n6s300_end_effector";
         Transform_camera.child_frame_id = "Realsense_Camera";
-        Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
+        Transform_camera.transform.translation.x = 0.0967; //Mulig fortegnsændring
         Transform_camera.transform.translation.y = 0;
-        Transform_camera.transform.translation.z = -0.182;
+        Transform_camera.transform.translation.z = -0.1779;
         tf2::Quaternion q1;
-            q1.setRPY(-0.26, 0, M_PI/2);
+            q1.setRPY(0.21, 0, M_PI);
         Transform_camera.transform.rotation.x = q1.x();
         Transform_camera.transform.rotation.y = q1.y();
         Transform_camera.transform.rotation.z = q1.z();
