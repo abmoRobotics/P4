@@ -78,7 +78,8 @@ exports an xml and image file that can be imported to roboflow.
 # Shape Fitting
 1. Download the file installPackagesForShapefitting.sh from P4/dependencies
 2. Move the file to /usr/local/lib/
-3. Open a terminal, and run:
+3. Right click -> properties -> Permissions -> Make executable
+4. Open a terminal, and run:
 ```
 cd /usr/local/lib/
 ./installPackagesForShapefitting.sh
