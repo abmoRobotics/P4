@@ -1,0 +1,49 @@
+[ 8160.721821] audit: type=1400 audit(1619514035.723:94354): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8160.721885] audit: type=1400 audit(1619514035.723:94355): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8160.721962] audit: type=1400 audit(1619514035.723:94356): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8160.722032] audit: type=1400 audit(1619514035.723:94357): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8160.722101] audit: type=1400 audit(1619514035.723:94358): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8160.722170] audit: type=1400 audit(1619514035.723:94359): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8160.722248] audit: type=1400 audit(1619514035.723:94360): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8160.722326] audit: type=1400 audit(1619514035.723:94361): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8160.722409] audit: type=1400 audit(1619514035.723:94362): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8160.722503] audit: type=1400 audit(1619514035.723:94363): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="snap.code.code"
+[ 8165.731983] kauditd_printk_skb: 28 callbacks suppressed
+[ 8165.731986] audit: type=1400 audit(1619514040.731:94392): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8165.732010] audit: type=1400 audit(1619514040.731:94393): apparmor="DENIED" operation="open" profile="snap.discord.discord" name="/proc/1285/cmdline" pid=16885 comm="Discord" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8165.732104] audit: type=1400 audit(1619514040.731:94394): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8165.732112] audit: type=1400 audit(1619514040.731:94395): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8165.732154] audit: type=1400 audit(1619514040.731:94396): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8165.732257] audit: type=1400 audit(1619514040.731:94397): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8165.732265] audit: type=1400 audit(1619514040.731:94398): apparmor="DENIED" operation="open" profile="snap.discord.discord" name="/proc/1379/cmdline" pid=16885 comm="Discord" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8165.732306] audit: type=1400 audit(1619514040.731:94399): apparmor="DENIED" operation="open" profile="snap.discord.discord" name="/proc/1414/cmdline" pid=16885 comm="Discord" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8165.732341] audit: type=1400 audit(1619514040.731:94400): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8165.732383] audit: type=1400 audit(1619514040.731:94401): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8170.744625] kauditd_printk_skb: 59 callbacks suppressed
+[ 8170.744629] audit: type=1400 audit(1619514045.743:94461): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8170.744759] audit: type=1400 audit(1619514045.743:94462): apparmor="DENIED" operation="open" profile="snap.discord.discord" name="/proc/1285/cmdline" pid=16885 comm="Discord" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8170.744767] audit: type=1400 audit(1619514045.743:94463): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8170.744773] audit: type=1400 audit(1619514045.743:94464): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8170.744879] audit: type=1400 audit(1619514045.743:94465): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8170.744888] audit: type=1400 audit(1619514045.743:94466): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8170.745002] audit: type=1400 audit(1619514045.743:94467): apparmor="DENIED" operation="open" profile="snap.discord.discord" name="/proc/1379/cmdline" pid=16885 comm="Discord" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8170.745010] audit: type=1400 audit(1619514045.743:94468): apparmor="DENIED" operation="open" profile="snap.discord.discord" name="/proc/1414/cmdline" pid=16885 comm="Discord" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8170.745015] audit: type=1400 audit(1619514045.743:94469): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8170.745058] audit: type=1400 audit(1619514045.743:94470): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8173.701848] usb 1-1: new full-speed USB device number 17 using xhci_hcd
+[ 8173.855928] usb 1-1: New USB device found, idVendor=10c4, idProduct=ea60, bcdDevice= 1.00
+[ 8173.855935] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[ 8173.855938] usb 1-1: Product: CP2102 USB to UART Bridge Controller
+[ 8173.855942] usb 1-1: Manufacturer: Silicon Labs
+[ 8173.855944] usb 1-1: SerialNumber: 0001
+[ 8173.895437] usbcore: registered new interface driver usbserial_generic
+[ 8173.895457] usbserial: USB Serial support registered for generic
+[ 8173.900060] usbcore: registered new interface driver cp210x
+[ 8173.900083] usbserial: USB Serial support registered for cp210x
+[ 8173.900164] cp210x 1-1:1.0: cp210x converter detected
+[ 8173.902541] usb 1-1: cp210x converter now attached to ttyUSB0
+[ 8175.755617] kauditd_printk_skb: 59 callbacks suppressed
+[ 8175.755620] audit: type=1400 audit(1619514050.755:94530): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8175.755631] audit: type=1400 audit(1619514050.755:94531): apparmor="DENIED" operation="open" profile="snap.discord.discord" name="/proc/1285/cmdline" pid=16885 comm="Discord" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+[ 8175.755674] audit: type=1400 audit(1619514050.755:94532): apparmor="DENIED" operation="ptrace" profile="snap.discord.discord" pid=16885 comm="Discord" requested_mask="read" denied_mask="read" peer="unconfined"
+[ 8175.755786] audit:

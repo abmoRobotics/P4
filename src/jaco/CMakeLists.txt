@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   std_msgs
+  sensor_msgs
   shapefitting
   vision
   actionlib_msgs
@@ -21,8 +22,12 @@ find_package(catkin REQUIRED COMPONENTS
   #ros_controllers
   #moveit_ros_planning
   moveit_ros_planning_interface
-)
+  cv_bridge
 
+
+)
+find_package(OpenCV REQUIRED)
+find_package(realsense2 REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -86,6 +91,7 @@ generate_messages(
   geometry_msgs
   actionlib_msgs
   vision
+  sensor_msgs
 )
 install(PROGRAMS
   src/jacoScript.py
@@ -127,7 +133,7 @@ install(PROGRAMS
 catkin_package(
  INCLUDE_DIRS include
   #LIBRARIES kinova_driver
-CATKIN_DEPENDS roscpp std_msgs message_runtime moveit_core moveit_ros_planning_interface kinova_driver
+CATKIN_DEPENDS roscpp std_msgs rospy message_runtime moveit_core moveit_ros_planning_interface kinova_driver sensor_msgs cv_bridge
 )
 
 #find_package(Eigen REQUIRED)
@@ -182,10 +188,10 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-#catkin_install_python(PROGRAMS
+# catkin_install_python(PROGRAMS
 #  src/RAWitonguetalker.py
 #  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+# )
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -257,6 +263,9 @@ add_executable(jaco_control src/jaco_control.cpp include/jaco_control.h)
 target_link_libraries(jaco_control ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS jaco_control DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+add_executable(CameraSplitter src/CameraSplitter.cpp)
+target_link_libraries(CameraSplitter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${realsense2_LIBRARY})
+install(TARGETS CameraSplitter DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # add_executable(shapefitting src/shapefitting.cpp)
 # target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})

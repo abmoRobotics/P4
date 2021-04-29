@@ -80,24 +80,40 @@ bool jaco_control::gripper_action(double finger_turn){
     }
 }
 
+// double scaletest(double val, double max, double min){
+//     double n = (val - min )/ (max-min);
+//     return n;
+// }
+
+
 // Værdier skal justeres
 void jaco_control::spherical_grip(double diameter){
 	//Joint values found from palm to mid-finger
-	double jointValue = (M_PI / 4.0) - asin((diameter / 44.0) - (29.0 / 22.0));
-	//ROS_INFO_STREAM(jointValue);
+	// double jointValue = (M_PI / 4.0) - asin((diameter / 44.0) - (29.0 / 22.0));
+	// //ROS_INFO_STREAM(jointValue);
 
-    //Send jointvalue to all fingers:
-    finger_goal.fingers.finger1 = jointValue;
-    finger_goal.fingers.finger2 = finger_goal.fingers.finger1;
-    finger_goal.fingers.finger3 = finger_goal.fingers.finger1;
-    finger_client_->sendGoal(finger_goal);
+    // //Send jointvalue to all fingers:
+    // finger_goal.fingers.finger1 = jointValue;
+    // finger_goal.fingers.finger2 = finger_goal.fingers.finger1;
+    // finger_goal.fingers.finger3 = finger_goal.fingers.finger1;
+    // finger_client_->sendGoal(finger_goal);
 
-    if (finger_client_->waitForResult(ros::Duration(5.0))){
-        finger_client_->getResult();
-    } else {
-        finger_client_->cancelAllGoals();
-        ROS_WARN_STREAM("The gripper action timed-out");
-    }
+    // if (finger_client_->waitForResult(ros::Duration(5.0))){
+    //     finger_client_->getResult();
+    // } else {
+    //     finger_client_->cancelAllGoals();
+    //     ROS_WARN_STREAM("The gripper action timed-out");
+    // }
+
+
+    double fingerPercent = (diameter - 45) / (100-45);
+    kinova::FingerAngles fingerAng;
+    fingerAng.Finger1 = FINGER_MAX*fingerPercent;
+    fingerAng.Finger2 = FINGER_MAX*fingerPercent;
+    fingerAng.Finger3 = FINGER_MAX*fingerPercent;
+    kinova_comm.printFingers(fingerAng);
+    kinova_comm.setFingerPositions(fingerAng);
+    
 
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_2", jointValue);
@@ -292,12 +308,17 @@ jaco_control::~jaco_control(){
 // DONE
 void jaco_control::vision_data_callback(const vision::Detection_arrayConstPtr &msg){
     visionDataArray.msg.clear();
-    for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
+    if (msg->msg.size()>0)
     {
-        vision::Detection DetectionData;
-        DetectionData = msg->msg[i];
-        visionDataArray.msg.push_back(DetectionData);
+       for (size_t i = 0; i < sizeof(msg->msg)/sizeof(msg->msg[0]); i++)
+        {
+            vision::Detection DetectionData;
+            DetectionData = msg->msg[i];
+            visionDataArray.msg.push_back(DetectionData);
+        }
     }
+    
+    
 };
 
 // DONE
@@ -324,7 +345,7 @@ shapefitting::shape_data jaco_control::get_shape_data(vision::Detection Detectio
         //Set up frames:
         //tf from end effector to camera
         Transform_camera.header.stamp = ros::Time::now();
-        Transform_camera.header.frame_id = "j2n6s300_end_effector";
+        Transform_camera.header.frame_id = "j2n7s300_end_effector";
         Transform_camera.child_frame_id = "Realsense_Camera";
         Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
         Transform_camera.transform.translation.y = 0;
@@ -370,10 +391,10 @@ void jaco_control::connect_itongue(){
     //Initiate connection with iTongue
     while (itongue_start_pub.getNumSubscribers() < 1 )
     {
-        ROS_INFO("VENT");
+        //ROS_INFO("VENT");
     }
     
-    ROS_INFO("her");
+    //ROS_INFO("her");
     jaco::sys_msg data;
     data.start_tci = 1;
     data.InHand = 1;
@@ -394,14 +415,11 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     else Sensor_count = 0;
     old_Sensor = msg->Sensor;
 
-    // ROS_INFO_STREAM(msg->Sensor);
-    // ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.x );
-    //ROS_INFO_STREAM(currentpose.pose.position.x);
-    //ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.y );
-    //ROS_INFO_STREAM(currentpose.pose.position.y);
-    //ROS_INFO_STREAM(current_robot_transformStamped.transform.translation.z );
-    //ROS_INFO_STREAM(currentpose.pose.position.z);
     kinova::KinovaPose velocity;
+    geometry_msgs::Point velDir;
+    velDir.x = 0;
+    velDir.y = 0;
+    velDir.z = 0;
     velocity.ThetaX = 0;
     velocity.ThetaY = 0;
     velocity.ThetaZ = 0;
@@ -416,45 +434,60 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         {
         case 17: //Z forwards  - away from oneself
         ROS_INFO("Z forwards  - away from oneself");
-            velocity.Z = -0.05;
+            velocity.Z = -0.30;
             break;
         case 12: //Z backwards -- towards oneself
-            velocity.Z = 0.05;
+            velocity.Z = 0.30;
             break; 
         case 11: // cross up-left
         ROS_INFO("cross up-left");
-            velocity.Y  = 0.05;
-            velocity.X  = -0.05;
+            velocity.Y  = 0.30;
+            velocity.X  = -0.30;
             break;
         case 8:// Y upwards
         ROS_INFO("Y upwards");
-            velocity.Y = 0.05;
+            velocity.Y = 0.30;
             break;
         case 13: // Cross up-right
         ROS_INFO("Cross up-right");
-            velocity.Y = 0.05;
-            velocity.X = 0.05;
+            velocity.Y = 0.30;
+            velocity.X = 0.30;
             break;
         case 14: //x left
         ROS_INFO("x left");
-            velocity.X  = -0.05;
+            velocity.X  = -0.30;
             break;
         case 15: //x right
         ROS_INFO("x right");
-            velocity.X = 0.05;
+            velocity.X = 0.30;
             break;
         case 16: // Cross down-left
-            velocity.Y = -0.05;
-            velocity.X = -0.05;
+            velocity.Y = -0.30;
+            velocity.X = -0.30;
             break;
         case 9: // y downwards
-            velocity.Y = -0.05;
+            velocity.Y = -0.30;
             break;
         case 18: // Cross down-right
-            velocity.Y = -0.05;
-            velocity.X = 0.05;
+            velocity.Y = -0.30;
+            velocity.X = 0.30;
             break;
-
+        case 1: //Twist wrist
+            ROS_INFO("twist 1");
+            velocity.ThetaY = 0.7;
+            break;
+        case 2: //twist  wrist another way
+            ROS_INFO("Twist 2");
+            velocity.ThetaY = -0.7;
+            break;
+        case 3: //twist  wrist another way
+            ROS_INFO("gripper");
+            spherical_grip(100);
+            break;
+        case 4: //twist  wrist another way
+            ROS_INFO("gripper open");
+            spherical_grip(45);
+            break;
         default:
             break;
         }
@@ -469,7 +502,29 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         if (robot_connected_)
         {
             //kinova_comm.getCartesianPosition(ee_pose);
-            //kinova_comm.setCartesianVelocities(velocity);
+            ROS_INFO("GAMLE VÆRDIER");
+            geometry_msgs::Point newTraj;
+            ROS_INFO_STREAM(velocity.X);
+            ROS_INFO_STREAM(velocity.Y);
+            ROS_INFO_STREAM(velocity.Z);
+            velDir.x = velocity.X;
+            velDir.y = velocity.Y;
+            velDir.z = velocity.Z;
+            // if (!obj_ee_array.empty())
+            // {
+            //     ROS_INFO_STREAM(obj_ee_array.size());
+            //     newTraj = assistiveControl(velDir,obj_ee_array,current_robot_transformStamped);
+    
+            // }
+            // velocity.X = newTraj.x;
+            // velocity.Y = newTraj.y;
+            // velocity.Z = newTraj.z;
+            ROS_INFO_STREAM(newTraj.x);
+            ROS_INFO_STREAM(newTraj.y);
+            ROS_INFO_STREAM(newTraj.z);
+            kinova_comm.setCartesianVelocities(velocity);
+            ROS_INFO("SEND  ");
+            
         }
     } else
     {
@@ -531,11 +586,11 @@ void jaco_control::setCameraPos(){
         Transform_camera.header.stamp = ros::Time::now();
         Transform_camera.header.frame_id = "j2n6s300_end_effector";
         Transform_camera.child_frame_id = "Realsense_Camera";
-        Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
-        Transform_camera.transform.translation.y = 0;
-        Transform_camera.transform.translation.z = -0.182;
+        Transform_camera.transform.translation.x = 0; //Mulig fortegnsændring
+        Transform_camera.transform.translation.y = 0.0967;
+        Transform_camera.transform.translation.z = -0.1779;
         tf2::Quaternion q1;
-            q1.setRPY(-0.26, 0, M_PI/2);
+            q1.setRPY(-0.21, 0, M_PI);
         Transform_camera.transform.rotation.x = q1.x();
         Transform_camera.transform.rotation.y = q1.y();
         Transform_camera.transform.rotation.z = q1.z();
@@ -548,7 +603,9 @@ void jaco_control::shapefitting_activeCb(){
 
 void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_simple_position_arrayResultConstPtr& result){
     // Clear previous object position data
-    tf_cam_to_object.clear();
+    if (result->object[0].pos.x > -10)
+    {
+        tf_cam_to_object.clear();
     geometry_msgs::TransformStamped Transform_obj;
     ROS_INFO_STREAM("shapefitting_doneCB");
     
@@ -573,30 +630,13 @@ void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& s
 
         tf_cam_to_object.push_back(Transform_obj);
     }
+    }
+    
+    
     
     
     
 }
-// bool goalActive =0;
-// void activeCb(){
-//     goalActive = 1;
-//     ROS_INFO("Goal just went active");
-// }
-
-// void doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_position_arrayResultConstPtr& result){
-//     // Clear previous object position data
-//     geometry_msgs::TransformStamped Transform_obj;
-//     ROS_INFO_STREAM("shapefitting_doneCB");
-//    goalActive = false;
-    
-    
-    
-// }
-
-// void feedbackCb(const shapefitting::shapefitting_position_arrayFeedbackConstPtr& feedback){
-//     ROS_INFO("Got Feedback of length ");
-// }
-
 
 void jaco_control::doStuff(){}
 
@@ -606,10 +646,19 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     nh_(nh),
     shape_data_client("get_shape",true),
     interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_control::IF_full_auto_execute, this, _1), false),
-    //kinova_comm(nh_,mutexer,true,"j2n6s300"),
+    kinova_comm(nh_,mutexer,true,"j2n6s300"),
+    kinova_arm(kinova_comm, nh_, "j2n6s300", "j2n6s300"),
+    pose_server(kinova_comm, nh_, "j2n6s300", "j2n6s300"),
+    angles_server(kinova_comm, nh_),
+    fingers_server(kinova_comm, nh_),
+    joint_trajectory_controller(kinova_comm, nh_),
     shapefitting_ac("get_simple_shape_array",true)
 {
     
+    kinova_comm.startAPI();
+
+
+   
     
     interface_as_.start();
     ROS_INFO("Waiting for action server to start.");
@@ -617,8 +666,8 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     ROS_INFO("Waiting for action server to start.");
     
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
-    nh_.param<bool>("/robot_connected",robot_connected_,true);
-
+    //nh_.param<bool>("/robot_connected",robot_connected_,true);
+    robot_connected_ = true;
     //group_ = new moveit::planning_interface::MoveGroupInterface("arm");
     //gripper_group_ = new moveit::planning_interface::MoveGroupInterface("gripper");
 
@@ -630,11 +679,11 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     //group_->setEndEffectorLink("j2n6s300_end_effector"); //robot_type_ + "_end_effector" <---
     //kinova::KinovaPose::CartesianInfo a;
 
-     finger_client_ = new actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>
-             ("/j2n6s300_driver/fingers_action/finger_positions", false);
-     while(robot_connected_ && !finger_client_->waitForServer(ros::Duration(5.0))){
-        ROS_INFO("Waiting for the finger action server to come up");
-      }
+    //  finger_client_ = new actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>
+    //          ("/j2n6s300_driver/fingers_action/finger_positions", false);
+    //  while(robot_connected_ && !finger_client_->waitForServer(ros::Duration(5.0))){
+    //     ROS_INFO("Waiting for the finger action server to come up");
+    //   }
         //moveit::planning_interface::MoveGroupInterface
 
     pub_aco_ = nh_.advertise<moveit_msgs::AttachedCollisionObject>("/attached_collision_object", 10);
@@ -646,17 +695,17 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
     vision_data_sub = nh.subscribe<vision::Detection_array>("/Vision/ObjectDetection",1000,&jaco_control::vision_data_callback,this);
 
-    //connect_itongue();
+    connect_itongue();
 
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
     ros::Rate rate(10.0);
 
-
+    // spherical_grip(100);
 
 
     while (nh_.ok()){     
-         
+        
         vision::Detection data;
         
         // data.X1 = 0.492;
@@ -664,7 +713,8 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         // data.Y1 = 0.207;
         // data.Y2 = 0.823;
 
-
+            
+            
     //MANUEL
         // shapefitting::shapefitting_position_arrayGoal goal;
         
@@ -715,12 +765,12 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         
 
 
-        
+        //ROS_INFO("NHOK");
         try{    
             //Send transforms to /tf:
             static_broadcaster.sendTransform(Transform_camera);
             for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
-                ROS_INFO_STREAM("JAJA");
+                //ROS_INFO_STREAM("JAJA");
                 br.sendTransform(camData);
             }
 
@@ -730,6 +780,10 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             
             // Transform each camData into world frame and save
             for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
+                // ROS_INFO_STREAM(camData.transform.translation.x);
+                // ROS_INFO_STREAM(camData.transform.translation.y);
+                // ROS_INFO_STREAM(camData.transform.translation.z);
+                obj_ee_array.clear();
                 obj_ee_array.push_back(tfBuffer.lookupTransform("world", camData.child_frame_id,
                                     ros::Time(0),ros::Duration(3.0)));
             }
@@ -763,17 +817,19 @@ geometry_msgs::Point jaco_control::EndEffDirVec(geometry_msgs::Point iTongueDire
 
 } //Enheds retnings vektor (skal normaliseres)
 
-std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose){
+std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::vector<geometry_msgs::TransformStamped> &objects, geometry_msgs::TransformStamped &endEffPose){
     std::vector<jaco_control::ObjectInScene> objectDataVec;
+     ROS_INFO("OBJDIRRECTION 1");
 
+    for (geometry_msgs::TransformStamped obj : objects){
+          ROS_INFO("OBJDIRRECTION 2");
 
-    for (shapefitting::shape_data obj : objects){
         jaco_control::ObjectInScene objectData;
         geometry_msgs::Point vec;
         //Bergn vektor mellem to punkter
-        vec.x = obj.pos.x - endEffPose.position.x;
-        vec.y = obj.pos.y - endEffPose.position.y;
-        vec.z = obj.pos.z - endEffPose.position.z;
+        vec.x = obj.transform.translation.x - endEffPose.transform.translation.x;
+        vec.y = obj.transform.translation.y - endEffPose.transform.translation.y;
+        vec.z = obj.transform.translation.z - endEffPose.transform.translation.z;
         //Beregn afstand
         objectData.dist = std::sqrt(std::pow(vec.x,2) + std::pow(vec.y,2) + std::pow(vec.z,2));
         
@@ -784,9 +840,11 @@ std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::
 
         //Save vector
         objectData.directionVector = vec;
-        objectData.position = obj.pos;
-
+        objectData.position.x = obj.transform.translation.x;
+        objectData.position.y = obj.transform.translation.y;
+        objectData.position.z = obj.transform.translation.z;
         //Push til vector
+
         objectDataVec.push_back(objectData);
     }
     
@@ -794,14 +852,24 @@ std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::
 
 }
 
-geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point iTongueDir, std::vector<shapefitting::shape_data> objects, geometry_msgs::Pose endEffPose)
+geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongueDirIn, std::vector<geometry_msgs::TransformStamped> &objectsIn, geometry_msgs::TransformStamped &endEffPoseIn)
 {
+    std::vector<geometry_msgs::TransformStamped> objects = objectsIn;
+    geometry_msgs::Point iTongueDir = iTongueDirIn;
+    geometry_msgs::TransformStamped endEffPose = endEffPoseIn;
+
+    if (!objects.empty())
+    {
+       ROS_INFO("1");
     std::vector<float> Assist; 
 
     geometry_msgs::Point EndEffDir = EndEffDirVec(iTongueDir);
-
+ ROS_INFO("11");
     std::vector<jaco_control::ObjectInScene> ObjDirVec = ObjDirectionVectors(objects,endEffPose);
-
+    
+        /* code */
+   
+        ROS_INFO("2");
     for(size_t i = 0; i < ObjDirVec.size(); i++)
     {
         float Angle = acos((iTongueDir.x * ObjDirVec[i].directionVector.x) + (iTongueDir.y * ObjDirVec[i].directionVector.y) + (iTongueDir.z * ObjDirVec[i].directionVector.z) * M_PI / 180);
@@ -810,12 +878,26 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point iTongue
         float Assitability = dist * dist * Angle; // Skal måske justeres
         Assist.push_back(Assitability);
     }
-    int id = *min_element(Assist.begin(), Assist.end());//ID på objekt med lavest assistability
+        ROS_INFO("3");
+        int id ;
+    ROS_INFO_STREAM(objects.size());
+    if (objects.size() > 1)
+    {
+       id = *min_element(Assist.begin(), Assist.end());//HER
+    } else
+    {
+        id = 0;
+    }
+
+   
+    ROS_INFO_STREAM(id);
+    ROS_INFO("31");
     double thresh_auto = 0.2;
     double thresh_semi = 0.5;
     geometry_msgs::Point newTraj;
+    ROS_INFO_STREAM(Assist.size());
 
- // Gem placering for detected vector.
+     // Gem placering for detected vector.
     for (shapefitting::shape_data obj : objects){
         
         int index = obj.object_index;
@@ -839,16 +921,13 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point iTongue
         std::cout << Placement[index].at(0) << std::endl;
     }
 
+
     if (Assist[id] < thresh_auto) // full auto den har du lavet
     {
         // Når asistabiliy er mindre end en hvis threshold, udfør automatisk grasping.
         // Problem: Placering af objekter i "objects". Det er nødvendigt at huske placeringerne, da der kan være "afvigere".
 
-
-
-
-    
-        
+        ROS_INFO("4");
         std::cout << "Going towards object " << id << std::endl;
         newTraj.x = ObjDirVec[id].position.x;
         newTraj.y = ObjDirVec[id].position.y;
@@ -857,6 +936,7 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point iTongue
     }
     else if (Assist[id] > thresh_auto && Assist[id] < thresh_semi) // semi auto 
     {
+            ROS_INFO("5");
         // beregn percent assistance
         double p_manual = Assist[id]-thresh_auto/(thresh_semi-thresh_auto);
         double p_assist = 1-p_manual;
@@ -879,14 +959,21 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point iTongue
         newTraj.z = EndEffDir.z;
     }
     
-    
+        ROS_INFO("6");
     // Juster vektorer afhængigt af hastighed. 
     double vel = 0.05; // m/s
     newTraj.x = newTraj.x * vel;
     newTraj.y = newTraj.y * vel;
     newTraj.z = newTraj.z * vel;
+    ROS_INFO("IM IN");
 
-    return newTraj;
+     return newTraj;
+    
+    }
+    
+    
+    
+    
 }
 
 // geometry_msgs::Point jaco_control::trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose){
@@ -1006,8 +1093,8 @@ void jaco_control::testemil(){
 int main(int argc, char **argv)
 {
     
-    ros::init(argc, argv, "test");
-    ros::NodeHandle node;
+    ros::init(argc, argv, "kinova_arm_driver");
+    ros::NodeHandle node("~");
     ros::AsyncSpinner spinner(4);
     spinner.start();
     jaco_control Jaco(node);

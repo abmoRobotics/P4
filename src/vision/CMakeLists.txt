@@ -12,7 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
 )
-
+find_package(OpenCV REQUIRED)
+find_package(realsense2 REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
