@@ -810,13 +810,44 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point iTongue
         float Assitability = dist * dist * Angle; // Skal måske justeres
         Assist.push_back(Assitability);
     }
-    int id = *min_element(Assist.begin(), Assist.end());//HER
+    int id = *min_element(Assist.begin(), Assist.end());//ID på objekt med lavest assistability
     double thresh_auto = 0.2;
     double thresh_semi = 0.5;
     geometry_msgs::Point newTraj;
+
+ // Gem placering for detected vector.
+    for (shapefitting::shape_data obj : objects){
+        
+        int index = obj.object_index;
+
+        geometry_msgs::Point vec;
+        vec.x = obj.pos.x;
+        vec.y = obj.pos.y;
+        vec.z = obj.pos.z;
+        
+        if (Placement[index].size() < 10){ //Hvis placerings-hukommelse går til mindre end 10 entries, push data til enden af Placement.
+
+            Placement[index].push_back(vec);
+
+        } else { //Ellers fjern det sidste element og tilføj et nyt i starten.
+
+            Placement[index].pop_back();
+            Placement[index].insert(Placement[index].begin(), vec);
+
+        }
+
+        std::cout << Placement[index].at(0) << std::endl;
+    }
+
     if (Assist[id] < thresh_auto) // full auto den har du lavet
     {
+        // Når asistabiliy er mindre end en hvis threshold, udfør automatisk grasping.
+        // Problem: Placering af objekter i "objects". Det er nødvendigt at huske placeringerne, da der kan være "afvigere".
 
+
+
+
+    
         
         std::cout << "Going towards object " << id << std::endl;
         newTraj.x = ObjDirVec[id].position.x;

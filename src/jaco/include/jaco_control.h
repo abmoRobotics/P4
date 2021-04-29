@@ -111,6 +111,8 @@ private:
     vision::Detection_array visionDataArray;
     shapefitting::shape_data shapeData;
 
+    std::list<std::vector<geometry_msgs::Point>> Placement;
+
     //Frames
     shapefitting::shape_data tf_Cam_Obj;
     shapefitting::shapefitting_positionActionResult tf_World_Obj;

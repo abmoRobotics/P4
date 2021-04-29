@@ -102,6 +102,8 @@ void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr go
         result_temp.orientation.y = 0;
         result_temp.orientation.z = 0;
 
+        result_temp.object_index = element.Class;
+
         resultreturn.object.push_back(result_temp);
     }
     ROS_INFO_STREAM("DONE");
