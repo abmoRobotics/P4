@@ -169,12 +169,13 @@ def detect(save_img=False):
             # Print time (inference + NMS)
             print(f'{s}Done. ({t2 - t1:.3f}s)')
 
-            if ThereIsData == True:
-                CoordPub.publish(DetectionArray)
-                ThereIsData = False
-                DetectionArray.msg.clear()
-            ThereIsData = False
-
+            # if ThereIsData == True:
+            #     CoordPub.publish(DetectionArray)
+            #     ThereIsData = False
+            #     DetectionArray.msg.clear()
+            # ThereIsData = False
+            CoordPub.publish(DetectionArray)
+            DetectionArray.msg.clear()
             # Stream results
             if view_img:
                 cv2.imshow(str(p), im0)
