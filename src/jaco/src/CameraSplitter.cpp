@@ -36,6 +36,27 @@ sensor_msgs::Image imageCb(const cv::Mat& img)
     return rosImg;
 }
 
+sensor_msgs::Image imageDepthCb(const cv::Mat& img)
+{
+    cv_bridge::CvImage img_bridge;
+    sensor_msgs::Image rosImg;
+
+    img_bridge = cv_bridge::CvImage();
+    std_msgs::Header header; // empty header
+    header.seq = counter; // user defined counter
+    header.stamp = ros::Time::now(); // time
+    // Draw an example circle on the video stream
+    
+    img_bridge = cv_bridge::CvImage(header, "32FC1", img);
+    img_bridge.toImageMsg(rosImg); // from cv_bridge to sensor_msgs::Image
+    // Update GUI Window
+    //cv::imshow("OPENCV_WINDOW", img);
+    cv::waitKey(3);
+
+    // Output modified video stream
+    counter++;
+    return rosImg;
+}
 rs2::pipeline InitiateRealsense()
 {
     // Create config object, and enable stream of depth data.
@@ -123,18 +144,20 @@ cv::Mat RealSenseCallBackDepth(rs2::pipeline *pipe, rs2::align *align_color){
 
 int main(int argc, char **argv)
 {
-    
+    rs2::align align_to_color(RS2_STREAM_COLOR);
     ros::init(argc, argv, "CameraNode");
     ros::NodeHandle nh_;
     
     ros::Publisher image_pub = nh_.advertise<sensor_msgs::Image>("/Imagepub/RGB", 1);
+    ros::Publisher depth_pub = nh_.advertise<sensor_msgs::Image>("/Imagepub/Depth", 1);
 
     rs2::pipeline pipe = InitiateRealsense();
     while(ros::ok())
     {
     cv::Mat RealsenseRGB = RealSenseCallBackRGB(&pipe);
-    
+    cv::Mat RealsenseDepth = RealSenseCallBackDepth(&pipe, &align_to_color);
     image_pub.publish(imageCb(RealsenseRGB));
+    depth_pub.publish(imageDepthCb(RealsenseDepth));
     }
     
     ros::spinOnce();

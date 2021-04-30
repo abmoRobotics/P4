@@ -69,7 +69,6 @@ add_message_files(
    sys_msg.msg
   position.msg
     obj_pos.msg
-
 )
 
 ## Generate services in the 'srv' folder

@@ -20,7 +20,7 @@ class image_converter:
     
     self.image_sub = rospy.Subscriber("/Imagepub/RGB",Image,self.callback)
 
-    self.camera = pyfakewebcam.FakeWebcam('/dev/video1', 640, 480)
+    self.camera = pyfakewebcam.FakeWebcam('/dev/video6', 640, 480)
 
 
 
@@ -40,6 +40,8 @@ class image_converter:
   def callback(self,data):
     
     cv_image = self.imgmsg_to_cv2(data)
+    cv_image =	cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+
     self.camera.schedule_frame(cv_image)
     time.sleep(1/30.0)
 
@@ -47,7 +49,7 @@ class image_converter:
     if cols > 60 and rows > 60 :
       cv2.circle(cv_image, (50,50), 10, 255)
 
-    cv2.imshow("Image window", cv_image)
+    #cv2.imshow("Image window", cv_image)
     cv2.waitKey(3)
 
   
