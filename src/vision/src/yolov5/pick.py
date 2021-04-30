@@ -22,10 +22,11 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 from std_msgs.msg import Int16
 
+
 def detect(save_img=False):
 
     CoordPub = rospy.Publisher('/Vision/ObjectDetection', Detection_array, queue_size=10) 
-    rospy.init_node('talker', anonymous=True)
+    rospy.init_node('vision', anonymous=True)
     R = rospy.Rate(60) # tci sends 30hz
     
     DetectionArray = Detection_array()
@@ -66,7 +67,7 @@ def detect(save_img=False):
     else:
         save_img = True
         dataset = LoadImages(source, img_size=imgsz, stride=stride)
-
+    
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]

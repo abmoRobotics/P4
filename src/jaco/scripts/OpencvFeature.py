@@ -1,57 +1,67 @@
-from __future__ import print_function
-import cv2 as cv
+#!/usr/bin/env python3
+import time
+import pyfakewebcam
+import roslib
 import numpy as np
-import argparse
+roslib.load_manifest('jaco')
+import sys
 import rospy
-from cv_bridge import CvBridge
+import cv2
+from std_msgs.msg import String
 from sensor_msgs.msg import Image
-#Import necessary libraries
-from flask import Flask, render_template, Response
-#Initialize the Flask app
-app = Flask(__name__)
+#from vision_opencv.cv_bridge.python import CvBridge, CvBridgeError
+#from cv_bridge.boost.cv_bridge_boost import getCvType
 
-bridge = CvBridge()
+class image_converter:
 
-def LoadRos():
-    app.run(debug=True)
-    try:
-      cv_image = bridge.imgmsg_to_cv2(data, "bgr8")
-    except CvBridgeError as e:
-      print(e)
+  def __init__(self):
+    #self.image_pub = rospy.Publisher("image_topic_2",Image)
+
     
-def gen_frames():
-    while True:
-        #src = cv.imread('E:/Mine Ting/Dokumenter/P4/P4/src/vision/src/test.jpg')
-        #succes, src = Camera.read()
-        #grey = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+    self.image_sub = rospy.Subscriber("/Imagepub/RGB",Image,self.callback)
+
+    self.camera = pyfakewebcam.FakeWebcam('/dev/video1', 640, 480)
+
+
+
+  def imgmsg_to_cv2(self,img_msg):
+        if img_msg.encoding != "bgr8":
+            rospy.logerr("This Coral detect node has been hardcoded to the 'bgr8' encoding.  Come change the code if you're actually trying to implement a new camera")
+        dtype = np.dtype("uint8") # Hardcode to 8 bits...
+        dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
+        image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
+                    dtype=dtype, buffer=img_msg.data)
+    # If the byt order is different between the message and the system.
+        if img_msg.is_bigendian == (sys.byteorder == 'little'):
+            image_opencv = image_opencv.byteswap().newbyteorder()
+        return image_opencv    
+
+
+  def callback(self,data):
     
-        #kp = Feature.detect(src,None)
-        #img = cv.drawKeypoints(src, kp, src)
+    cv_image = self.imgmsg_to_cv2(data)
+    self.camera.schedule_frame(cv_image)
+    time.sleep(1/30.0)
 
-        #for keypoint in kp:
-        #    x = keypoint.pt[0]
-        #    y = keypoint.pt[1]
-        #    print("x: " + str(x) + "    y: " + str(y))
-        #cv.imshow('img', img)
-        ret, buffer = cv.imencode('.jpg', cv_image)
-        img = buffer.tobytes()
-        yield (b'--frame\r\n'
-            b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')  # concat frame one by one and show result
-        cv.waitKey(2)
+    (rows,cols,channels) = cv_image.shape
+    if cols > 60 and rows > 60 :
+      cv2.circle(cv_image, (50,50), 10, 255)
 
-image_sub = rospy.Subscriber("/Imagepub/RGB",Image,LoadRos)
-@app.route('/')
-def index():
-    return render_template('index.html')
+    cv2.imshow("Image window", cv_image)
+    cv2.waitKey(3)
+
+  
+
+       
 
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame') 
+def main(args):
+  ic = image_converter()
+  rospy.init_node('image_converter', anonymous=True)
+  try:
+    rospy.spin()
+  except KeyboardInterrupt:
+    print("Shutting down")
+  cv2.destroyAllWindows()
 
-if __name__ == "__main__":
-    rospy.init_node('image_converter', anonymous=False)
-    try:
-        rospy.spin()
-    except KeyboardInterrupt:
-        print("Shutting down")   
+main(sys.argv)

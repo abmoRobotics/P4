@@ -28,6 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(OpenCV REQUIRED)
 find_package(realsense2 REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -99,6 +100,10 @@ install(PROGRAMS
 )
 install(PROGRAMS
   src/RAWitonguetalker.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+catkin_install_python(PROGRAMS 
+  scripts/OpencvFeature.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 ################################################
@@ -266,6 +271,10 @@ install(TARGETS jaco_control DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 add_executable(CameraSplitter src/CameraSplitter.cpp)
 target_link_libraries(CameraSplitter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${realsense2_LIBRARY})
 install(TARGETS CameraSplitter DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+add_executable(interface_screen src/interface_screen.cpp)
+target_link_libraries(interface_screen ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${realsense2_LIBRARY})
+install(TARGETS interface_screen DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # add_executable(shapefitting src/shapefitting.cpp)
 # target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
