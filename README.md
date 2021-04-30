@@ -73,6 +73,16 @@ python detect.py --weights yolov5s.pt --source path/to/images  # run inference o
 For marking images
 exports an xml and image file that can be imported to roboflow.
 
+## CameraSplitter & subprograms
+pip install pyfakewebcam
+sudo apt-get install ffmpeg
+
+#v4l2Loopback installation
+cd ~ && git clone https://github.com/umlaeute/v4l2loopback.git
+cd v4l2loopback && make && sudo make install
+modprobe v4l2loopback video_nr=8, 9
+
+
 ## AutoRotate for rotating pictures
 
 # Shape Fitting
