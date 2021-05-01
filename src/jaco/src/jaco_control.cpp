@@ -1,8 +1,67 @@
 #include <ros/ros.h>
 #include <jaco_control.h>
-
+//#include <customVector.h>
 #include <actionlib/client/simple_action_client.h>
 #include <tf_conversions/tf_eigen.h>
+
+template <class T>
+std::array<T,3> vector::dotProd(std::array<T,3> A,std::array<T,3> B){
+    return A;
+}
+
+template <class T>
+std::array<T,3> crossProd(std::array<T,3>,std::array<T,3>);
+
+
+template <class T>
+std::array<T,3> sub(std::array<T,3>,std::array<T,3>);
+
+template <class T>
+std::array<T,3> add(std::array<T,3>,std::array<T,3>);
+
+template <class T>
+std::array<T,3> vecProj(std::array<T,3>,std::array<T,3>);
+
+template <class T>
+std::array<T,3> pointToArray(geometry_msgs::Vector3,std::array<T,3>);
+
+template <class T>
+std::array<T,3> pointToArray(geometry_msgs::Point,std::array<T,3>);
+
+
+bool debug_assistiveb = false;
+void debug_assistive(std::string a){
+if (debug_assistiveb)
+{
+    ROS_INFO_STREAM(a);
+    std::array<double,3> A = {1,1,1};
+    vector::dotProd(A,A);
+}
+}
+bool debug_normalb = false;
+void debug_normal(std::string a){
+if (debug_normalb)
+{
+    ROS_INFO_STREAM(a);
+}
+}
+bool debug_experimentalb = true;
+
+void debug_experimental(std::string a){
+if (debug_experimentalb)
+    {
+        ROS_INFO_STREAM(a);
+    }
+}
+
+bool debug_itongueb = false;
+
+void debug_itongue(std::string a){
+    if (debug_itongueb)
+    {
+        ROS_INFO_STREAM(a);
+    }
+}
 
 
 
@@ -433,32 +492,32 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         switch (msg->Sensor)
         {
         case 17: //Z forwards  - away from oneself
-        ROS_INFO("Z forwards  - away from oneself");
+        debug_itongue("Z forwards  - away from oneself");
             velocity.Z = -0.30;
             break;
         case 12: //Z backwards -- towards oneself
             velocity.Z = 0.30;
             break; 
         case 11: // cross up-left
-        ROS_INFO("cross up-left");
+        debug_itongue("cross up-left");
             velocity.Y  = 0.30;
             velocity.X  = -0.30;
             break;
         case 8:// Y upwards
-        ROS_INFO("Y upwards");
+        debug_itongue("Y upwards");
             velocity.Y = 0.30;
             break;
         case 13: // Cross up-right
-        ROS_INFO("Cross up-right");
+        debug_itongue("Cross up-right");
             velocity.Y = 0.30;
             velocity.X = 0.30;
             break;
         case 14: //x left
-        ROS_INFO("x left");
+        debug_itongue("x left");
             velocity.X  = -0.30;
             break;
         case 15: //x right
-        ROS_INFO("x right");
+        debug_itongue("x right");
             velocity.X = 0.30;
             break;
         case 16: // Cross down-left
@@ -473,22 +532,23 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             velocity.X = 0.30;
             break;
         case 1: //Twist wrist
-            ROS_INFO("twist 1");
+            debug_itongue("twist 1");
             velocity.ThetaY = 0.7;
             break;
         case 2: //twist  wrist another way
-            ROS_INFO("Twist 2");
+            debug_itongue("Twist 2");
             velocity.ThetaY = -0.7;
             break;
         case 3: //twist  wrist another way
-            ROS_INFO("gripper");
+            debug_itongue("gripper");
             spherical_grip(100);
             break;
         case 4: //twist  wrist another way
-            ROS_INFO("gripper open");
+            debug_itongue("gripper open");
             spherical_grip(45);
             break;
         default:
+        return;
             break;
         }
         // ROS_INFO_STREAM(currentpose.pose.position.x)
@@ -501,29 +561,29 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         kinova::KinovaPose ee_pose; //end effectpr åpse
         if (robot_connected_)
         {
-            //kinova_comm.getCartesianPosition(ee_pose);
-            ROS_INFO("GAMLE VÆRDIER");
+            kinova_comm.getCartesianPosition(ee_pose);
+            debug_normal("GAMLE VÆRDIER");
             geometry_msgs::Point newTraj;
-            ROS_INFO_STREAM(velocity.X);
-            ROS_INFO_STREAM(velocity.Y);
-            ROS_INFO_STREAM(velocity.Z);
+            debug_normal(std::to_string(velocity.X));
+            debug_normal(std::to_string(velocity.Y));
+            debug_normal(std::to_string(velocity.Z));
             velDir.x = velocity.X;
             velDir.y = velocity.Y;
             velDir.z = velocity.Z;
-            // if (!obj_ee_array.empty())
-            // {
-            //     ROS_INFO_STREAM(obj_ee_array.size());
-            //     newTraj = assistiveControl(velDir,obj_ee_array,current_robot_transformStamped);
+            debug_experimental("Initial values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
+             if (!obj_ee_array.empty())
+            {
+                debug_normal(std::to_string(obj_ee_array.size()));
+                newTraj = assistiveControl(velDir,obj_ee_array,current_robot_transformStamped);
+                velocity.X = newTraj.x;
+                velocity.Y = newTraj.y;
+                velocity.Z = newTraj.z;
     
-            // }
-            // velocity.X = newTraj.x;
-            // velocity.Y = newTraj.y;
-            // velocity.Z = newTraj.z;
-            ROS_INFO_STREAM(newTraj.x);
-            ROS_INFO_STREAM(newTraj.y);
-            ROS_INFO_STREAM(newTraj.z);
-            kinova_comm.setCartesianVelocities(velocity);
-            ROS_INFO("SEND  ");
+            }
+
+            debug_experimental("Adjusted values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
+             kinova_comm.setCartesianVelocities(velocity);
+            debug_normal("SEND  ");
             
         }
     } else
@@ -598,7 +658,7 @@ void jaco_control::setCameraPos(){
 }
 
 void jaco_control::shapefitting_activeCb(){
-    ROS_INFO("Goal just went active");
+    debug_normal("Goal just went active");
 }
 
 void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_simple_position_arrayResultConstPtr& result){
@@ -607,12 +667,12 @@ void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& s
     {
         tf_cam_to_object.clear();
     geometry_msgs::TransformStamped Transform_obj;
-    ROS_INFO_STREAM("shapefitting_doneCB");
+    debug_normal("shapefitting_doneCB");
     
     // Map every object to the camera, since the position is measured from the camera
     for (size_t i = 0; i < result->object.size(); i++)
     {
-        ROS_INFO_STREAM("shapefitting_doneCB_LOOP");
+        debug_normal("shapefitting_doneCB_LOOP");
         //tf from camera to object
         Transform_obj.header.stamp = ros::Time::now();
         Transform_obj.header.frame_id = "Realsense_Camera";
@@ -660,10 +720,10 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
 
    
     
-    interface_as_.start();
-    ROS_INFO("Waiting for action server to start.");
-    shapefitting_ac.waitForServer();
-    ROS_INFO("Waiting for action server to start.");
+   // interface_as_.start();
+    ROS_INFO("Waiting for shapefitting action server to start.");
+    //shapefitting_ac.waitForServer();
+    ROS_INFO("ShapeFitting action server started");
     
     planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
     //nh_.param<bool>("/robot_connected",robot_connected_,true);
@@ -694,14 +754,18 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     // pos_sub = nh.subscribe<jaco::obj_pos>("/obj_pos", 1000, &jaco_control::pos_callback, this); //EMIL
     itongue_start_pub = nh_.advertise<jaco::sys_msg>("/Sys_cmd",1);
     vision_data_sub = nh.subscribe<vision::Detection_array>("/Vision/ObjectDetection",1000,&jaco_control::vision_data_callback,this);
-
+    ROS_INFO("Connecting itongue");
     connect_itongue();
-
+    ROS_INFO("Itongue connected");
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
-    ros::Rate rate(10.0);
 
     // spherical_grip(100);
+    // sleep(3);
+    // spherical_grip(45);
+    testemil();
+    ros::Rate rate(10.0);
+
 
 
     while (nh_.ok()){     
@@ -779,6 +843,8 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
                                     ros::Time(0),ros::Duration(3.0));
             
             // Transform each camData into world frame and save
+            
+            tf_cam_to_object[0].header.stamp = ros::Time::now();
             for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
                 // ROS_INFO_STREAM(camData.transform.translation.x);
                 // ROS_INFO_STREAM(camData.transform.translation.y);
@@ -817,12 +883,18 @@ geometry_msgs::Point jaco_control::EndEffDirVec(geometry_msgs::Point iTongueDire
 
 } //Enheds retnings vektor (skal normaliseres)
 
-std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::vector<geometry_msgs::TransformStamped> &objects, geometry_msgs::TransformStamped &endEffPose){
+std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::vector<geometry_msgs::TransformStamped> &objectsIn, geometry_msgs::TransformStamped &endEffPoseIn){
+        debug_assistive("OBJDIRRECTION 11");
+    geometry_msgs::TransformStamped endEffPose = endEffPoseIn;
     std::vector<jaco_control::ObjectInScene> objectDataVec;
-     ROS_INFO("OBJDIRRECTION 1");
-
+     debug_assistive("OBJDIRRECTION 1");
+     debug_experimental(std::to_string(objectsIn.size()));
+    std::vector<geometry_msgs::TransformStamped> objects = objectsIn;
+ 
+    debug_experimental("OBJDIRRECTION 12");
+    debug_assistive(std::to_string(objects.size()));
     for (geometry_msgs::TransformStamped obj : objects){
-          ROS_INFO("OBJDIRRECTION 2");
+          debug_assistive("OBJDIRRECTION 2");
 
         jaco_control::ObjectInScene objectData;
         geometry_msgs::Point vec;
@@ -854,33 +926,51 @@ std::vector<jaco_control::ObjectInScene> jaco_control::ObjDirectionVectors(std::
 
 geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongueDirIn, std::vector<geometry_msgs::TransformStamped> &objectsIn, geometry_msgs::TransformStamped &endEffPoseIn)
 {
+
+    if (std::abs(iTongueDirIn.x) + std::abs(iTongueDirIn.y) + std::abs(iTongueDirIn.z))
+    {
+        /* code */
+    
+    
+
     std::vector<geometry_msgs::TransformStamped> objects = objectsIn;
     geometry_msgs::Point iTongueDir = iTongueDirIn;
     geometry_msgs::TransformStamped endEffPose = endEffPoseIn;
-
+    //debug_experimental("Initial direction: " + std::to_string(iTongueDirIn.x) + " "+ std::to_string(iTongueDirIn.y) + " " + std::to_string(iTongueDirIn.z));
     if (!objects.empty())
     {
-       ROS_INFO("1");
+    debug_assistive("1");
     std::vector<float> Assist; 
-
+    debug_assistive(std::to_string(objects.size()));
     geometry_msgs::Point EndEffDir = EndEffDirVec(iTongueDir);
- ROS_INFO("11");
+ debug_assistive("11");
+    
+    
+
     std::vector<jaco_control::ObjectInScene> ObjDirVec = ObjDirectionVectors(objects,endEffPose);
     
         /* code */
    
-        ROS_INFO("2");
+        debug_assistive("2");
     for(size_t i = 0; i < ObjDirVec.size(); i++)
     {
-        float Angle = acos((iTongueDir.x * ObjDirVec[i].directionVector.x) + (iTongueDir.y * ObjDirVec[i].directionVector.y) + (iTongueDir.z * ObjDirVec[i].directionVector.z) * M_PI / 180);
-        float dist = ObjDirVec[i].dist;
+        debug_experimental("i1: " + std::to_string(iTongueDir.x) + " obj1 " + std::to_string(ObjDirVec[i].directionVector.x) + " i2 " + std::to_string(iTongueDir.y) + " obj2 " + std::to_string(ObjDirVec[i].directionVector.y)  + " i3 " + std::to_string(iTongueDir.z) + " obj3 " + std::to_string(ObjDirVec[i].directionVector.z) + " sum " + std::to_string(((iTongueDir.x * ObjDirVec[i].directionVector.x) + (iTongueDir.y * ObjDirVec[i].directionVector.y) + (iTongueDir.z * ObjDirVec[i].directionVector.z) )/(std::sqrt((std::pow(iTongueDir.x,2)+(std::pow(iTongueDir.y,2)+(std::pow(iTongueDir.z,2))))))));
+        
+        double dotProd = ((iTongueDir.x * ObjDirVec[i].directionVector.x) + (iTongueDir.y * ObjDirVec[i].directionVector.y) + (iTongueDir.z * ObjDirVec[i].directionVector.z));
+        double leniTongueVec = (std::sqrt((std::pow(iTongueDir.x,2)+(std::pow(iTongueDir.y,2)+(std::pow(iTongueDir.z,2))))));
+        double Angle = acos(dotProd/leniTongueVec);
+        //Angle = std::min(Angle,M_PI-Angle);
+        double dist = ObjDirVec[i].dist; 
         //Find på nogle parametre
-        float Assitability = dist * dist * Angle; // Skal måske justeres
-        Assist.push_back(Assitability);
+        //double Assitability =  std::max((double)dist,0.2) * Angle; // Skal måske justeres
+        double Assitability = (std::pow(dist,2) * Angle) + ( 0.3 * dist ) + ( 0.03 * std::pow(Angle,4));
+        Assist.push_back(Assitability); 
+        debug_experimental("Adjustability: " + std::to_string(Assitability) + " dist: " + std::to_string(dist) + " Angle: " + std::to_string(Angle) + " New value: " + std::to_string(std::max((double)dist,0.2)*Angle));
     }
-        ROS_INFO("3");
+        debug_assistive("3");
         int id ;
-    ROS_INFO_STREAM(objects.size());
+        
+    debug_assistive(std::to_string(objects.size()));
     if (objects.size() > 1)
     {
        id = *min_element(Assist.begin(), Assist.end());//HER
@@ -891,25 +981,27 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     
     
     
-    ROS_INFO_STREAM(id);
-        ROS_INFO("31");
-    double thresh_auto = 0.2;
-    double thresh_semi = 0.5;
+    debug_assistive(std::to_string(id));
+        debug_assistive("31");
+    double thresh_auto = 0.1;
+    double thresh_semi = 0.15;
      geometry_msgs::Point newTraj;
-     ROS_INFO_STREAM(Assist.size());
+     debug_assistive(std::to_string(Assist.size()));
     if (Assist[id] < thresh_auto) // full auto den har du lavet
     {
 
-            ROS_INFO("4");
+            debug_assistive("4");
+        debug_experimental("Full auto");
         std::cout << "Going towards object " << id << std::endl;
-        newTraj.x = ObjDirVec[id].position.x;
-        newTraj.y = ObjDirVec[id].position.y;
-        newTraj.z = ObjDirVec[id].position.z;
+        newTraj.x = ObjDirVec[id].directionVector.x;
+        newTraj.y = ObjDirVec[id].directionVector.y;
+        newTraj.z = ObjDirVec[id].directionVector.z;
 
     }
     else if (Assist[id] > thresh_auto && Assist[id] < thresh_semi) // semi auto 
     {
-            ROS_INFO("5");
+         debug_experimental("Semi auto");
+            debug_assistive("5");
         // beregn percent assistance
         double p_manual = Assist[id]-thresh_auto/(thresh_semi-thresh_auto);
         double p_assist = 1-p_manual;
@@ -920,33 +1012,37 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
         newTraj.z = EndEffDir.z*p_manual;
 
         // Vægt auto hastighed
-        newTraj.x = newTraj.x + ObjDirVec[id].position.x*p_assist;
-        newTraj.y = newTraj.y + ObjDirVec[id].position.y*p_assist;
-        newTraj.z = newTraj.z + ObjDirVec[id].position.z*p_assist;
+        newTraj.x = newTraj.x + ObjDirVec[id].directionVector.x*p_assist;
+        newTraj.y = newTraj.y + ObjDirVec[id].directionVector.y*p_assist;
+        newTraj.z = newTraj.z + ObjDirVec[id].directionVector.z*p_assist;
         
     }else // full manual
     {
+         debug_experimental("NOT auto");
         std::cout << "not close enough to assist" << std::endl;
         newTraj.x = EndEffDir.x;
         newTraj.y = EndEffDir.y;
         newTraj.z = EndEffDir.z;
     }
     
-        ROS_INFO("6");
+        debug_assistive("6");
     // Juster vektorer afhængigt af hastighed. 
-    double vel = 0.05; // m/s
+    double vel = 0.3; // m/s
     newTraj.x = newTraj.x * vel;
     newTraj.y = newTraj.y * vel;
     newTraj.z = newTraj.z * vel;
-    ROS_INFO("IM IN");
+    //debug_experimental("Adjusted direction: " + std::to_string(newTraj.x) + " " + std::to_string(newTraj.y) + " " + std::to_string(newTraj.z));
+    debug_assistive("IM IN");
 
      return newTraj;
     
     }
-    
-    
-    
-    
+    }
+    geometry_msgs::Point newTraj;
+    newTraj.x = iTongueDirIn.x;
+    newTraj.y = iTongueDirIn.y;
+    newTraj.z = iTongueDirIn.z;
+    return newTraj;
 }
 
 // geometry_msgs::Point jaco_control::trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose){
@@ -983,80 +1079,20 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     
 
 void jaco_control::testemil(){
-    ROS_INFO("BEGYNDT");
-    // vision::Detection DetectionData;
-    // DetectionData.Class = 1;
-    // DetectionData.X1 = 100;
-    // DetectionData.X2 = 200;
-    // DetectionData.Y1 = 100;
-    // DetectionData.Y2 = 200;
-
-    // shapefitting::shape_data test = jaco_trajectory::get_shape_data(DetectionData);
-
-        
-        tf_Cam_Obj.object_class.data = "Vin"; 
-        tf_Cam_Obj.pos.x = 0.6;
-        tf_Cam_Obj.pos.y = 0.6;
-        tf_Cam_Obj.pos.z = 0.6;
-        tf_Cam_Obj.orientation.x = -1.2;
-        tf_Cam_Obj.orientation.y = 0;
-        tf_Cam_Obj.orientation.z = 2.3;
-        
-
-        Transform_camera.header.stamp = ros::Time::now();
-        Transform_camera.header.frame_id = "j2n6s300_end_effector";
-        Transform_camera.child_frame_id = "Realsense_Camera";
-        Transform_camera.transform.translation.x = 0.102; //Mulig fortegnsændring
-        Transform_camera.transform.translation.y = 0;
-        Transform_camera.transform.translation.z = -0.182;
-        tf2::Quaternion q1;
-            q1.setRPY(-0.26, 0, M_PI/2);
-        Transform_camera.transform.rotation.x = q1.x();
-        Transform_camera.transform.rotation.y = q1.y();
-        Transform_camera.transform.rotation.z = q1.z();
-        Transform_camera.transform.rotation.w = q1.w();
-
-        //tf from camera to object
-        Transform_obj.header.stamp = ros::Time::now();
-        Transform_obj.header.frame_id = "Realsense_Camera";
-        Transform_obj.child_frame_id = tf_Cam_Obj.object_class.data;
-        Transform_obj.transform.translation.x = tf_Cam_Obj.pos.x;
-        Transform_obj.transform.translation.y = tf_Cam_Obj.pos.y;
-        Transform_obj.transform.translation.z = tf_Cam_Obj.pos.z;
-        tf2::Quaternion q2;
-            //q2.setRPY(0,0,0);
-            q2.setRPY(tf_Cam_Obj.orientation.x, tf_Cam_Obj.orientation.y, tf_Cam_Obj.orientation.z);
-        Transform_obj.transform.rotation.x = q2.x();
-        Transform_obj.transform.rotation.y = q2.y();
-        Transform_obj.transform.rotation.z = q2.z();
-        Transform_obj.transform.rotation.w = q2.w();
-
-
-    // shapefitting::shapefitting_positionGoal goal;
-    // goal.input = DetectionData;
-    // actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shape_data_client("get_shape",true);
-    //  ROS_INFO("1");
-    // shape_data_client.waitForServer();
-    //  ROS_INFO("2");
-    // shape_data_client.sendGoal(goal);
-    // shape_data_client.waitForResult(ros::Duration(2.0));
-    // if (shape_data_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-    //     ROS_INFO("SUCCESS");
-    // }
-
-    // shapefitting::shape_data Shakinova_commpe_Data_Test;
-    // Shape_Data_Test.object_class.data = "Sodavand";
-    // Shape_Data_Test.radius = 0.12;
-    // Shape_Data_Test.pos.x = 0.2;
-    // Shape_Data_Test.pos.y = -0.5;
-    // Shape_Data_Test.pos.z = 1.3;
-    // Shape_Data_Test.orientation.x = 0;
-    // Shape_Data_Test.orientation.y = 1;
-    // Shape_Data_Test.orientation.z = 0;
-
-    // shapefitting::shapefitting_positionActionResult result;
-    // result.result.object = Shape_Data_Test;
     
+    geometry_msgs::TransformStamped testPos;
+    testPos.transform.translation.x = 0.26846;
+    testPos.transform.translation.y = -0.6144;
+    testPos.transform.translation.z = 0.2311;
+    testPos.transform.rotation.w = 0.05287;
+    testPos.transform.rotation.x = 0.81934;
+    testPos.transform.rotation.y = -0.57;
+    testPos.transform.rotation.z = 0.015761;
+    testPos.header.frame_id = "world";
+    testPos.child_frame_id = "object";
+    testPos.header.stamp = ros::Time::now();
+    
+    tf_cam_to_object.push_back(testPos);
 }
 
 

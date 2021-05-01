@@ -7,6 +7,7 @@
 #include <moveit_msgs/ApplyPlanningScene.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <array>
+#include <algorithm>
 #include <moveit/planning_interface/planning_interface.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
@@ -204,3 +205,27 @@ public:
 // jaco_trajectory::~jaco_trajectory()
 // {
 // }
+
+namespace vector{
+
+    template <class T>
+    std::array<T,3> dotProd(std::array<T,3>,std::array<T,3>);
+
+    template <class T>
+    std::array<T,3> crossProd(std::array<T,3>,std::array<T,3>);
+
+    template <class T>
+    std::array<T,3> sub(std::array<T,3>,std::array<T,3>);
+
+    template <class T>
+    std::array<T,3> add(std::array<T,3>,std::array<T,3>);
+
+    template <class T>
+    std::array<T,3> vecProj(std::array<T,3>,std::array<T,3>);
+
+    template <class T>
+    std::array<T,3> pointToArray(geometry_msgs::Vector3,std::array<T,3>);
+
+    template <class T>
+    std::array<T,3> pointToArray(geometry_msgs::Point,std::array<T,3>);
+}
