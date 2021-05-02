@@ -114,7 +114,7 @@ private:
     geometry_msgs::PoseStamped object_pose_;
     ros::Subscriber itongue_sub_;
     ros::Subscriber tf_sub;
-    geometry_msgs::TransformStamped current_robot_transformStamped;
+    geometry_msgs::TransformStamped ee_pose_;
 
     vision::Detection_array visionDataArray;
     shapefitting::shape_data shapeData;
@@ -146,11 +146,18 @@ private:
     geometry_msgs::Point EndEffDirVec(geometry_msgs::Point iTongueDirection); //Enheds retnings vektor (skal normaliseres)
 
     std::vector<ObjectInScene> ObjDirectionVectors(std::vector<geometry_msgs::TransformStamped> &objects, geometry_msgs::TransformStamped &endEffPose);
-    
     // Function that determines level of automation
     geometry_msgs::Point assistiveControl(geometry_msgs::Point &iTongueDir, std::vector<geometry_msgs::TransformStamped> &objects, geometry_msgs::TransformStamped &endEffPose);
 
+    // geometry_msgs::TransformStamped pregrasp(geometry_msgs::TransformStamped )
     // Eventuelt PID controller til at styre retning
+
+    //Function for calculating pregrasp position
+    geometry_msgs::TransformStamped pregraspPose(geometry_msgs::TransformStamped graspPose);
+    //Function for defining cylidrical area where the gripper must be assisted
+    bool pregraspArea(geometry_msgs::TransformStamped pregraspPose, geometry_msgs::TransformStamped graspPose);
+    // Function for defining the sphere where that gripper must grip
+    bool graspArea(geometry_msgs::TransformStamped graspPose);
 
     // Beregn trajectory retuner hastighed og retning på hastighed
 
@@ -209,23 +216,29 @@ public:
 namespace vector{
 
     template <class T>
-    std::array<T,3> dotProd(std::array<T,3>,std::array<T,3>);
+    double dotProd(std::array<T,3>,std::array<T,3>);
+
+    // template <class T>
+    // std::array<T,3> crossProd(std::array<T,3>,std::array<T,3>);
 
     template <class T>
-    std::array<T,3> crossProd(std::array<T,3>,std::array<T,3>);
+    std::array<double,3> sub(std::array<T,3>,std::array<T,3>);
 
     template <class T>
-    std::array<T,3> sub(std::array<T,3>,std::array<T,3>);
+    std::array<double,3> add(std::array<T,3>,std::array<T,3>);
 
     template <class T>
-    std::array<T,3> add(std::array<T,3>,std::array<T,3>);
+    std::array<double,3> scalarProd(T,std::array<T,3>);
 
     template <class T>
-    std::array<T,3> vecProj(std::array<T,3>,std::array<T,3>);
+    std::array<double,3> vecProj(std::array<T,3>,std::array<T,3>);
+
+    //template <class T>
+    std::array<double,3> pointToArray(geometry_msgs::Vector3);
+
+   // template <class T>
+    std::array<double,3> pointToArray(geometry_msgs::Point);
 
     template <class T>
-    std::array<T,3> pointToArray(geometry_msgs::Vector3,std::array<T,3>);
-
-    template <class T>
-    std::array<T,3> pointToArray(geometry_msgs::Point,std::array<T,3>);
+    double length(std::array<T,3>);
 }

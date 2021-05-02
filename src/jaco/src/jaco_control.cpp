@@ -4,29 +4,74 @@
 #include <actionlib/client/simple_action_client.h>
 #include <tf_conversions/tf_eigen.h>
 
+
+
+// template <class T>
+// std::array<T,3> vector::crossProd(std::array<T,3>,std::array<T,3>){
+
+// };
+
 template <class T>
-std::array<T,3> vector::dotProd(std::array<T,3> A,std::array<T,3> B){
-    return A;
+double vector::dotProd(std::array<T,3> A,std::array<T,3> B){
+    double sum{0};
+    for (size_t i = 0; i < A.size(); i++) sum = sum + (A[i]*B[i]);    
+    return sum;
 }
 
 template <class T>
-std::array<T,3> crossProd(std::array<T,3>,std::array<T,3>);
-
-
-template <class T>
-std::array<T,3> sub(std::array<T,3>,std::array<T,3>);
-
-template <class T>
-std::array<T,3> add(std::array<T,3>,std::array<T,3>);
+std::array<double,3> vector::sub(std::array<T,3> A,std::array<T,3> B){
+    std::array<double,3> vec;
+    for (size_t i = 0; i < A.size(); i++) vec[i] = A[i] - B[i] ;    
+    return vec;
+}
 
 template <class T>
-std::array<T,3> vecProj(std::array<T,3>,std::array<T,3>);
+std::array<double,3> vector::add(std::array<T,3> A,std::array<T,3> B){
+    std::array<double,3> vec;
+    for (size_t i = 0; i < A.size(); i++) vec[i] = A[i] + B[i] ;    
+    return vec;
+}
 
 template <class T>
-std::array<T,3> pointToArray(geometry_msgs::Vector3,std::array<T,3>);
+std::array<double,3> vector::scalarProd(T A,std::array<T,3> B){
+    std::array<double,3> vec;
+    for (size_t i = 0; i < B.size(); i++) vec[i] = A * B[i];
+    return vec;
+}
 
 template <class T>
-std::array<T,3> pointToArray(geometry_msgs::Point,std::array<T,3>);
+std::array<double,3> vector::vecProj(std::array<T,3> A,std::array<T,3> B){
+    T lenB = vector::length(B);
+    T lenBpow = std::pow(lenB,2);
+    T dotAB = vector::dotProd(A,B);
+
+    std::array<double,3> projVec = vector::scalarProd(dotAB,B);
+    return projVec;
+};
+
+// template <class T>
+std::array<double,3> vector::pointToArray(geometry_msgs::Vector3 A){
+    std::array<double,3> vec;
+    vec[0] = A.x;
+    vec[1] = A.y;
+    vec[2] = A.z;
+    return vec;
+};
+
+//template <class T>
+std::array<double,3> vector::pointToArray(geometry_msgs::Point A){
+    std::array<double,3> vec;
+    vec[0] = A.x;
+    vec[1] = A.y;
+    vec[2] = A.z;
+    return vec;
+};
+
+template <class T>
+double vector::length(std::array<T,3> A){
+
+    return std::sqrt(std::pow(A[0],2)+std::pow(A[1],2)+std::pow(A[2],2));
+}
 
 
 bool debug_assistiveb = false;
@@ -35,7 +80,9 @@ if (debug_assistiveb)
 {
     ROS_INFO_STREAM(a);
     std::array<double,3> A = {1,1,1};
-    vector::dotProd(A,A);
+    
+    vector::length(A);
+    
 }
 }
 bool debug_normalb = false;
@@ -558,10 +605,10 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         // group_->move();
         // bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
         // group_->execute(my_plan);
-        kinova::KinovaPose ee_pose; //end effectpr åpse
+        //kinova::KinovaPose ee_pose; //end effectpr åpse
         if (robot_connected_)
         {
-            kinova_comm.getCartesianPosition(ee_pose);
+            //kinova_comm.getCartesianPosition(ee_pose);
             debug_normal("GAMLE VÆRDIER");
             geometry_msgs::Point newTraj;
             debug_normal(std::to_string(velocity.X));
@@ -574,7 +621,7 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
              if (!obj_ee_array.empty())
             {
                 debug_normal(std::to_string(obj_ee_array.size()));
-                newTraj = assistiveControl(velDir,obj_ee_array,current_robot_transformStamped);
+                newTraj = assistiveControl(velDir,obj_ee_array,ee_pose_);
                 velocity.X = newTraj.x;
                 velocity.Y = newTraj.y;
                 velocity.Z = newTraj.z;
@@ -839,7 +886,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             }
 
 
-            current_robot_transformStamped = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
+            ee_pose_ = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
                                     ros::Time(0),ros::Duration(3.0));
             
             // Transform each camData into world frame and save
@@ -1044,6 +1091,103 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     newTraj.z = iTongueDirIn.z;
     return newTraj;
 }
+
+bool jaco_control::graspArea(geometry_msgs::TransformStamped objectPose){
+    // graspPose is the position of the object 
+    double radius {0.03};      // Radius of sphere in meters
+    double dist {0.0};
+    
+    geometry_msgs::Vector3 A = objectPose.transform.translation;
+    geometry_msgs::Vector3 B = ee_pose_.transform.translation;
+
+    std::array<double,3> AB = vector::sub(vector::pointToArray(A),vector::pointToArray(B)); // Vector between the  object and end effector
+
+    dist = vector::length(AB);
+
+    if (dist < radius){ return true; }
+    else { return false; }
+    
+    
+
+};
+
+geometry_msgs::TransformStamped jaco_control::pregraspPose(geometry_msgs::TransformStamped graspPose){
+    geometry_msgs::TransformStamped pregraspPose = graspPose;
+    pregraspPose.child_frame_id = "pregrasp_" + pregraspPose.child_frame_id;
+    double pregrasp_offset = 0.07;
+    
+    // Vector object center (graspPose)
+    std::array<double,2> A;
+    A[0] = graspPose.transform.translation.x;
+    A[1] = graspPose.transform.translation.y;
+
+    // End effector pose
+    std::array<double,2> B;
+    B[0] = ee_pose_.transform.translation.x;
+    B[1] = ee_pose_.transform.translation.x;
+
+    // Vector from end object to end effector
+    std::array<double,2> AB;
+    AB[0] = B[0] - A[0];
+    AB[1] = B[1] - A[1];
+
+    double lenAB = std::sqrt( std::pow(AB[0],2) + std::pow(AB[1],2) );
+
+    //Normalize the vector
+    std::array<double,2> ABnorm;
+    ABnorm[0] = AB[0]/lenAB;
+    ABnorm[1] = AB[1]/lenAB;
+
+    //Calculate vector from object to pregrasp pose
+    std::array<double,2> AC;
+    AC[0] = ABnorm[0]*pregrasp_offset;
+    AC[1] = ABnorm[1]*pregrasp_offset;
+
+    //Pregrasp pose
+    std::array<double,2> C;
+    C[0] = A[0] + AC[0];
+    C[1] = A[1] + AC[1];
+
+    pregraspPose.transform.translation.x = C[0];
+    pregraspPose.transform.translation.y = C[1];
+
+    return pregraspPose;
+};
+
+//Function for defining cylidrical area where the gripper must be assisted
+bool jaco_control::pregraspArea(geometry_msgs::TransformStamped pregraspPose, geometry_msgs::TransformStamped graspPose){
+    double radius {0.03};
+
+
+    std::array<double,3> A = vector::pointToArray(pregraspPose.transform.translation);  // Pregrasp position for object
+    std::array<double,3> B = vector::pointToArray(graspPose.transform.translation);     // Position of object
+    std::array<double,3> C = vector::pointToArray(ee_pose_.transform.translation);      // End effector position
+
+    std::array<double,3> AB = vector::sub(B,A);                                         // Vector from pregrasp to object
+
+    std::array<double,3> AC = vector::sub(C,A);                                         // Vector from pregrasp to ee;
+
+    std::array<double,3> proj_AC_on_AB = vector::vecProj(AC,AB);                        // Projection of AC on AB
+
+    std::array<double,3> perpendicular_vec = vector::sub(AC,proj_AC_on_AB);
+
+    double perpendiscular_distance_to_ee = vector::length(perpendicular_vec);
+
+
+    //find t
+    double t = proj_AC_on_AB[0]/AB[0];
+
+    if ((0 > t > 1) && (perpendiscular_distance_to_ee < 0.03))
+    {
+        return true;
+    }else
+    {
+        return false;
+    }
+    
+    
+};
+
 
 // geometry_msgs::Point jaco_control::trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose){
 //     std::array<double,3> startPos {endEffPose.position.x, endEffPose.position.y, endEffPose.position.z};

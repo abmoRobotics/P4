@@ -153,6 +153,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/jaco.cpp
@@ -263,6 +265,8 @@ add_executable(scenario_semi_automatic src/scenario_semi_automatic.cpp)
 target_link_libraries(scenario_semi_automatic ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS scenario_semi_automatic DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+# add_executable(vectorCustomm src/libraries/customVector.cpp  include/libraries/customVector.h)
+
 add_executable(jaco_control src/jaco_control.cpp include/jaco_control.h)
 target_link_libraries(jaco_control ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 install(TARGETS jaco_control DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
@@ -279,6 +283,7 @@ install(TARGETS interface_screen DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 # target_link_libraries(shapefitting ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${kinova_driver_LIBRARIES})
 # install(TARGETS shapefitting DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 add_dependencies(work_scene2 jaco_generate_messages_cpp )
+
 add_dependencies(jaco_trajectory jaco_generate_messages_cpp kinova_msgs_generate_messages_cpp)
 add_dependencies(tester2 jaco_generate_messages_cpp)
 add_dependencies(interface jaco_generate_messages_cpp)
