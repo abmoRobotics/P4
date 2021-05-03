@@ -159,17 +159,23 @@ private:
     // Function for defining the sphere where that gripper must grip
     bool graspArea(geometry_msgs::TransformStamped graspPose);
 
-    double assistability();
+    double assistability(kinova::KinovaPose &iTongueDirIn, geometry_msgs::TransformStamped &objectsIn);
 
     // Calculate trajectory in pregrasp area
-    geometry_msgs::Vector3 pregraspAssistance(geometry_msgs::TransformStamped graspPose);
+    kinova::KinovaPose pregraspAssistance(kinova::KinovaPose &iTongueDirIn,geometry_msgs::TransformStamped graspPose);
 
+    // Calculate trajectory in pregrasp area
+    kinova::KinovaPose semiAutoAssistance(kinova::KinovaPose &iTongueDir,geometry_msgs::TransformStamped pregraspPose);
+
+    double gripperThetaToObject(geometry_msgs::TransformStamped graspPose);
+
+    geometry_msgs::TransformStamped objectToAssist(kinova::KinovaPose &iTongueDirIn, std::vector<geometry_msgs::TransformStamped> &objectsIn);
     //Close gripper
     void gripperAssistance();
     // Beregn trajectory retuner hastighed og retning på hastighed
 
     // geometry_msgs::Point trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose);
-    
+    kinova::KinovaPose Assistance(kinova::KinovaPose &iTongueDir);
     
 
     std::vector<geometry_msgs::TransformStamped> tf_cam_to_object;
@@ -244,7 +250,9 @@ namespace vector{
     std::array<double,3> pointToArray(geometry_msgs::Vector3);
 
    // template <class T>
-    std::array<double,3> pointToArray(geometry_msgs::Point);
+    std::array<double,3> pointToArray(geometry_msgs::Point); 
+
+    std::array<double,3> pointToArray(kinova::KinovaPose); 
 
     std::array<double,3> norm(std::array<double,3> A);
     

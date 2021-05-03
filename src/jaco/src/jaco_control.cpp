@@ -67,6 +67,14 @@ std::array<double,3> vector::pointToArray(geometry_msgs::Point A){
     return vec;
 };
 
+std::array<double,3> vector::pointToArray(kinova::KinovaPose A){
+    std::array<double,3> vec;
+    vec[0] = A.X;
+    vec[1] = A.Y;
+    vec[2] = A.Z;
+    return vec;
+};
+
 template <class T>
 double vector::length(std::array<T,3> A){
 
@@ -536,12 +544,13 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     velDir.x = 0;
     velDir.y = 0;
     velDir.z = 0;
-    velocity.ThetaX = 0;
-    velocity.ThetaY = 0;
-    velocity.ThetaZ = 0;
-    velocity.X = 0;
-    velocity.Y = 0;
-    velocity.Z = 0;
+    velocity.InitStruct();
+    // velocity.ThetaX = 0;
+    // velocity.ThetaY = 0;
+    // velocity.ThetaZ = 0;
+    // velocity.X = 0;
+    // velocity.Y = 0;
+    // velocity.Z = 0;
     //To prevent noise in data, sensor count must be above 4.
     if(Sensor_count > 4){
 
@@ -619,22 +628,23 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         if (robot_connected_)
         {
             //kinova_comm.getCartesianPosition(ee_pose);
-            debug_normal("GAMLE VÆRDIER");
-            geometry_msgs::Point newTraj;
-            debug_normal(std::to_string(velocity.X));
-            debug_normal(std::to_string(velocity.Y));
-            debug_normal(std::to_string(velocity.Z));
-            velDir.x = velocity.X;
-            velDir.y = velocity.Y;
-            velDir.z = velocity.Z;
-            debug_experimental("Initial values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
-             if (!obj_ee_array.empty())
+            // debug_normal("GAMLE VÆRDIER");
+            // geometry_msgs::Point newTraj;
+            // debug_normal(std::to_string(velocity.X));
+            // debug_normal(std::to_string(velocity.Y));
+            // debug_normal(std::to_string(velocity.Z));
+            // velDir.x = velocity.X;
+            // velDir.y = velocity.Y;
+            // velDir.z = velocity.Z;
+            // debug_experimental("Initial values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
+              if (!obj_ee_array.empty())
             {
-                debug_normal(std::to_string(obj_ee_array.size()));
-                newTraj = assistiveControl(velDir,obj_ee_array,ee_pose_);
-                velocity.X = newTraj.x;
-                velocity.Y = newTraj.y;
-                velocity.Z = newTraj.z;
+                velocity = Assistance(velocity);
+                // debug_normal(std::to_string(obj_ee_array.size()));
+                // newTraj = assistiveControl(velDir,obj_ee_array,ee_pose_);
+                // velocity.X = newTraj.x;
+                // velocity.Y = newTraj.y;
+                // velocity.Z = newTraj.z;
     
             }
 
@@ -1102,6 +1112,8 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     return newTraj;
 }
 
+
+
 bool jaco_control::graspArea(geometry_msgs::TransformStamped objectPose){
     // graspPose is the position of the object 
     double radius {0.03};      // Radius of sphere in meters
@@ -1198,13 +1210,189 @@ bool jaco_control::pregraspArea(geometry_msgs::TransformStamped pregraspPose, ge
     
 };
 
-double assistability();
+
+double jaco_control::assistability(kinova::KinovaPose &iTongueDirIn, geometry_msgs::TransformStamped &objectsIn){
+        std::array<double,3> A = vector::pointToArray(iTongueDirIn);
+        std::array<double,3> B = vector::pointToArray(ee_pose_.transform.translation);
+        std::array<double,3> C = vector::pointToArray(objectsIn.transform.translation);
+        std::array<double,3> BC = vector::sub(C,B);     // From end effector to object
+        
+
+        double lenA = vector::length(A);
+        double lenC = vector::length(C);    //Length from object to EE 
+
+        double dot_prod = vector::dotProd(A,BC);
+        
+        double angle = dot_prod / (lenA * lenC);
+
+
+        double Assitability = (std::pow(lenC,2) * angle) + ( 0.3 * lenC ) + ( 0.03 * std::pow(angle,4));
+
+        return Assitability;
+};
+
+geometry_msgs::TransformStamped jaco_control::objectToAssist(kinova::KinovaPose &iTongueDirIn, std::vector<geometry_msgs::TransformStamped> &objectsIn){
+    double assist{0};
+    std::vector<double> assistArr; 
+    if (!objectsIn.empty())
+    {
+        for (size_t i = 0; i < objectsIn.size(); i++)
+        {
+            assist = assistability(iTongueDirIn,objectsIn[i]);
+            assistArr.push_back(assist);
+        }
+        int id = *min_element(assistArr.begin(), assistArr.end());
+        return objectsIn[id];
+    }
+
+    
+    
+    
+    
+};
+
 
 // Calculate trajectory in pregrasp area
-geometry_msgs::Vector3 pregraspAssistance(geometry_msgs::TransformStamped graspPose);
+kinova::KinovaPose jaco_control::pregraspAssistance(kinova::KinovaPose &iTongueDir,geometry_msgs::TransformStamped graspPose){
+
+    std::array<double,3> A = vector::pointToArray(iTongueDir);
+    std::array<double,3> B = vector::pointToArray(ee_pose_.transform.translation);
+    std::array<double,3> C = vector::pointToArray(graspPose.transform.translation);
+    std::array<double,3> BC = vector::sub(C,B);
+    
+    double dist = vector::length(BC);
+    double translationalVelocity = 0.3;
+    double vel_thresh_distance = 0.07; // full speed 7 cm from object
+
+    kinova::KinovaPose velocityPose;
+
+    velocityPose.X = vector::norm(BC)[0] * translationalVelocity * ( (dist-vel_thresh_distance) /dist);
+    velocityPose.Y = vector::norm(BC)[1] * translationalVelocity * ( (dist-vel_thresh_distance) /dist);
+    velocityPose.Z = vector::norm(BC)[2] * translationalVelocity * ( (dist-vel_thresh_distance) /dist);
+
+    
+    return velocityPose;
+
+};
+
+    // Calculate trajectory in pregrasp area
+kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueDir,geometry_msgs::TransformStamped pregraspPose){
+    double assist = assistability(iTongueDir,pregraspPose);
+    double translationalVelocity = 0.3;
+    kinova::KinovaPose velocityPose;
+    std::array<double,3> A = vector::pointToArray(iTongueDir);
+    std::array<double,3> B = vector::pointToArray(ee_pose_.transform.translation);
+    std::array<double,3> C = vector::pointToArray(pregraspPose.transform.translation);
+    std::array<double,3> BC = vector::sub(C,B);
+
+    double thresh_auto = 0.1;
+    double thresh_semi = 0.15;
+    
+    if (assist < thresh_auto) // full auto den har du lavet
+    {
+        double dist = vector::length(BC);
+        double dist_thresh = 0.08;
+        if (dist > dist_thresh)
+        {
+            velocityPose.X = vector::norm(BC)[0] * translationalVelocity;
+            velocityPose.Y = vector::norm(BC)[1] * translationalVelocity;
+            velocityPose.Z = vector::norm(BC)[2] * translationalVelocity;
+        } else
+        {
+            translationalVelocity = translationalVelocity * ( (dist-dist_thresh) /dist);
+            velocityPose.X = vector::norm(BC)[0] * translationalVelocity;
+            velocityPose.Y = vector::norm(BC)[1] * translationalVelocity;
+            velocityPose.Z = vector::norm(BC)[2] * translationalVelocity;
+
+            //mangler rotation af gripper
+        }
+    
+
+    }
+    else if (assist > thresh_auto && assist< thresh_semi) // semi auto 
+    {
+         debug_experimental("Semi auto");
+        debug_assistive("5");
+        // beregn percent assistance
+        double p_manual = assist-thresh_auto/(thresh_semi-thresh_auto);
+        double p_assist = 1-p_manual;
+
+        // Vægt manual hastighed 
+        velocityPose.X = (vector::norm(A)[0] * p_manual + vector::norm(BC)[0] * p_assist) * translationalVelocity;
+        velocityPose.Y = (vector::norm(A)[1] * p_manual + vector::norm(BC)[1] * p_assist) * translationalVelocity;
+        velocityPose.Z = (vector::norm(A)[2] * p_manual + vector::norm(BC)[2] * p_assist) * translationalVelocity;
+        
+    }else // full manual
+    {
+        debug_experimental("NOT auto");
+        std::cout << "not close enough to assist" << std::endl;
+        velocityPose.X = vector::norm(A)[0] * translationalVelocity;
+        velocityPose.Y = vector::norm(A)[1] * translationalVelocity;
+        velocityPose.Z = vector::norm(A)[2] * translationalVelocity;
+    }
+
+    return velocityPose;
+};
+
+double jaco_control::gripperThetaToObject(geometry_msgs::TransformStamped graspPose){
+    //ee_pose_.transform.rotation.z
+    tf::Quaternion q(
+        ee_pose_.transform.rotation.x,
+        ee_pose_.transform.rotation.y,
+        ee_pose_.transform.rotation.z,
+        ee_pose_.transform.rotation.w
+        ); 
+    
+    tf::Matrix3x3 rotation(q); 
+    
+    
+};
+
+kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
+    kinova::KinovaPose velocityPose;
+    velocityPose.InitStruct();
+    if (!obj_ee_array.empty())
+    {
+        bool pregraspMode = false;
+        
+        for (size_t i = 0; i < obj_ee_array.size(); i++)
+        {
+            geometry_msgs::TransformStamped pregrasp = pregraspPose(obj_ee_array[i]);
+            if (pregraspArea(pregrasp,obj_ee_array[i]) && (gripperThetaToObject(obj_ee_array[i]) < 1.5))
+            {
+                if (!graspArea(obj_ee_array[i]))
+                {
+                    pregraspAssistance(iTongueDir,obj_ee_array[i]);
+                } else if (graspArea(obj_ee_array[i]))
+                {
+                    gripperAssistance();
+                }
+                
+                
+                pregraspMode = true;
+            } 
+        }
+
+        if (!pregraspMode)
+        {
+
+            geometry_msgs::TransformStamped object = objectToAssist(iTongueDir,obj_ee_array);
+            geometry_msgs::TransformStamped pregrasp = pregraspPose(object);
+            velocityPose = semiAutoAssistance(iTongueDir,pregrasp);
+        }
+        
+        
+    }
+
+    return velocityPose;
+    
+};
+
 
 //Close gripper
- void gripperAssistance();
+ void jaco_control::gripperAssistance(){
+     spherical_grip(100);
+ };
 
 
 // geometry_msgs::Point jaco_control::trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose){
