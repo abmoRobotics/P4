@@ -165,9 +165,9 @@ private:
     kinova::KinovaPose pregraspAssistance(kinova::KinovaPose &iTongueDirIn,geometry_msgs::TransformStamped graspPose);
 
     // Calculate trajectory in pregrasp area
-    kinova::KinovaPose semiAutoAssistance(kinova::KinovaPose &iTongueDir,geometry_msgs::TransformStamped pregraspPose);
+    kinova::KinovaPose semiAutoAssistance(kinova::KinovaPose &iTongueDir,geometry_msgs::TransformStamped pregraspPose, geometry_msgs::TransformStamped graspPose);
 
-    double gripperThetaToObject(geometry_msgs::TransformStamped graspPose);
+    double gripperThetaToObject(geometry_msgs::TransformStamped graspPose, geometry_msgs::TransformStamped pregraspPose);
 
     geometry_msgs::TransformStamped objectToAssist(kinova::KinovaPose &iTongueDirIn, std::vector<geometry_msgs::TransformStamped> &objectsIn);
     //Close gripper

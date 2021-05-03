@@ -1276,7 +1276,7 @@ kinova::KinovaPose jaco_control::pregraspAssistance(kinova::KinovaPose &iTongueD
 };
 
     // Calculate trajectory in pregrasp area
-kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueDir,geometry_msgs::TransformStamped pregraspPose){
+kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueDir,geometry_msgs::TransformStamped pregraspPose, geometry_msgs::TransformStamped graspPose){
     double assist = assistability(iTongueDir,pregraspPose);
     double translationalVelocity = 0.3;
     kinova::KinovaPose velocityPose;
@@ -1306,6 +1306,7 @@ kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueD
 
             //mangler rotation af gripper
         }
+        velocityPose.ThetaZ = std::min(gripperThetaToObject(graspPose,pregraspPose)*1.6,0.8);
     
 
     }
@@ -1334,8 +1335,17 @@ kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueD
     return velocityPose;
 };
 
-double jaco_control::gripperThetaToObject(geometry_msgs::TransformStamped graspPose){
+double jaco_control::gripperThetaToObject(geometry_msgs::TransformStamped graspPose, geometry_msgs::TransformStamped pregraspPose){
     //ee_pose_.transform.rotation.z
+    tf::StampedTransform grasp;
+    tf::StampedTransform pregrasp;
+    tf::transformStampedMsgToTF(graspPose,grasp);
+    tf::transformStampedMsgToTF(pregraspPose,pregrasp);
+    
+    tf::Vector3 A = grasp.getOrigin();
+    tf::Vector3 B = pregrasp.getOrigin();
+    tf::Vector3 BA = A - B;
+
     tf::Quaternion q(
         ee_pose_.transform.rotation.x,
         ee_pose_.transform.rotation.y,
@@ -1343,9 +1353,14 @@ double jaco_control::gripperThetaToObject(geometry_msgs::TransformStamped graspP
         ee_pose_.transform.rotation.w
         ); 
     
-    tf::Matrix3x3 rotation(q); 
+    tf::Matrix3x3 gripperRot(q);
+    tf::Vector3 C = gripperRot.getColumn(2); 
+    C.setZ(0);
     
-    
+
+    double angle = C.dot(BA) / (C.length() * BA.length() );
+
+    return angle;
 };
 
 kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
@@ -1358,7 +1373,7 @@ kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
         for (size_t i = 0; i < obj_ee_array.size(); i++)
         {
             geometry_msgs::TransformStamped pregrasp = pregraspPose(obj_ee_array[i]);
-            if (pregraspArea(pregrasp,obj_ee_array[i]) && (gripperThetaToObject(obj_ee_array[i]) < 1.5))
+            if (pregraspArea(pregrasp,obj_ee_array[i]) && (gripperThetaToObject(obj_ee_array[i],pregrasp) < 1.5))
             {
                 if (!graspArea(obj_ee_array[i]))
                 {
@@ -1378,7 +1393,7 @@ kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
 
             geometry_msgs::TransformStamped object = objectToAssist(iTongueDir,obj_ee_array);
             geometry_msgs::TransformStamped pregrasp = pregraspPose(object);
-            velocityPose = semiAutoAssistance(iTongueDir,pregrasp);
+            velocityPose = semiAutoAssistance(iTongueDir,pregrasp,object);
         }
         
         
