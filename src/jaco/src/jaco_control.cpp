@@ -84,7 +84,7 @@ double vector::length(std::array<T,3> A){
 
 std::array<double,3> vector::norm(std::array<double,3> A){
     std::array<double,3> B;
-    double sum = A[0]+A[1]+A[2];
+    double sum = std::sqrt(std::pow(A[0],2) + std::pow(A[1],2)+ std::pow(A[2],2));
     B[0] = A[0]/sum;
     B[1] = A[1]/sum;
     B[2] = A[2]/sum;
@@ -625,7 +625,7 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         // bool success = (group_->plan(my_plan) == moveit_msgs::MoveItErrorCodes::SUCCESS);
         // group_->execute(my_plan);
         //kinova::KinovaPose ee_pose; //end effectpr åpse
-        if (robot_connected_)
+        if (robot_connected_ && ((abs(velocity.X)+abs(velocity.Y)+abs(velocity.Z)+abs(velocity.ThetaX)+abs(velocity.ThetaY)+abs(velocity.ThetaZ)) > 0))
         {
             //kinova_comm.getCartesianPosition(ee_pose);
             // debug_normal("GAMLE VÆRDIER");
@@ -636,7 +636,7 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             // velDir.x = velocity.X;
             // velDir.y = velocity.Y;
             // velDir.z = velocity.Z;
-            // debug_experimental("Initial values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
+             debug_experimental("Initial values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
               if (!obj_ee_array.empty())
             {
                 velocity = Assistance(velocity);
@@ -647,7 +647,7 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
                 // velocity.Z = newTraj.z;
     
             }
-
+            velocity.ThetaY = 0.0;
             debug_experimental("Adjusted values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
              kinova_comm.setCartesianVelocities(velocity);
             debug_normal("SEND  ");
@@ -765,7 +765,9 @@ void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& s
     
 }
 
-void jaco_control::doStuff(){}
+void jaco_control::doStuff(){
+    
+};
 
 typedef actionlib::SimpleActionClient<shapefitting::shapefitting_position_arrayAction> Client;
 
@@ -1219,29 +1221,38 @@ double jaco_control::assistability(kinova::KinovaPose &iTongueDirIn, geometry_ms
         
 
         double lenA = vector::length(A);
-        double lenC = vector::length(C);    //Length from object to EE 
+        double lenBC = vector::length(BC);    //Length from object to EE 
 
         double dot_prod = vector::dotProd(A,BC);
-        
-        double angle = dot_prod / (lenA * lenC);
+        double b = dot_prod / (lenA * lenBC);
+        ROS_INFO_STREAM(b);
+        double angle = acos(dot_prod / (lenA * lenBC));
 
 
-        double Assitability = (std::pow(lenC,2) * angle) + ( 0.3 * lenC ) + ( 0.03 * std::pow(angle,4));
-
-        return Assitability;
+        double Assitabilit = (std::pow(lenBC,2) * angle) + ( 0.3 * lenBC ) + ( 0.03 * std::pow(angle,4));
+        debug_experimental("Angle: " + std::to_string(angle) + " dist: " + std::to_string(lenBC) + " assist: " + std::to_string(Assitabilit));
+        return Assitabilit;
 };
 
 geometry_msgs::TransformStamped jaco_control::objectToAssist(kinova::KinovaPose &iTongueDirIn, std::vector<geometry_msgs::TransformStamped> &objectsIn){
-    double assist{0};
+    double assist = 0;
     std::vector<double> assistArr; 
+    assistArr.clear();
     if (!objectsIn.empty())
     {
         for (size_t i = 0; i < objectsIn.size(); i++)
         {
+            ROS_INFO("1");
             assist = assistability(iTongueDirIn,objectsIn[i]);
+            ROS_INFO("2");
             assistArr.push_back(assist);
+            ROS_INFO("3");
         }
-        int id = *min_element(assistArr.begin(), assistArr.end());
+        ROS_INFO("4");
+        std::vector<double>::iterator result = min_element(assistArr.begin(), assistArr.end());
+        
+        int  id = std::distance(std::begin(assistArr), result);
+        ROS_INFO("5");
         return objectsIn[id];
     }
 
@@ -1285,11 +1296,14 @@ kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueD
     std::array<double,3> C = vector::pointToArray(pregraspPose.transform.translation);
     std::array<double,3> BC = vector::sub(C,B);
 
+    debug_experimental("first: " + std::to_string(BC[0]) + " " + std::to_string(BC[1]) + " " + std::to_string(BC[2]));
+    debug_experimental("second: " + std::to_string(vector::norm(BC)[0]) + " " + std::to_string(vector::norm(BC)[1]) + " " + std::to_string(vector::norm(BC)[2]));
     double thresh_auto = 0.1;
     double thresh_semi = 0.15;
     
     if (assist < thresh_auto) // full auto den har du lavet
     {
+        debug_experimental("FULL auto");
         double dist = vector::length(BC);
         double dist_thresh = 0.08;
         if (dist > dist_thresh)
@@ -1312,8 +1326,7 @@ kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueD
     }
     else if (assist > thresh_auto && assist< thresh_semi) // semi auto 
     {
-         debug_experimental("Semi auto");
-        debug_assistive("5");
+        debug_experimental("Semi auto");
         // beregn percent assistance
         double p_manual = assist-thresh_auto/(thresh_semi-thresh_auto);
         double p_assist = 1-p_manual;
@@ -1331,7 +1344,7 @@ kinova::KinovaPose jaco_control::semiAutoAssistance(kinova::KinovaPose &iTongueD
         velocityPose.Y = vector::norm(A)[1] * translationalVelocity;
         velocityPose.Z = vector::norm(A)[2] * translationalVelocity;
     }
-
+    debug_experimental("for out:" + std::to_string(velocityPose.X) + " " + std::to_string(velocityPose.Y) + " " + std::to_string(velocityPose.Z));
     return velocityPose;
 };
 
@@ -1360,7 +1373,7 @@ double jaco_control::gripperThetaToObject(geometry_msgs::TransformStamped graspP
 
     double angle = C.dot(BA) / (C.length() * BA.length() );
 
-    return angle;
+    return 0.1;
 };
 
 kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
@@ -1390,7 +1403,7 @@ kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
 
         if (!pregraspMode)
         {
-
+            debug_experimental("BEGIN");
             geometry_msgs::TransformStamped object = objectToAssist(iTongueDir,obj_ee_array);
             geometry_msgs::TransformStamped pregrasp = pregraspPose(object);
             velocityPose = semiAutoAssistance(iTongueDir,pregrasp,object);

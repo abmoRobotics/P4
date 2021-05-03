@@ -130,6 +130,10 @@ private:
    
     actionlib::SimpleActionClient<shapefitting::shapefitting_simple_position_arrayAction> shapefitting_ac;
 
+
+        boost::recursive_mutex api_mutex;
+
+    bool is_first_init = true;
     
     struct ObjectInScene{
         double dist;                          // Afstand til objekt
