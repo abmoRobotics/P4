@@ -74,6 +74,16 @@ double vector::length(std::array<T,3> A){
 }
 
 
+std::array<double,3> vector::norm(std::array<double,3> A){
+    std::array<double,3> B;
+    double sum = A[0]+A[1]+A[2];
+    B[0] = A[0]/sum;
+    B[1] = A[1]/sum;
+    B[2] = A[2]/sum;
+    return B;
+}
+
+
 bool debug_assistiveb = false;
 void debug_assistive(std::string a){
 if (debug_assistiveb)
@@ -1187,6 +1197,14 @@ bool jaco_control::pregraspArea(geometry_msgs::TransformStamped pregraspPose, ge
     
     
 };
+
+double assistability();
+
+// Calculate trajectory in pregrasp area
+geometry_msgs::Vector3 pregraspAssistance(geometry_msgs::TransformStamped graspPose);
+
+//Close gripper
+ void gripperAssistance();
 
 
 // geometry_msgs::Point jaco_control::trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose){

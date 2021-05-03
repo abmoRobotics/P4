@@ -159,6 +159,13 @@ private:
     // Function for defining the sphere where that gripper must grip
     bool graspArea(geometry_msgs::TransformStamped graspPose);
 
+    double assistability();
+
+    // Calculate trajectory in pregrasp area
+    geometry_msgs::Vector3 pregraspAssistance(geometry_msgs::TransformStamped graspPose);
+
+    //Close gripper
+    void gripperAssistance();
     // Beregn trajectory retuner hastighed og retning på hastighed
 
     // geometry_msgs::Point trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose);
@@ -239,6 +246,8 @@ namespace vector{
    // template <class T>
     std::array<double,3> pointToArray(geometry_msgs::Point);
 
+    std::array<double,3> norm(std::array<double,3> A);
+    
     template <class T>
     double length(std::array<T,3>);
 }
