@@ -80,10 +80,13 @@ sudo apt-get install ffmpeg
 ##v4l2Loopback installation
 ```
 cd ~ && git clone https://github.com/umlaeute/v4l2loopback.git
-cd v4l2loopback && make && sudo make install
+cd v4l2loopback
+make && sudo make install
+sudo depmod -a
 modprobe v4l2loopback 
 ```
-
+Check what video the dummy deive is with:
+v4l2-ctl --list-devices
 
 ## AutoRotate for rotating pictures
 
