@@ -5,17 +5,15 @@ typedef actionlib::SimpleActionServer<shapefitting::shapefitting_simple_position
 using namespace cv;
 using namespace rs2;
 
+Mat Depth_Image;
 
 void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr goal, ShapeSimpleArrayActionServer* as){
     // Initiate Return variables
     shapefitting::shapefitting_simple_position_arrayResult resultreturn;
     shapefitting::shape_data result_temp;
-    // Initiate the Realsense sensor and pipeline
-    rs2::pipeline pipe = InitiateRealsense();
-    // Get depth data from pipeline
-    Mat depth_mat = GetDepthData(&pipe);
-    
-    
+
+    Mat depth_mat = Depth_Image;
+   
     int i = 0;
     // For each element to detect
     for (auto element : goal->input.msg)
@@ -111,6 +109,25 @@ void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr go
     
 }
 
+void UpdatePointCloud(const jaco::DepthImageConstPtr &msg){
+
+    int i = 0;
+    cv::Mat Initialiser(Size(msg->width, msg->height), CV_64F);
+
+    Depth_Image = Initialiser;
+
+    for (int x = 0; x < msg->width; x++)
+    {
+        for (int y = 0; y < msg->height; y++)
+        {
+            Depth_Image.at<float>(cv::Point(x, y)) = msg->data.at(i);
+            i++;
+        }
+        
+    }
+    
+}
+
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "get_shape");
@@ -119,6 +136,10 @@ int main(int argc, char **argv){
     ROS_INFO("Shape fitting up and running");
 
     ShapeSimpleArrayActionServer server(node,"get_simple_shape_array", boost::bind(&array,_1,&server),false);
+
+    ros::Subscriber PointCloudSubscriber;
+
+    PointCloudSubscriber = node.subscribe<jaco::DepthImage>("/Imagepub/Depth",1,&UpdatePointCloud);
 
     server.start();
     ros::spin();
