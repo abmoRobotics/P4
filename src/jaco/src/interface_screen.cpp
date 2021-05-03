@@ -90,18 +90,19 @@ void videoFeed_window(){
         pt2.x = visionDataArray[i].X2 * camera1Image.cols;
         pt2.y = visionDataArray[i].Y2 * camera1Image.rows;
         cv::Scalar color;
-        if(visionDataArray[i].Class = 0) color = cv::Scalar(13,17,241); // Blue
-        else if(visionDataArray[i].Class = 1) color = cv::Scalar(249,58,56); // Red
-        else if(visionDataArray[i].Class = 2) color = cv::Scalar(80,224,212); // Cyan
-        else if(visionDataArray[i].Class = 3) color = cv::Scalar(154,7,203); // Dark purple
-        else if(visionDataArray[i].Class = 4) color = cv::Scalar(19,140,65); // Green
-        else if(visionDataArray[i].Class = 5) color = cv::Scalar(30,9,65); // Dark blue
-        else if(visionDataArray[i].Class = 6) color = cv::Scalar(225,60,233); //Pink
-        else if(visionDataArray[i].Class = 7) color = cv::Scalar(255,255,0); //Yellow
-        else if(visionDataArray[i].Class = 8) color = cv::Scalar(240,108,11); //Orange
+        if(visionDataArray[i].Class == 0) color = cv::Scalar(13,17,241); // Blue
+        else if(visionDataArray[i].Class == 1) color = cv::Scalar(249,58,56); // Red
+        else if(visionDataArray[i].Class == 2) color = cv::Scalar(80,224,212); // Cyan
+        else if(visionDataArray[i].Class == 3) color = cv::Scalar(154,7,203); // Dark purple
+        else if(visionDataArray[i].Class == 4) color = cv::Scalar(19,140,65); // Green
+        else if(visionDataArray[i].Class == 5) color = cv::Scalar(30,9,65); // Dark blue
+        else if(visionDataArray[i].Class == 6) color = cv::Scalar(225,60,233); //Pink
+        else if(visionDataArray[i].Class == 7) color = cv::Scalar(255,255,0); //Yellow
+        else if(visionDataArray[i].Class == 8) color = cv::Scalar(240,108,11); //Orange
         cv::rectangle(camera1Image, pt1, pt2, color, 4);
         textPoint.x = pt1.x;
         textPoint.y = pt1.y - 10;
+        cout << visionDataArray[i].Class / 10 << endl;
          cv::putText(camera1Image, objectVector[(visionDataArray[i].Class / 10)], textPoint, cv::FONT_HERSHEY_SIMPLEX, 1, color);
      }
     
