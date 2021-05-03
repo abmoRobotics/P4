@@ -47,7 +47,7 @@ void video_stream(const sensor_msgs::ImageConstPtr &msg){
 }
 
 cv::Mat Keypad = cv::Mat::zeros(720, 360, CV_8UC3);
-bool hasRunOnce {false};
+//bool hasRunOnce {false};
 
 void videoFeed_window(){
     
@@ -63,11 +63,10 @@ void videoFeed_window(){
     int radius {35};
     
 
-    if (hasRunOnce == false){
+    //if (hasRunOnce == false){
     for (size_t i = 0; i < keypadPoints.size()-4; i++)
     {
         cv::circle(Keypad, keypadPoints[i], radius, Ycolor, cv::FILLED);
-        cout << "Drawing circle\n";
     }
 
     for (size_t i = 14; i < keypadPoints.size()-2; i++) //stå op
@@ -79,8 +78,8 @@ void videoFeed_window(){
     {
         cv::ellipse(Keypad,keypadPoints[i],elipseSize, 0, 0, 360, Ycolor, cv::FILLED);
     }
-    hasRunOnce = true;
-    }
+    //hasRunOnce = true;
+    //}
     
     
     for (int i = 0; i < visionDataArray.size(); i++)
@@ -107,12 +106,10 @@ void videoFeed_window(){
      }
     
 
-// LETS MAKE SOME COLORS!!!!!!!!!!!!!!!!!!!!!
-
-vector<int> iTongueMap {3, 2, 1, 6, 5, 4, 10, 9, 8, 7, 13, 11, 18, 15, 12, 17, 15, 14};
+vector<int> iTongueMap {3, 2, 1, 6, 5, 4, 10, 9, 8, 7, 13, 11, 18, 16, 12, 17, 15, 14};
 
 cv::Scalar Rcolor = cv::Scalar(0,0,255);
-if(iTongue_sensor != 0)
+if(iTongue_sensor > 0 && iTongue_sensor <= 18)
 {
     auto it = find(iTongueMap.begin(), iTongueMap.end(), iTongue_sensor);
     int index = std::distance(iTongueMap.begin(), it);
@@ -120,9 +117,9 @@ if(iTongue_sensor != 0)
 }
 
     cv::imshow("Keypad", Keypad);
-    //cv::moveWindow("Keypad", 20,20);
+    cv::moveWindow("Keypad", 20,20);
     cv::imshow("Display", camera1Image);
-    //cv::moveWindow("Display", 430, 20);
+    cv::moveWindow("Display", 430, 20);
     cv::waitKey(100);
 }
 
