@@ -47,42 +47,52 @@ void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr go
         case 0: // 150clSoda
             result_temp.radius = 0.035;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "150clSoda";
             break;
         case 1: // 50clSoda
             result_temp.radius = 0.04;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "50clSoda";
             break;
         case 2: // Juice
             result_temp.radius = 0.03;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "Juice";
             break;
         case 3: // Minimælk
             result_temp.radius = 0.033;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "Minimælk";
             break;
         case 4: // Rødvin
             result_temp.radius = 0.0375;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "Rødvin";
             break;
         case 5: // Rosevin
             result_temp.radius = 0.035;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "Rosevin";
             break;
         case 6: // Saftevand
             result_temp.radius = 0.035;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "Saftevand";
             break;
         case 7: // Skummetmælk
             result_temp.radius = 0.033;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "Skummetmælk";
             break;
         case 8: // Termokrus
             result_temp.radius = 0.0378;
             Z = distNorm+result_temp.radius;
+            result_temp.object_class.data = "Termokrus";
             break;
         default: // Default værdi
             result_temp.radius = 0.03;
             Z = distNorm+0.03;
+            result_temp.object_class.data = "FEJL";
             break;
         }
 
@@ -120,7 +130,7 @@ void UpdatePointCloud(const jaco::DepthImageConstPtr &msg){
     {
         for (int y = 0; y < msg->height; y++)
         {
-            Depth_Image.at<float>(cv::Point(x, y)) = msg->data.at(i);
+            Depth_Image.at<double>(cv::Point(x, y)) = msg->data.at(i);
             i++;
         }
         

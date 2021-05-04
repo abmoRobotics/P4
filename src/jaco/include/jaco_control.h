@@ -83,6 +83,7 @@ private:
     //void semi_autonomous_control(); Not implemented
     //void full_autonomous_control();
     void setCameraPos();
+    void EvaluateTransforms();
     void testemil();
     void shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_simple_position_arrayResultConstPtr& result);
     void shapefitting_activeCb();
