@@ -74,9 +74,10 @@ For marking images
 exports an xml and image file that can be imported to roboflow.
 
 ## CameraSplitter & subprograms
+```
 pip install pyfakewebcam
 sudo apt-get install ffmpeg
-
+```
 ##v4l2Loopback installation
 ```
 cd ~ && git clone https://github.com/umlaeute/v4l2loopback.git
