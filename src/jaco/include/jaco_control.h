@@ -84,9 +84,16 @@ private:
     //void semi_autonomous_control(); Not implemented
     //void full_autonomous_control();
     void setCameraPos();
+    void EvaluateTransforms();
     void testemil();
     void shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_simple_position_arrayResultConstPtr& result);
     void shapefitting_activeCb();
+
+    void UpdatePlacement(std::vector<geometry_msgs::TransformStamped> objects); // Push back the latest transforms into placement vector.
+    geometry_msgs::TransformStamped GetPlacement(geometry_msgs::TransformStamped object);                  // Retrieve placement of frame from placement vector.
+    void EvaluatePlacement(geometry_msgs::TransformStamped GripperPosition);    // Uvaluate all frames in Placement with relation to time and gripper frame.
+    void RANSAC();                                                              // Perform RANSAC on the frames inside Placement, to determine inliers and noise.
+    double TransformDist(geometry_msgs::TransformStamped T1,geometry_msgs::TransformStamped T2);
 
     kinova::KinovaPose generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
@@ -118,6 +125,9 @@ private:
 
     vision::Detection_array visionDataArray;
     shapefitting::shape_data shapeData;
+
+    std::vector<std::vector<geometry_msgs::TransformStamped>> Placement;
+    std::vector<geometry_msgs::TransformStamped> RANSAC_Placement;
 
     //Frames
     shapefitting::shape_data tf_Cam_Obj;

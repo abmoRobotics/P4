@@ -513,12 +513,12 @@ shapefitting::shape_data jaco_control::get_shape_data(vision::Detection Detectio
 // DONE
 void jaco_control::connect_itongue(){
     //Initiate connection with iTongue
+    ROS_INFO("Connecting to iTongue");
     while (itongue_start_pub.getNumSubscribers() < 1 )
     {
         //ROS_INFO("VENT");
     }
-    
-    //ROS_INFO("her");
+    ROS_INFO("iTongue connected");
     jaco::sys_msg data;
     data.start_tci = 1;
     data.InHand = 1;
@@ -740,11 +740,15 @@ void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& s
     // Map every object to the camera, since the position is measured from the camera
     for (size_t i = 0; i < result->object.size(); i++)
     {
+<<<<<<< HEAD
         debug_normal("shapefitting_doneCB_LOOP");
+=======
+        // ROS_INFO_STREAM("shapefitting_doneCB_LOOP");
+>>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
         //tf from camera to object
         Transform_obj.header.stamp = ros::Time::now();
         Transform_obj.header.frame_id = "Realsense_Camera";
-        Transform_obj.child_frame_id = result->object[i].object_class.data + "object";
+        Transform_obj.child_frame_id = (result->object[i].object_class.data);
         Transform_obj.transform.translation.x = result->object[i].pos.x;
         Transform_obj.transform.translation.y = result->object[i].pos.y;
         Transform_obj.transform.translation.z = result->object[i].pos.z;
@@ -912,16 +916,20 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             ee_pose_ = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
                                     ros::Time(0),ros::Duration(3.0));
             
+            EvaluateTransforms();
+
             // Transform each camData into world frame and save
+<<<<<<< HEAD
             
             tf_cam_to_object[0].header.stamp = ros::Time::now();
+=======
+            obj_ee_array.clear();
+>>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
             for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
-                // ROS_INFO_STREAM(camData.transform.translation.x);
-                // ROS_INFO_STREAM(camData.transform.translation.y);
-                // ROS_INFO_STREAM(camData.transform.translation.z);
-                obj_ee_array.clear();
-                obj_ee_array.push_back(tfBuffer.lookupTransform("world", camData.child_frame_id,
-                                    ros::Time(0),ros::Duration(3.0)));
+                obj_ee_array.push_back(tfBuffer.lookupTransform("world",
+                    camData.child_frame_id,
+                    ros::Time(0),ros::Duration(1.0)));
+
             }
 
         }
@@ -934,7 +942,32 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         }
         //Check if previous goal is finished
         //if Finished send new goal using sendGoal(goal,doneCb,activeCb,feedbackCb)
+        UpdatePlacement(obj_ee_array);
+        EvaluatePlacement(current_robot_transformStamped);
+
     }
+
+void jaco_control::EvaluateTransforms(){
+    ros::Time RosTime = ros::Time::now();
+
+    std::vector<std::vector<geometry_msgs::TransformStamped>::iterator> remove;
+
+    int it = 0;
+
+    for(auto camData : tf_cam_to_object){
+        if (camData.header.stamp.sec < RosTime.sec - 3)
+        {
+            std::vector<geometry_msgs::TransformStamped>::iterator itr = tf_cam_to_object.begin()+it;
+            remove.push_back(itr);
+        }
+         it++;
+    }
+
+    for (auto erase : remove)
+    {
+        tf_cam_to_object.erase(erase);
+    }
+    
 }
 
 geometry_msgs::Point jaco_control::EndEffDirVec(geometry_msgs::Point iTongueDirection)
@@ -1048,6 +1081,7 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     {
         id = 0;
     }
+<<<<<<< HEAD
     
     
     
@@ -1057,11 +1091,29 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     double thresh_semi = 0.15;
      geometry_msgs::Point newTraj;
      debug_assistive(std::to_string(Assist.size()));
+=======
+
+   
+    ROS_INFO_STREAM(id);
+    ROS_INFO("31");
+    double thresh_auto = 0.2;
+    double thresh_semi = 0.5;
+    geometry_msgs::Point newTraj;
+    ROS_INFO_STREAM(Assist.size());
+
+     
+>>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
     if (Assist[id] < thresh_auto) // full auto den har du lavet
     {
+        // Når asistabiliy er mindre end en hvis threshold, udfør automatisk grasping.
+        // Problem: Placering af objekter i "objects". Det er nødvendigt at huske placeringerne, da der kan være "afvigere".
 
+<<<<<<< HEAD
             debug_assistive("4");
         debug_experimental("Full auto");
+=======
+        ROS_INFO("4");
+>>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
         std::cout << "Going towards object " << id << std::endl;
         newTraj.x = ObjDirVec[id].directionVector.x;
         newTraj.y = ObjDirVec[id].directionVector.y;
@@ -1440,6 +1492,178 @@ kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
      spherical_grip(100);
  };
 
+
+void jaco_control::UpdatePlacement(std::vector<geometry_msgs::TransformStamped> objects){
+ 
+ // Gem placering for detected vector.
+ 
+    
+    for (auto obj : objects){
+        bool DataPlaced = false;
+        int iterator = 0;
+
+        for(auto vector : Placement){
+            std::string ObjectFrameName = obj.child_frame_id.data();
+            std::string VectorFrameName = vector[0].child_frame_id.data();
+
+            if (ObjectFrameName == VectorFrameName && DataPlaced == false)
+            {
+                Placement.at(iterator).insert(Placement.at(iterator).begin(),obj);
+                DataPlaced = true;
+            }
+            iterator++;
+        }
+
+        if (!DataPlaced)
+        {
+            std::vector<geometry_msgs::TransformStamped> vectorTemp;
+            vectorTemp.push_back(obj);
+            Placement.push_back(vectorTemp);
+        }
+        
+    }
+
+    RANSAC();
+
+}
+
+geometry_msgs::TransformStamped jaco_control::GetPlacement(geometry_msgs::TransformStamped object){
+
+    int it = 0;
+
+    std::cout << RANSAC_Placement.size() << std::endl;
+    std::cout << RANSAC_Placement.at(0).child_frame_id.data() << std::endl;
+    std::cout << object.child_frame_id.data() << std::endl;
+
+    for(auto transform : RANSAC_Placement){
+
+        std::string FrameName = object.child_frame_id.data();
+        std::string RansacName = RANSAC_Placement.at(it).child_frame_id.data();
+
+        if(FrameName == RansacName){
+            return RANSAC_Placement.at(it);
+        }
+        it++;
+    }
+
+    geometry_msgs::TransformStamped ErrorTransform;
+    ErrorTransform.child_frame_id = "NoTransformFound";
+
+    ROS_WARN("In jaco_control::GetPlacement: No transform with specified name");
+    
+    return ErrorTransform;
+    
+}
+
+void jaco_control::RANSAC(){
+    double epsilon = 0.01;                  //Maximum distance from point to another point, for it to be considered an inlier.
+
+    RANSAC_Placement.clear();
+
+    for(auto vector : Placement){           // For hver vector i placement - Udregn score for hver eneste indgang, og returner den med højest.
+
+        int HighestScoreValue = 0;
+        geometry_msgs::TransformStamped HighestScore;
+   
+        for (auto element : vector){        // For hver indgang i vector - Udregn score.
+
+            int ElementScore = 0;
+            for(auto element2 : vector){
+
+                if(TransformDist(element, element2) < epsilon){
+                    
+                    ElementScore++;
+                }
+
+            }
+
+            if(ElementScore > HighestScoreValue){
+                HighestScore = element;
+                HighestScoreValue = ElementScore; 
+            }
+
+        }
+        
+        RANSAC_Placement.push_back(HighestScore);
+
+    }
+
+}
+
+double jaco_control::TransformDist(geometry_msgs::TransformStamped T1,geometry_msgs::TransformStamped T2){
+
+    double x1 = T1.transform.translation.x;
+    double y1 = T1.transform.translation.y;
+    double z1 = T1.transform.translation.z;
+    double x2 = T2.transform.translation.x;
+    double y2 = T2.transform.translation.y;
+    double z2 = T2.transform.translation.z;
+
+    double dX = x1-x2;
+    double dY = y1-y2;
+    double dZ = z1-z2;
+
+    double dist = sqrt((dX*dX)+(dY*dY)+(dZ*dZ));
+
+    return dist;
+
+}
+
+void jaco_control::EvaluatePlacement(geometry_msgs::TransformStamped GripperPosition){
+
+    ros::Time RosTime = ros::Time::now();
+
+    int MaxMemory = 50;
+    int PlacementIt = 0;
+
+    std::vector<std::vector<geometry_msgs::TransformStamped>::iterator> EraseVectorEntries;
+    std::vector<std::vector<std::vector<geometry_msgs::TransformStamped>>::iterator> ErasePlacementEntries;
+
+    for (auto vector : Placement)
+    {   
+        EraseVectorEntries.clear();
+        int it = 0;
+        int deleteLast = 0;
+        
+        for(auto transform : vector){
+            int TimeDistCost = int(TransformDist(GripperPosition,Placement.at(PlacementIt).at(it))*10);
+            uint64_t TimeLimit = RosTime.sec - TimeDistCost;
+
+            if(Placement.at(PlacementIt).at(it).header.stamp.sec < TimeLimit){
+                std::vector<geometry_msgs::TransformStamped>::iterator itr = Placement.at(PlacementIt).begin()+it;
+                EraseVectorEntries.insert(EraseVectorEntries.begin(),itr);
+            } else if(it >= MaxMemory){
+                deleteLast++;
+            }
+
+                it++;
+            
+            }
+            
+        for(auto erase : EraseVectorEntries){
+            Placement.at(PlacementIt).erase(erase);
+        }
+            
+        for (int i = 0; i < deleteLast; i++){
+            Placement.at(PlacementIt).pop_back();
+        }
+
+
+        if (Placement.at(PlacementIt).empty())
+        {
+            std::vector<std::vector<geometry_msgs::TransformStamped>>::iterator itr = Placement.begin()+PlacementIt;
+            ErasePlacementEntries.insert(ErasePlacementEntries.begin(), itr);
+        } 
+        
+            PlacementIt++;
+        
+        }
+        
+    for(auto erase : ErasePlacementEntries){
+        Placement.erase(erase);
+    }
+
+}
 
 // geometry_msgs::Point jaco_control::trajVel(ObjectInScene obj, geometry_msgs::Pose endEffPose){
 //     std::array<double,3> startPos {endEffPose.position.x, endEffPose.position.y, endEffPose.position.z};

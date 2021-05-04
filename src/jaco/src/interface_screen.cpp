@@ -47,7 +47,7 @@ void video_stream(const sensor_msgs::ImageConstPtr &msg){
 }
 
 cv::Mat Keypad = cv::Mat::zeros(720, 360, CV_8UC3);
-bool hasRunOnce {false};
+//bool hasRunOnce {false};
 
 void videoFeed_window(){
     
@@ -63,11 +63,10 @@ void videoFeed_window(){
     int radius {35};
     
 
-    if (hasRunOnce == false){
+    //if (hasRunOnce == false){
     for (size_t i = 0; i < keypadPoints.size()-4; i++)
     {
         cv::circle(Keypad, keypadPoints[i], radius, Ycolor, cv::FILLED);
-        cout << "Drawing circle\n";
     }
 
     for (size_t i = 14; i < keypadPoints.size()-2; i++) //stå op
@@ -79,8 +78,8 @@ void videoFeed_window(){
     {
         cv::ellipse(Keypad,keypadPoints[i],elipseSize, 0, 0, 360, Ycolor, cv::FILLED);
     }
-    hasRunOnce = true;
-    }
+    //hasRunOnce = true;
+    //}
     
     
     for (int i = 0; i < visionDataArray.size(); i++)
@@ -91,28 +90,27 @@ void videoFeed_window(){
         pt2.x = visionDataArray[i].X2 * camera1Image.cols;
         pt2.y = visionDataArray[i].Y2 * camera1Image.rows;
         cv::Scalar color;
-        if(visionDataArray[i].Class = 0) color = cv::Scalar(13,17,241); // Blue
-        else if(visionDataArray[i].Class = 1) color = cv::Scalar(249,58,56); // Red
-        else if(visionDataArray[i].Class = 2) color = cv::Scalar(80,224,212); // Cyan
-        else if(visionDataArray[i].Class = 3) color = cv::Scalar(154,7,203); // Dark purple
-        else if(visionDataArray[i].Class = 4) color = cv::Scalar(19,140,65); // Green
-        else if(visionDataArray[i].Class = 5) color = cv::Scalar(30,9,65); // Dark blue
-        else if(visionDataArray[i].Class = 6) color = cv::Scalar(225,60,233); //Pink
-        else if(visionDataArray[i].Class = 7) color = cv::Scalar(255,255,0); //Yellow
-        else if(visionDataArray[i].Class = 8) color = cv::Scalar(240,108,11); //Orange
+        if(visionDataArray[i].Class == 0) color = cv::Scalar(13,17,241); // Blue
+        else if(visionDataArray[i].Class == 1) color = cv::Scalar(249,58,56); // Red
+        else if(visionDataArray[i].Class == 2) color = cv::Scalar(80,224,212); // Cyan
+        else if(visionDataArray[i].Class == 3) color = cv::Scalar(154,7,203); // Dark purple
+        else if(visionDataArray[i].Class == 4) color = cv::Scalar(19,140,65); // Green
+        else if(visionDataArray[i].Class == 5) color = cv::Scalar(30,9,65); // Dark blue
+        else if(visionDataArray[i].Class == 6) color = cv::Scalar(225,60,233); //Pink
+        else if(visionDataArray[i].Class == 7) color = cv::Scalar(255,255,0); //Yellow
+        else if(visionDataArray[i].Class == 8) color = cv::Scalar(240,108,11); //Orange
         cv::rectangle(camera1Image, pt1, pt2, color, 4);
         textPoint.x = pt1.x;
         textPoint.y = pt1.y - 10;
+        cout << visionDataArray[i].Class / 10 << endl;
          cv::putText(camera1Image, objectVector[(visionDataArray[i].Class / 10)], textPoint, cv::FONT_HERSHEY_SIMPLEX, 1, color);
      }
     
 
-// LETS MAKE SOME COLORS!!!!!!!!!!!!!!!!!!!!!
-
-vector<int> iTongueMap {3, 2, 1, 6, 5, 4, 10, 9, 8, 7, 13, 11, 18, 15, 12, 17, 15, 14};
+vector<int> iTongueMap {3, 2, 1, 6, 5, 4, 10, 9, 8, 7, 13, 11, 18, 16, 12, 17, 15, 14};
 
 cv::Scalar Rcolor = cv::Scalar(0,0,255);
-if(iTongue_sensor != 0)
+if(iTongue_sensor > 0 && iTongue_sensor <= 18)
 {
     auto it = find(iTongueMap.begin(), iTongueMap.end(), iTongue_sensor);
     int index = std::distance(iTongueMap.begin(), it);
@@ -120,9 +118,9 @@ if(iTongue_sensor != 0)
 }
 
     cv::imshow("Keypad", Keypad);
-    //cv::moveWindow("Keypad", 20,20);
+    cv::moveWindow("Keypad", 20,20);
     cv::imshow("Display", camera1Image);
-    //cv::moveWindow("Display", 430, 20);
+    cv::moveWindow("Display", 430, 20);
     cv::waitKey(100);
 }
 

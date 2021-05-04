@@ -5,15 +5,18 @@
 #include <actionlib/client/simple_action_client.h>
 #include <jaco/RAWItongueOut.h>
 #include <vision/Detection.h>
+#include <jaco/DepthImage.h>
 #include <time.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 #include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/PointCloud.h>
 #include <librealsense2/rs.hpp> 
 
 static const std::string OPENCV_WINDOW = "Image window";
 int counter{0};
+
 sensor_msgs::Image imageCb(const cv::Mat& img)
 {
     cv_bridge::CvImage img_bridge;
@@ -36,27 +39,27 @@ sensor_msgs::Image imageCb(const cv::Mat& img)
     return rosImg;
 }
 
-sensor_msgs::Image imageDepthCb(const cv::Mat& img)
+jaco::DepthImage DepthMat_to_DepthImage(cv::Mat DepthMat)
 {
-    cv_bridge::CvImage img_bridge;
-    sensor_msgs::Image rosImg;
+    jaco::DepthImage DepthImage;
+    DepthImage.height = DepthMat.rows;
+    DepthImage.width = DepthMat.cols;
 
-    img_bridge = cv_bridge::CvImage();
-    std_msgs::Header header; // empty header
-    header.seq = counter; // user defined counter
-    header.stamp = ros::Time::now(); // time
-    // Draw an example circle on the video stream
-    
-    img_bridge = cv_bridge::CvImage(header, "32FC1", img);
-    img_bridge.toImageMsg(rosImg); // from cv_bridge to sensor_msgs::Image
-    // Update GUI Window
-    //cv::imshow("OPENCV_WINDOW", img);
-    cv::waitKey(3);
+    for (int x = 0; x < DepthMat.cols; x++) {
+        for (int y = 0; y < DepthMat.rows; y++) {
+            DepthImage.data.push_back(DepthMat.at<double>(cv::Point(x, y)));
+        }
+    }
 
-    // Output modified video stream
-    counter++;
-    return rosImg;
+    return DepthImage;
 }
+
+jaco::DepthImage imageDepthCb(const cv::Mat& img)
+{
+    jaco::DepthImage PointCloud = DepthMat_to_DepthImage(img);
+    return PointCloud;
+}
+
 rs2::pipeline InitiateRealsense()
 {
     // Create config object, and enable stream of depth data.
@@ -67,9 +70,7 @@ rs2::pipeline InitiateRealsense()
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Start streaming with default recommended configuration
-    std::cout << "START\n"; 
     pipe.start(cfg);
-    std::cout << "SLUT\n";
 
     return pipe;
 }
@@ -149,7 +150,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh_;
     
     ros::Publisher image_pub = nh_.advertise<sensor_msgs::Image>("/Imagepub/RGB", 1);
-    ros::Publisher depth_pub = nh_.advertise<sensor_msgs::Image>("/Imagepub/Depth", 1);
+    ros::Publisher depth_pub = nh_.advertise<jaco::DepthImage>("/Imagepub/Depth", 1);
 
     rs2::pipeline pipe = InitiateRealsense();
     while(ros::ok())
@@ -164,7 +165,3 @@ int main(int argc, char **argv)
     cv::destroyWindow(OPENCV_WINDOW);
     return 0;
 }
-
-
-// cv::Mat RealsenseRGB = RealSenseCallBackRGB(&pipe);
-// cv::Mat RealsenseDepth = RealSenseCallBackDepth(&pipe, &align_to_color);

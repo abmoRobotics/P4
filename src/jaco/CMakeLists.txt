@@ -67,8 +67,9 @@ add_message_files(
   FILES
    RAWItongueOut.msg
    sys_msg.msg
-  position.msg
-    obj_pos.msg
+   position.msg
+   obj_pos.msg
+   DepthImage.msg
 )
 
 ## Generate services in the 'srv' folder

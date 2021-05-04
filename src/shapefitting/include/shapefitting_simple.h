@@ -4,8 +4,10 @@
 #include <jaco/obj_pos.h>
 
 #include <vision/Detection.h>
+#include <jaco/DepthImage.h>
 
 #include <std_msgs/String.h>
+#include <sensor_msgs/PointCloud.h>
 #include <actionlib/server/simple_action_server.h>
 #include <shapefitting/shape_data.h>
 #include <shapefitting/shapefitting_simple_position_arrayAction.h>
