@@ -94,6 +94,9 @@ private:
     void EvaluatePlacement(geometry_msgs::TransformStamped GripperPosition);    // Uvaluate all frames in Placement with relation to time and gripper frame.
     void RANSAC();                                                              // Perform RANSAC on the frames inside Placement, to determine inliers and noise.
     double TransformDist(geometry_msgs::TransformStamped T1,geometry_msgs::TransformStamped T2);
+    bool setInHand(bool state){is_in_hand = state;};
+    bool InHand(){return is_in_hand;};
+
 
     kinova::KinovaPose generate_gripper_align_pose(geometry_msgs::Point targetpose_msg, double dist, double azimuth, double polar, double rot_gripper_z);
     actionlib::SimpleActionClient<kinova_msgs::SetFingersPositionAction>* finger_client_;
@@ -144,7 +147,7 @@ private:
         boost::recursive_mutex api_mutex;
 
     bool is_first_init = true;
-    
+    bool is_in_hand = false;
     struct ObjectInScene{
         double dist;                          // Afstand til objekt
         geometry_msgs::Point directionVector;       //Vektorer med retning til de forskellige objekter (normaliseret)

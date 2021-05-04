@@ -236,6 +236,15 @@ void jaco_control::spherical_grip(double diameter){
     fingerAng.Finger2 = FINGER_MAX*fingerPercent;
     fingerAng.Finger3 = FINGER_MAX*fingerPercent;
     kinova_comm.printFingers(fingerAng);
+    kinova::FingerAngles fingerAnglesCurrent;
+    kinova_comm.getFingerPositions(fingerAnglesCurrent);
+    if (fingerAng.Finger1 < fingerAnglesCurrent.Finger1)
+    {
+        setInHand(true);
+    }else{
+        setInHand(false);
+    }
+    
     kinova_comm.setFingerPositions(fingerAng);
     
 
@@ -637,17 +646,17 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             // velDir.y = velocity.Y;
             // velDir.z = velocity.Z;
              debug_experimental("Initial values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
-              if (!obj_ee_array.empty() && (abs(velocity.X) + abs(velocity.Y) + abs(velocity.Z) > 0 ))
-            {
+              if (!obj_ee_array.empty() && (abs(velocity.X) + abs(velocity.Y) + abs(velocity.Z) > 0 ) && !InHand())
+                {
 
-                velocity = Assistance(velocity);
-                // debug_normal(std::to_string(obj_ee_array.size()));
-                // newTraj = assistiveControl(velDir,obj_ee_array,ee_pose_);
-                // velocity.X = newTraj.x;
-                // velocity.Y = newTraj.y;
-                // velocity.Z = newTraj.z;
-    
-            }
+                    velocity = Assistance(velocity);
+                    // debug_normal(std::to_string(obj_ee_array.size()));
+                    // newTraj = assistiveControl(velDir,obj_ee_array,ee_pose_);
+                    // velocity.X = newTraj.x;
+                    // velocity.Y = newTraj.y;
+                    // velocity.Z = newTraj.z;
+        
+                }
             //velocity.ThetaY = 0.0;
             debug_experimental("Adjusted values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
              kinova_comm.setCartesianVelocities(velocity);
@@ -833,7 +842,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     // spherical_grip(100);
     // sleep(3);
     // spherical_grip(45);
-    testemil();
+    //testemil();
     ros::Rate rate(10.0);
 
 
@@ -912,11 +921,11 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             ee_pose_ = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
                                     ros::Time(0),ros::Duration(3.0));
             
-            EvaluateTransforms();
+            //EvaluateTransforms();
 
             // Transform each camData into world frame and save
             
-            tf_cam_to_object[0].header.stamp = ros::Time::now();
+
             for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
                 obj_ee_array.push_back(tfBuffer.lookupTransform("world",
                     camData.child_frame_id,
@@ -934,8 +943,8 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         }
         //Check if previous goal is finished
         //if Finished send new goal using sendGoal(goal,doneCb,activeCb,feedbackCb)
-        UpdatePlacement(obj_ee_array);
-        EvaluatePlacement(ee_pose_);
+        //UpdatePlacement(obj_ee_array);
+        //EvaluatePlacement(ee_pose_);
 
     }
 }
