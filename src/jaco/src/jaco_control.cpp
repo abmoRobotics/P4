@@ -740,11 +740,7 @@ void jaco_control::shapefitting_doneCb(const actionlib::SimpleClientGoalState& s
     // Map every object to the camera, since the position is measured from the camera
     for (size_t i = 0; i < result->object.size(); i++)
     {
-<<<<<<< HEAD
-        debug_normal("shapefitting_doneCB_LOOP");
-=======
         // ROS_INFO_STREAM("shapefitting_doneCB_LOOP");
->>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
         //tf from camera to object
         Transform_obj.header.stamp = ros::Time::now();
         Transform_obj.header.frame_id = "Realsense_Camera";
@@ -919,12 +915,8 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             EvaluateTransforms();
 
             // Transform each camData into world frame and save
-<<<<<<< HEAD
             
             tf_cam_to_object[0].header.stamp = ros::Time::now();
-=======
-            obj_ee_array.clear();
->>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
             for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
                 obj_ee_array.push_back(tfBuffer.lookupTransform("world",
                     camData.child_frame_id,
@@ -943,9 +935,10 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         //Check if previous goal is finished
         //if Finished send new goal using sendGoal(goal,doneCb,activeCb,feedbackCb)
         UpdatePlacement(obj_ee_array);
-        EvaluatePlacement(current_robot_transformStamped);
+        EvaluatePlacement(ee_pose_);
 
     }
+}
 
 void jaco_control::EvaluateTransforms(){
     ros::Time RosTime = ros::Time::now();
@@ -1081,7 +1074,6 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     {
         id = 0;
     }
-<<<<<<< HEAD
     
     
     
@@ -1091,29 +1083,13 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
     double thresh_semi = 0.15;
      geometry_msgs::Point newTraj;
      debug_assistive(std::to_string(Assist.size()));
-=======
-
-   
-    ROS_INFO_STREAM(id);
-    ROS_INFO("31");
-    double thresh_auto = 0.2;
-    double thresh_semi = 0.5;
-    geometry_msgs::Point newTraj;
-    ROS_INFO_STREAM(Assist.size());
-
-     
->>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
     if (Assist[id] < thresh_auto) // full auto den har du lavet
     {
         // Når asistabiliy er mindre end en hvis threshold, udfør automatisk grasping.
         // Problem: Placering af objekter i "objects". Det er nødvendigt at huske placeringerne, da der kan være "afvigere".
 
-<<<<<<< HEAD
             debug_assistive("4");
         debug_experimental("Full auto");
-=======
-        ROS_INFO("4");
->>>>>>> 7ef28fab326d36dcabda9a1c357540fedcf9d9dc
         std::cout << "Going towards object " << id << std::endl;
         newTraj.x = ObjDirVec[id].directionVector.x;
         newTraj.y = ObjDirVec[id].directionVector.y;
