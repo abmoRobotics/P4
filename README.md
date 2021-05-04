@@ -84,6 +84,7 @@ cd v4l2loopback
 make && sudo make install
 sudo depmod -a
 modprobe v4l2loopback 
+sudo apt install v4l-utils
 ```
 Check what video the dummy device is with:
 v4l2-ctl --list-devices
