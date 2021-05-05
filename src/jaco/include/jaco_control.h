@@ -225,7 +225,8 @@ private:
     kinova_msgs::SetFingersPositionGoal finger_goal;
     kinova::KinovaAPI kinova_api_;
     
-
+    geometry_msgs::TransformStamped pregrasp_;
+    geometry_msgs::TransformStamped graspPose_;
 
 public: 
     bool gripper_action(double finger_turn);

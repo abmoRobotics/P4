@@ -45,7 +45,7 @@ std::array<double,3> vector::vecProj(std::array<T,3> A,std::array<T,3> B){
     T lenBpow = std::pow(lenB,2);
     T dotAB = vector::dotProd(A,B);
 
-    std::array<double,3> projVec = vector::scalarProd(dotAB,B);
+    std::array<double,3> projVec = vector::scalarProd((dotAB/lenBpow),B);
     return projVec;
 };
 
@@ -838,7 +838,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     // spherical_grip(100);
     // sleep(3);
     // spherical_grip(45);
-    testemil();
+    //testemil();
     ros::Rate rate(10.0);
 
 
@@ -882,7 +882,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         
         if (shapefitting_ac_state.isDone())
         {
-            // UpdatePlacement(obj_ee_array);
+             UpdatePlacement(obj_ee_array);
                 //shapefitting_ac.sendGoal(goal, &doneCb, &activeCb, &feedbackCb)
             if (visionDataArray.msg.size() > 0)
             {
@@ -906,18 +906,13 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             ee_pose_ = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
                                     ros::Time(0),ros::Duration(3.0));
             
-            // EvaluateTransforms();
+             EvaluateTransforms();
 
             // Transform each camData into world frame and save
             
             obj_ee_array.clear();
-            tf_cam_to_object[0].header.stamp = ros::Time::now();
-            obj_world_filtered.clear();
             for (geometry_msgs::TransformStamped camData : tf_cam_to_object){
                 obj_ee_array.push_back(tfBuffer.lookupTransform("world",
-                    camData.child_frame_id,
-                    ros::Time(0),ros::Duration(1.0)));
-                obj_world_filtered.push_back(tfBuffer.lookupTransform("world",
                     camData.child_frame_id,
                     ros::Time(0),ros::Duration(1.0)));
 
@@ -934,7 +929,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         //Check if previous goal is finished
         //if Finished send new goal using sendGoal(goal,doneCb,activeCb,feedbackCb)
         
-    //    EvaluatePlacement(ee_pose_);
+      EvaluatePlacement(ee_pose_);
 
     }
 
@@ -1145,17 +1140,17 @@ geometry_msgs::Point jaco_control::assistiveControl(geometry_msgs::Point &iTongu
 
 
 
-bool jaco_control::graspArea(geometry_msgs::TransformStamped objectPose){
+bool jaco_control::graspArea(geometry_msgs::TransformStamped graspPose){
     // graspPose is the position of the object 
     double radius {0.01};      // Radius of sphere in meters
     double dist {0.0};
     
-    geometry_msgs::Vector3 A = objectPose.transform.translation;
+    geometry_msgs::Vector3 A = graspPose.transform.translation;
     geometry_msgs::Vector3 B = ee_pose_.transform.translation;
-    ROS_INFO_STREAM("POSX: " + std::to_string(A.x) + " POSY: " + std::to_string(A.y) +" POSZ: " + std::to_string(A.z));
-    ROS_INFO_STREAM("POSX: " + std::to_string(B.x) + " POSY: " + std::to_string(B.y) +" POSZ: " + std::to_string(B.z));
+    // ROS_INFO_STREAM("POSX: " + std::to_string(A.x) + " POSY: " + std::to_string(A.y) +" POSZ: " + std::to_string(A.z));
+    // ROS_INFO_STREAM("POSX: " + std::to_string(B.x) + " POSY: " + std::to_string(B.y) +" POSZ: " + std::to_string(B.z));
     std::array<double,3> AB = vector::sub(vector::pointToArray(A),vector::pointToArray(B)); // Vector between the  object and end effector
-    ROS_INFO_STREAM("POSX: " + std::to_string(AB[0]) + " POSY: " + std::to_string(AB[1]) +" POSZ: " + std::to_string(AB[2]));
+    // ROS_INFO_STREAM("POSX: " + std::to_string(AB[0]) + " POSY: " + std::to_string(AB[1]) +" POSZ: " + std::to_string(AB[2]));
     dist = vector::length(AB);
     ROS_INFO_STREAM("DISTANCE: " + std::to_string(dist));
     if (dist < radius){ return true; }
@@ -1165,15 +1160,15 @@ bool jaco_control::graspArea(geometry_msgs::TransformStamped objectPose){
 
 };
 
-geometry_msgs::TransformStamped jaco_control::pregraspPose(geometry_msgs::TransformStamped graspPose){
-    geometry_msgs::TransformStamped pregraspPose = graspPose;
+geometry_msgs::TransformStamped jaco_control::pregraspPose(geometry_msgs::TransformStamped objectPose){
+    geometry_msgs::TransformStamped pregraspPose = objectPose;
     pregraspPose.child_frame_id = "pregrasp_" + pregraspPose.child_frame_id;
     double pregrasp_offset = 0.07;
     
-    // Vector object center (graspPose)
+    // Vector object center (objectPose)
     std::array<double,2> A;
-    A[0] = graspPose.transform.translation.x;
-    A[1] = graspPose.transform.translation.y;
+    A[0] = objectPose.transform.translation.x;
+    A[1] = objectPose.transform.translation.y;
 
     // End effector pose
     std::array<double,2> B;
@@ -1204,7 +1199,7 @@ geometry_msgs::TransformStamped jaco_control::pregraspPose(geometry_msgs::Transf
 
     pregraspPose.transform.translation.x = C[0];
     pregraspPose.transform.translation.y = C[1];
-
+    ROS_INFO_STREAM("pregraspPose X " + std::to_string(pregraspPose.transform.translation.x) + " y " + std::to_string(pregraspPose.transform.translation.y) + " z " + std::to_string(pregraspPose.transform.translation.z));
     return pregraspPose;
 };
 
@@ -1216,7 +1211,7 @@ geometry_msgs::TransformStamped jaco_control::graspPose(geometry_msgs::Transform
     tf::StampedTransform graspPose;
     tf::StampedTransform objectPose;
     tf::StampedTransform pregraspPose;
-    double distance_palm_to_ee = 0.3;//-0.1135;       //0.16 is the distance from joint 6 to tool_frame and 0.1135 is the distance from jonit 6 to the palm
+    double distance_palm_to_ee = 0.16-0.1135;//-0.1135;       //0.16 is the distance from joint 6 to tool_frame and 0.1135 is the distance from jonit 6 to the palm
     tf::transformStampedMsgToTF(objectPoseIn,objectPose);
     tf::transformStampedMsgToTF(pregraspPoseIn,pregraspPose);
 
@@ -1243,8 +1238,8 @@ geometry_msgs::TransformStamped jaco_control::graspPose(geometry_msgs::Transform
     // return geometry_msgss::TransformStamped
     geometry_msgs::TransformStamped graspPoseReturn;
     tf::transformStampedTFToMsg(graspPose,graspPoseReturn);
-    ROS_INFO_STREAM("dirvec v " + std::to_string(graspPoseReturn.transform.translation.x) + "objectPosition y " + std::to_string(graspPoseReturn.transform.translation.y) + "objectPosition z " + std::to_string(graspPoseReturn.transform.translation.y));
-    ROS_INFO_STREAM("dirvec v " + std::to_string(objectPoseIn.transform.translation.x) + "objectPosition y " + std::to_string(objectPoseIn.transform.translation.y) + "objectPosition z " + std::to_string(objectPoseIn.transform.translation.y));
+    ROS_INFO_STREAM("grasp x " + std::to_string(graspPoseReturn.transform.translation.x) + " y " + std::to_string(graspPoseReturn.transform.translation.y) + " z " + std::to_string(graspPoseReturn.transform.translation.z));
+    ROS_INFO_STREAM("objectposin X " + std::to_string(objectPoseIn.transform.translation.x) + " y " + std::to_string(objectPoseIn.transform.translation.y) + " z " + std::to_string(objectPoseIn.transform.translation.z));
     return graspPoseReturn;
     // 
 
@@ -1260,8 +1255,8 @@ bool jaco_control::pregraspArea(geometry_msgs::TransformStamped pregraspPose, ge
     std::array<double,3> B = vector::pointToArray(graspPose.transform.translation);     // Position of object
     std::array<double,3> C = vector::pointToArray(ee_pose_.transform.translation);      // End effector position
 
-    std::array<double,3> AB = vector::sub(B,A);                                         // Vector from pregrasp to object
-    std::array<double,3> BC = vector::sub(C,B);                                         // Vector from grasp to object
+    std::array<double,3> AB = vector::sub(B,A);                                         // Vector from pregrasp to graspPose
+    std::array<double,3> BC = vector::sub(C,B);                                         // Vector from end effector to graspPose
 
     std::array<double,3> AC = vector::sub(C,A);                                         // Vector from pregrasp to ee;
 
@@ -1273,17 +1268,35 @@ bool jaco_control::pregraspArea(geometry_msgs::TransformStamped pregraspPose, ge
 
 
     //find t
-    double t = proj_AC_on_AB[0]/AB[0];
+    double t = proj_AC_on_AB[0]/AB[0];          //FIXIFIXIFXIXFIXFIXFIIXFIXFOIIXFIFXIIIXFIIFIIFXXIIFXIXFIXIFIIFIIFXIIIFXIXIFIIXFIIXFIIXFIXFIIXFIIXFI
 
     //
     double distance_to_ee_from_pregrasp = vector::length(AC);
     double distance_to_ee_from_grasp = vector::length(BC);
+    ROS_INFO_STREAM("T: " + std::to_string(t) + " DISTANCE" + std::to_string(perpendiscular_distance_to_ee));
+    ROS_INFO_STREAM("PROJ " + std::to_string(proj_AC_on_AB[0]) + " Y " + std::to_string(proj_AC_on_AB[1]) + " Z " + std::to_string(proj_AC_on_AB[2]));
+    ROS_INFO_STREAM("PREGRASP " + std::to_string(A[0]) + " Y " + std::to_string(A[1]) + " Z " + std::to_string(A[2]));
+    ROS_INFO_STREAM("ABAB " + std::to_string(AB[0]) + " Y " + std::to_string(AB[1]) + " Z " + std::to_string(AB[2]));
 
-    if (((0 > t > 1) && (perpendiscular_distance_to_ee < radius)) || distance_to_ee_from_pregrasp < radius || distance_to_ee_from_grasp < radius )
+    if (((0 < t) && (t < 1) && (perpendiscular_distance_to_ee < radius))) // < radius
     {
-        ROS_INFO("PREGRASP");
+        ROS_INFO("PREGRASP CYLINDER");
         return true;
-    }else
+    } else if (distance_to_ee_from_pregrasp < radius )
+    {
+         ROS_INFO("PREGRASP KUGLE PREGRASP");
+        
+        
+        return true;
+    } else if (distance_to_ee_from_grasp < radius)
+    {
+         ROS_INFO("PREGRASP KUGLE GRASp");
+        return true;
+    }
+    
+    
+    
+    else
     {
         return false;
     }
@@ -1344,9 +1357,10 @@ kinova::KinovaPose jaco_control::pregraspAssistance(kinova::KinovaPose &iTongueD
     std::array<double,3> B = vector::pointToArray(ee_pose_.transform.translation);
     std::array<double,3> C = vector::pointToArray(graspPose.transform.translation);
     std::array<double,3> BC = vector::sub(C,B);
-    ROS_INFO_STREAM("PREGRASP X " + std::to_string(graspPose.transform.translation.x) + "PREGRASP y " + std::to_string(graspPose.transform.translation.y) + "PREGRASP z " + std::to_string(graspPose.transform.translation.y));
+    ROS_INFO_STREAM("GRASP X " + std::to_string(graspPose.transform.translation.x) + " y " + std::to_string(graspPose.transform.translation.y) + " z " + std::to_string(graspPose.transform.translation.z));
+    ROS_INFO_STREAM("vector from ee to grasp X " + std::to_string(BC[0]) + " y " + std::to_string(BC[1]) + " z " + std::to_string(BC[2]));
     double dist = vector::length(BC);
-    double translationalVelocity = 0.05;
+    double translationalVelocity = 0.3; // 0.3
     double vel_thresh_distance = 0.07; // full speed 7 cm from object
     double velScaling = (1 - ( (vel_thresh_distance-std::min(dist,vel_thresh_distance)) /vel_thresh_distance));
     ROS_INFO_STREAM("VELOCITY SCALING: " + std::to_string(velScaling));
@@ -1356,7 +1370,7 @@ kinova::KinovaPose jaco_control::pregraspAssistance(kinova::KinovaPose &iTongueD
     velocityPose.X = vector::norm(BC)[0] * translationalVelocity * 1;//velScaling;
     velocityPose.Y = vector::norm(BC)[1] * translationalVelocity * 1;//velScaling;
     velocityPose.Z = vector::norm(BC)[2] * translationalVelocity * 1;//velScaling;
-    
+    ROS_INFO_STREAM("VelocityOUT X " + std::to_string(velocityPose.X) + " y " + std::to_string(velocityPose.Y) + " z " + std::to_string(velocityPose.Z));
     return velocityPose;
 
 };
@@ -1448,8 +1462,8 @@ double jaco_control::gripperThetaToObject(geometry_msgs::TransformStamped graspP
     C.setZ(0);
     BA.setZ(0);
 
-    debug_experimental("BA x: " + std::to_string(BA.getX()) + " Y " + std::to_string(BA.getY()));
-    debug_experimental("C x: " + std::to_string(C.getX()) + " Y " + std::to_string(C.getY()));
+    // debug_experimental("BA x: " + std::to_string(BA.getX()) + " Y " + std::to_string(BA.getY()));
+    // debug_experimental("C x: " + std::to_string(C.getX()) + " Y " + std::to_string(C.getY()));
     double angleBA = std::atan2(BA.getY(),BA.getX());
     double angleC = std::atan2(C.getY(),C.getX());
 
@@ -1463,16 +1477,50 @@ kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
     kinova::KinovaPose velocityPose;
     velocityPose.InitStruct();
     velocityPose.ThetaY = 0;
+    static geometry_msgs::TransformStamped savedPregrasp;
+    static geometry_msgs::TransformStamped savedGrasp;
     //ROS_INFO_STREAM("TESTER: "  + std::to_string(velocityPose.ThetaY));
     if (!obj_world_filtered.empty())
     {
+
+
+
         bool pregraspMode = false;
         
-        for (size_t i = 0; i < obj_world_filtered.size(); i++)
+        if (savedPregrasp.transform.translation.x)
         {
+            
+            if (pregraspArea(savedPregrasp,savedGrasp)){
+                ROS_INFO("PREGRASP SAVED"); 
+                if (!graspArea(savedGrasp))
+                {
+                    ROS_INFO("PREGRASP SAVED");
+                    //ROS_INFO_STREAM("TESTER1: "  + std::to_string(velocityPose.ThetaY));
+                    velocityPose = pregraspAssistance(iTongueDir,savedGrasp);
+                    //ROS_INFO_STREAM("TESTER2: "  + std::to_string(velocityPose.ThetaY));
+                } else if (graspArea(savedGrasp))
+                {
+                    ROS_INFO("GRIPPER");
+                    gripperAssistance();
+                }
+                pregraspMode = true;
+            } else
+            {
+                
+                savedPregrasp.transform.translation.x = 0;
+                savedGrasp.transform.translation.x = savedPregrasp.transform.translation.x;
+                pregraspMode = false;
+            }
+            
+        }
+        
+        if (!pregraspMode)
+        {
+        for (size_t i = 0; i < obj_world_filtered.size(); i++)
+        {   ROS_INFO_STREAM("object pose X " + std::to_string(obj_world_filtered[i].transform.translation.x) + " y " + std::to_string(obj_world_filtered[i].transform.translation.y) + " z " + std::to_string(obj_world_filtered[i].transform.translation.z));
             geometry_msgs::TransformStamped pregrasp = pregraspPose(obj_world_filtered[i]);
             geometry_msgs::TransformStamped graspPosee = graspPose(pregrasp,obj_world_filtered[i]);
-            if (pregraspArea(pregrasp,graspPosee))
+            if (pregraspArea(pregrasp,graspPosee) && savedPregrasp.transform.translation.x == 0)
             {
                 if (!graspArea(graspPosee))
                 {
@@ -1488,7 +1536,11 @@ kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
                 
                 //ROS_INFO("PREGRASP mode true");
                 pregraspMode = true;
+                savedPregrasp = pregrasp;
+                savedGrasp = graspPosee;
+
             } 
+        }
         }
 
         if (!pregraspMode)
@@ -1772,8 +1824,8 @@ void jaco_control::EvaluatePlacement(geometry_msgs::TransformStamped GripperPosi
 void jaco_control::testemil(){
     
     geometry_msgs::TransformStamped testPos;
-    testPos.transform.translation.x = 0.26846;
-    testPos.transform.translation.y = -0.6144;
+    testPos.transform.translation.x = 0.26846/2;
+    testPos.transform.translation.y = -0.6144/2;
     testPos.transform.translation.z = 0.2311;
     testPos.transform.rotation.w = 0.05287;
     testPos.transform.rotation.x = 0.81934;
