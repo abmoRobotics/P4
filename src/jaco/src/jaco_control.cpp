@@ -882,7 +882,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         
         if (shapefitting_ac_state.isDone())
         {
-             UpdatePlacement(obj_ee_array);
+             //UpdatePlacement(obj_ee_array);
                 //shapefitting_ac.sendGoal(goal, &doneCb, &activeCb, &feedbackCb)
             if (visionDataArray.msg.size() > 0)
             {
@@ -906,7 +906,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
             ee_pose_ = tfBuffer.lookupTransform("world", "j2n6s300_end_effector",
                                     ros::Time(0),ros::Duration(3.0));
             
-             EvaluateTransforms();
+             //EvaluateTransforms();
 
             // Transform each camData into world frame and save
             
@@ -929,7 +929,7 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
         //Check if previous goal is finished
         //if Finished send new goal using sendGoal(goal,doneCb,activeCb,feedbackCb)
         
-      EvaluatePlacement(ee_pose_);
+      //EvaluatePlacement(ee_pose_);
 
     }
 
@@ -940,15 +940,13 @@ void jaco_control::EvaluateTransforms(){
 
     std::vector<std::vector<geometry_msgs::TransformStamped>::iterator> remove;
 
-    int it = 0;
-
-    for(auto camData : tf_cam_to_object){
-        if (camData.header.stamp.sec < RosTime.sec - 3)
+    for (size_t i = 0; i < tf_cam_to_object.size(); i++)
+    {
+        if (tf_cam_to_object.at(i).header.stamp.sec < RosTime.sec - 3)
         {
-            std::vector<geometry_msgs::TransformStamped>::iterator itr = tf_cam_to_object.begin()+it;
-            remove.push_back(itr);
+            std::vector<geometry_msgs::TransformStamped>::iterator itr = tf_cam_to_object.begin()+i;
+            remove.insert(remove.begin(),itr);
         }
-         it++;
     }
 
     for (auto erase : remove)
