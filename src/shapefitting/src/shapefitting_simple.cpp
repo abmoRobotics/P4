@@ -240,35 +240,6 @@ rs2::pipeline InitiateRealsense(){
     return pipe;
 }
 
-cv::Mat GetDepthData(rs2::pipeline *pipe){
-// Wait for next set of frames from the camera
-    frameset data = pipe->wait_for_frames();
-    // Import depth
-    depth_frame depth = data.get_depth_frame(); 
-    // Convert frame to Mat with distances
-    Mat depth_mat = depth_frame_to_meters(depth);
-
-    // Manually align depth data to RGB data
-    // D435i depth FOV: 86*57
-    // D435i RGB FOV: 64*41
-    double w = 0.560; // DO NOT ASK! Det er gæt-magi ¯\_( ͡❛ ͜ʖ ͡❛)_/¯
-    double h = 0.665; // Forholdet imellem FOV heights
-
-    cv::Rect roi;
-    roi.x = depth_mat.cols * ((1-w)/2);
-    roi.y = depth_mat.rows * ((1-h)/2);
-    roi.width = depth_mat.cols * w;
-    roi.height = depth_mat.rows * h;
-
-    std::cout << roi.width << " " << roi.height << std::endl;
-    
-    depth_mat = depth_mat(roi);
-
-    resize(depth_mat, depth_mat,Size(425,239));
-
-    return depth_mat;
-}
-
 cv::Mat IsolateROI(Mat depth_mat, double X1, double X2, double Y1, double Y2){
     //Black image
     Mat Blob = Mat::zeros(Size(depth_mat.cols,depth_mat.rows),CV_8UC1); 
