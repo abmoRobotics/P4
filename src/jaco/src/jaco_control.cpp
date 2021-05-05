@@ -1572,59 +1572,26 @@ void jaco_control::UpdatePlacement(std::vector<geometry_msgs::TransformStamped> 
  // Gem placering for detected vector.
     
 
-    // for (size_t i = 0; i < objects.size(); i++)
-    // { 
-    //     bool DataPlaced = false;
-    //     for (size_t j = 0; j < Placement.size(); j++)
-    //     {     
-    //         std::string ObjectFrameName = objects.at(i).child_frame_id.data();
-    //         ;
-    //         std::string VectorFrameName = Placement.at(j).at(0).child_frame_id.data();       
-    //         if (ObjectFrameName == VectorFrameName && DataPlaced == false)
-    //         {
-    //             Placement.at(j).insert(Placement.at(j).begin(),objects.at(i));
-    //             DataPlaced = true;         
-    //         }
-    //     }   
-    //     if (!DataPlaced)
-    //     {
-    //         std::vector<geometry_msgs::TransformStamped> vectorTemp;
-    //         vectorTemp.push_back(objects.at(i));
-    //         Placement.push_back(vectorTemp);
-    //     }
-    // }
-    
-
-
-    for (auto obj : objects){
+    for (size_t i = 0; i < objects.size(); i++)
+    { 
         bool DataPlaced = false;
-        int iterator = 0;
-        
-        double distance = TransformDist(obj,ee_pose_);
-        if (distance > 0.2)
-        {
-            for(auto vector : Placement){
-            std::string ObjectFrameName = obj.child_frame_id.data();
-            std::string VectorFrameName = Placement.at(iterator).at(0).child_frame_id.data();
-
+        for (size_t j = 0; j < Placement.size(); j++)
+        {     
+            std::string ObjectFrameName = objects.at(i).child_frame_id.data();
+            ;
+            std::string VectorFrameName = Placement.at(j).at(0).child_frame_id.data();       
             if (ObjectFrameName == VectorFrameName && DataPlaced == false)
             {
-                Placement.at(iterator).insert(Placement.at(iterator).begin(),obj);
-                DataPlaced = true;
+                Placement.at(j).insert(Placement.at(j).begin(),objects.at(i));
+                DataPlaced = true;         
             }
-            iterator++;
-            }
-
-            if (!DataPlaced)
-            {
-                std::vector<geometry_msgs::TransformStamped> vectorTemp;
-                vectorTemp.push_back(obj);
-                Placement.push_back(vectorTemp);
-            }
+        }   
+        if (!DataPlaced)
+        {
+            std::vector<geometry_msgs::TransformStamped> vectorTemp;
+            vectorTemp.push_back(objects.at(i));
+            Placement.push_back(vectorTemp);
         }
-        
-        
-        
     }
 
     RANSAC();
@@ -1686,18 +1653,10 @@ void jaco_control::RANSAC(){
             }
             
         }
+
         obj_world_filtered.push_back(HighestScore);
 
     }
-
-                
-            
-            
-        
-        
-        
-       
-     
     
     
 }
@@ -1726,62 +1685,41 @@ void jaco_control::EvaluatePlacement(geometry_msgs::TransformStamped GripperPosi
     ros::Time RosTime = ros::Time::now();
 
     int MaxMemory = 50;
-    int PlacementIt = 0;
 
     std::vector<std::vector<geometry_msgs::TransformStamped>::iterator> EraseVectorEntries;
     std::vector<std::vector<std::vector<geometry_msgs::TransformStamped>>::iterator> ErasePlacementEntries;
 
-    for (auto vector : Placement)
-    {   
-        
+
+    for (size_t i = 0; i < Placement.size(); i++)
+    {
         EraseVectorEntries.clear();
-        int it = 0;
         int deleteLast = 0;
-        for(auto transform : vector){
-            
-            // int TimeDistCost = int(TransformDist(GripperPosition,Placement.at(PlacementIt).at(it))*10);
-            // uint64_t TimeLimit = RosTime.sec - TimeDistCost;
-            double timeThreshhold = 30.0 - (TransformDist(GripperPosition,Placement.at(PlacementIt).at(it)) * 50);
+
+        for (size_t k = 0; k < Placement.at(i).size() ; k++)
+        {
+            double timeThreshhold = 30.0 - (TransformDist(GripperPosition,Placement.at(i).at(k)) * 50);
             timeThreshhold = std::min(timeThreshhold,20.0);
             timeThreshhold = std::max(timeThreshhold,5.0);
-            int objectAge = (RosTime.sec - Placement.at(PlacementIt).at(it).header.stamp.sec);
 
-            if((double)objectAge > timeThreshhold){ 
-                std::vector<geometry_msgs::TransformStamped>::iterator itr = Placement.at(PlacementIt).begin()+it;
+            int objectAge = (RosTime.sec - Placement.at(i).at(k).header.stamp.sec);
+
+            if((double)objectAge > timeThreshhold || k >= MaxMemory){ 
+                std::vector<geometry_msgs::TransformStamped>::iterator itr = Placement.at(i).begin()+k;
                 EraseVectorEntries.insert(EraseVectorEntries.begin(),itr);
-            } else if(it >= MaxMemory){
-                deleteLast++;
-            }
+            } 
+        }
 
-                it++;
-            
-            }
-        
-            
         for(auto erase : EraseVectorEntries){
-            Placement.at(PlacementIt).erase(erase);
-        }
-        
-            
-        for (int i = 0; i < deleteLast; i++){
-            Placement.at(PlacementIt).pop_back();
+            Placement.at(i).erase(erase);
         }
 
-        
-
-        if (Placement.at(PlacementIt).empty())
-        {
-            
-            std::vector<std::vector<geometry_msgs::TransformStamped>>::iterator itr = Placement.begin()+PlacementIt;
+        if (Placement.at(i).empty()){
+            std::vector<std::vector<geometry_msgs::TransformStamped>>::iterator itr = Placement.begin()+i;
             ErasePlacementEntries.insert(ErasePlacementEntries.begin(), itr);
-        } 
-        
-            
-            PlacementIt++;
-        
         }
         
-        
+    }
+    
     for(auto erase : ErasePlacementEntries){
         Placement.erase(erase);
     }
