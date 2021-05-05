@@ -49,42 +49,42 @@ void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr go
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "150clSoda";
             break;
-        case 1: // 50clSoda
+        case 10: // 50clSoda
             result_temp.radius = 0.04;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "50clSoda";
             break;
-        case 2: // Juice
+        case 20: // Juice
             result_temp.radius = 0.03;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "Juice";
             break;
-        case 3: // Minimælk
+        case 30: // Minimælk
             result_temp.radius = 0.033;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "Minimælk";
             break;
-        case 4: // Rødvin
+        case 40: // Rødvin
             result_temp.radius = 0.0375;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "Rødvin";
             break;
-        case 5: // Rosevin
+        case 50: // Rosevin
             result_temp.radius = 0.035;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "Rosevin";
             break;
-        case 6: // Saftevand
+        case 60: // Saftevand
             result_temp.radius = 0.035;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "Saftevand";
             break;
-        case 7: // Skummetmælk
+        case 70: // Skummetmælk
             result_temp.radius = 0.033;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "Skummetmælk";
             break;
-        case 8: // Termokrus
+        case 80: // Termokrus
             result_temp.radius = 0.0378;
             Z = distNorm+result_temp.radius;
             result_temp.object_class.data = "Termokrus";

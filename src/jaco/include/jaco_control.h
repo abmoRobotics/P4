@@ -89,11 +89,15 @@ private:
     void shapefitting_doneCb(const actionlib::SimpleClientGoalState& state, const shapefitting::shapefitting_simple_position_arrayResultConstPtr& result);
     void shapefitting_activeCb();
 
+
+    // Object tracking
     void UpdatePlacement(std::vector<geometry_msgs::TransformStamped> objects); // Push back the latest transforms into placement vector.
     geometry_msgs::TransformStamped GetPlacement(geometry_msgs::TransformStamped object);                  // Retrieve placement of frame from placement vector.
     void EvaluatePlacement(geometry_msgs::TransformStamped GripperPosition);    // Uvaluate all frames in Placement with relation to time and gripper frame.
     void RANSAC();                                                              // Perform RANSAC on the frames inside Placement, to determine inliers and noise.
     double TransformDist(geometry_msgs::TransformStamped T1,geometry_msgs::TransformStamped T2);
+
+    // Check if object are in hand
     bool setInHand(bool state){is_in_hand = state;};
     bool InHand(){return is_in_hand;};
 
@@ -129,8 +133,9 @@ private:
     vision::Detection_array visionDataArray;
     shapefitting::shape_data shapeData;
 
+    // Object tracking
     std::vector<std::vector<geometry_msgs::TransformStamped>> Placement;
-    std::vector<geometry_msgs::TransformStamped> RANSAC_Placement;
+    std::vector<geometry_msgs::TransformStamped> obj_world_filtered;
 
     //Frames
     shapefitting::shape_data tf_Cam_Obj;
@@ -171,6 +176,7 @@ private:
 
     //Function for calculating pregrasp position
     geometry_msgs::TransformStamped pregraspPose(geometry_msgs::TransformStamped graspPose);
+    geometry_msgs::TransformStamped graspPose(geometry_msgs::TransformStamped pregraspPose, geometry_msgs::TransformStamped objectPose);
     //Function for defining cylidrical area where the gripper must be assisted
     bool pregraspArea(geometry_msgs::TransformStamped pregraspPose, geometry_msgs::TransformStamped graspPose);
     // Function for defining the sphere where that gripper must grip
