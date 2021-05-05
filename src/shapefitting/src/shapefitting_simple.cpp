@@ -6,6 +6,7 @@ using namespace cv;
 using namespace rs2;
 
 Mat Depth_Image;
+bool runonce = false;
 
 void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr goal, ShapeSimpleArrayActionServer* as){
     // Initiate Return variables
@@ -122,9 +123,13 @@ void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr go
 void UpdatePointCloud(const jaco::DepthImageConstPtr &msg){
 
     int i = 0;
-    cv::Mat Initialiser(Size(msg->width, msg->height), CV_64F);
-
-    Depth_Image = Initialiser;
+    
+    if(!runonce){
+        cv::Mat Initialiser(Size(msg->width, msg->height), CV_64F);
+        Depth_Image = Initialiser;
+        runonce = true;
+    }
+    
 
     for (int x = 0; x < msg->width; x++)
     {
