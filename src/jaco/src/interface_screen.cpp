@@ -19,7 +19,7 @@ using namespace std;
 int iTongue_sensor{0};
 vector<vision::Detection> visionDataArray;
 cv::Mat camera1Image = cv::Mat::zeros(640, 480, CV_8UC3);
-cv::VideoCapture secondCam = cv::VideoCapture(9);
+//cv::VideoCapture secondCam = cv::VideoCapture(0);
 void iTongue_callback(const jaco::RAWItongueOutConstPtr &msg)
 {
 
@@ -51,8 +51,8 @@ cv::Mat Keypad = cv::Mat::zeros(720, 360, CV_8UC3);
 
 void videoFeed_window(){
     
-    cv::Mat frame;
-    secondCam >> frame;   
+    // cv::Mat frame;
+    // secondCam >> frame;   
     cv::Size elipseSize = cv::Size(60,35);
     vector<cv::Point> keypadPoints = {cv::Point(90, 40), cv::Point(2*90, 40), cv::Point(3*90, 40), cv::Point(90, 140), cv::Point(2*90, 140),
                                     cv::Point(3*90, 140), cv::Point(50, 240), cv::Point(50+86, 240), cv::Point(310-86, 240), cv::Point(360-50, 240),
@@ -122,8 +122,8 @@ if(iTongue_sensor > 0 && iTongue_sensor <= 18)
     cv::moveWindow("Keypad", 20,20);
     cv::imshow("Display", camera1Image);
     cv::moveWindow("Display", 430, 20);
-    cv::imshow("3rd Person CAM", frame);
-    cv::waitKey(30);
+    //cv::imshow("3rd Person CAM", frame);
+    cv::waitKey(100);
 }
 
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 {
 cv::namedWindow("Display");
 cv::namedWindow("Keypad");
-cv::namedWindow("3rd Person CAM");
+//cv::namedWindow("3rd Person CAM");
 
     ros::init(argc, argv, "interface_screen");
     ros::AsyncSpinner spinner(0);

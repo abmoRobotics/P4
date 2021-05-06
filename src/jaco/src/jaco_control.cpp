@@ -566,23 +566,23 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         //Switch statement to move robot in relation to sensor
         switch (msg->Sensor)
         {
-        case 9: //Z forwards  - away from oneself
+        case 7: //Z forwards  - away from oneself
         debug_itongue("Z forwards  - away from oneself");
             velocity.Z = -0.30;
             break;
         case 8: //Z backwards -- towards oneself
             velocity.Z = 0.30;
             break; 
-        case 11: // cross up-left
+        case 16: // cross up-left
         debug_itongue("cross up-left");
             velocity.Y  = 0.30;
             velocity.X  = -0.30;
             break;
-        case 12:// Y upwards
+        case 17:// Y upwards
         debug_itongue("Y upwards");
             velocity.Y = 0.30;
             break;
-        case 13: // Cross up-right
+        case 18: // Cross up-right
         debug_itongue("Cross up-right");
             velocity.Y = 0.30;
             velocity.X = 0.30;
@@ -595,40 +595,51 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
         debug_itongue("x right");
             velocity.X = 0.30;
             break;
-        case 16: // Cross down-left
+        case 11: // Cross down-left
             velocity.Y = -0.30;
             velocity.X = -0.30;
             break;
-        case 17: // y downwards
+        case 12: // y downwards
             velocity.Y = -0.30;
             break;
-        case 18: // Cross down-right
+        case 13: // Cross down-right
             velocity.Y = -0.30;
             velocity.X = 0.30;
             break;
+        
+        case 9: //twist  wrist another way før 3
+            debug_itongue("gripper");
+            spherical_grip(100);
+            break;
+        case 10: //twist  wrist another way før 4
+            debug_itongue("gripper open");
+            spherical_grip(45);
+            break;
+
         case 1: //Twist wrist
             debug_itongue("twist 1");
             velocity.ThetaY = 0.7;
             break;
-        case 2: //twist  wrist another way
+        case 4: //twist  wrist another way før 2
             debug_itongue("Twist 2");
             velocity.ThetaY = -0.7;
             break;
-        case 3: //twist  wrist another way
-            debug_itongue("gripper");
-            spherical_grip(100);
-            break;
-        case 4: //twist  wrist another way
-            debug_itongue("gripper open");
-            spherical_grip(45);
-            break;
-        case 5: //twist  wrist another way
+        case 2: //twist  wrist another way før 5
             debug_itongue("rotate gripper");
             velocity.ThetaZ = 0.7;
             break;
-        case 6: //twist  wrist another way
+        case 5: //twist  wrist another way
             debug_itongue("rotate gripper");
             velocity.ThetaZ = -0.7;
+            break;
+
+        case 3: //twist  wrist another way
+            debug_itongue("rotate gripper");
+            velocity.ThetaX = 0.7;
+            break;
+        case 6: //twist  wrist another way
+            debug_itongue("rotate gripper");
+            velocity.ThetaX = -0.7;
             break;
         default:
         return;

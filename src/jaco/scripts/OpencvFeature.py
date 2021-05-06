@@ -20,7 +20,7 @@ class image_converter:
     
     self.image_sub = rospy.Subscriber("/Imagepub/RGB",Image,self.callback)
 
-    self.camera = pyfakewebcam.FakeWebcam('/dev/video8', 640, 480)
+    self.camera = pyfakewebcam.FakeWebcam('/dev/video12', 640, 480)
 
 
 
