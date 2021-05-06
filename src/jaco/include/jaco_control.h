@@ -55,6 +55,8 @@
 #include "kinova_driver/kinova_fingers_action.h"
 #include "kinova_driver/kinova_joint_trajectory_controller.h"
 
+#include <chrono>
+#include <thread>
 
 #include <kinova_msgs/AddPoseToCartesianTrajectory.h>
 class jaco_control
@@ -95,7 +97,9 @@ private:
     geometry_msgs::TransformStamped GetPlacement(geometry_msgs::TransformStamped object);                  // Retrieve placement of frame from placement vector.
     void EvaluatePlacement(geometry_msgs::TransformStamped GripperPosition);    // Uvaluate all frames in Placement with relation to time and gripper frame.
     void RANSAC();                                                              // Perform RANSAC on the frames inside Placement, to determine inliers and noise.
-    double TransformDist(geometry_msgs::TransformStamped T1,geometry_msgs::TransformStamped T2);
+    double TransformDist(geometry_msgs::TransformStamped *T1,geometry_msgs::TransformStamped *T2);
+    uint64_t LastCheckTransform;
+
 
     // Check if object are in hand
     bool setInHand(bool state){is_in_hand = state;};

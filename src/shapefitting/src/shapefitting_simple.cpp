@@ -63,12 +63,12 @@ void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr go
         case 30: // Minimælk
             result_temp.radius = 0.033;
             Z = distNorm+result_temp.radius;
-            result_temp.object_class.data = "Minimælk";
+            result_temp.object_class.data = "Minimaelk";
             break;
         case 40: // Rødvin
             result_temp.radius = 0.0375;
             Z = distNorm+result_temp.radius;
-            result_temp.object_class.data = "Rødvin";
+            result_temp.object_class.data = "Roedvin";
             break;
         case 50: // Rosevin
             result_temp.radius = 0.035;
@@ -83,7 +83,7 @@ void array(const shapefitting::shapefitting_simple_position_arrayGoalConstPtr go
         case 70: // Skummetmælk
             result_temp.radius = 0.033;
             Z = distNorm+result_temp.radius;
-            result_temp.object_class.data = "Skummetmælk";
+            result_temp.object_class.data = "Skummetmaelk";
             break;
         case 80: // Termokrus
             result_temp.radius = 0.0378;
