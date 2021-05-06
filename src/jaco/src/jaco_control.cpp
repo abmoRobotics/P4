@@ -624,11 +624,11 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             break;
         case 5: //twist  wrist another way
             debug_itongue("rotate gripper");
-            velocity.ThetaY = 0.7;
+            velocity.ThetaZ = 0.7;
             break;
         case 6: //twist  wrist another way
             debug_itongue("rotate gripper");
-            velocity.ThetaY = -0.7;
+            velocity.ThetaZ = -0.7;
             break;
         default:
         return;
