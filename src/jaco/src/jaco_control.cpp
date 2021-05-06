@@ -564,13 +564,13 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     if(Sensor_count > 4){
 
         //Switch statement to move robot in relation to sensor
-        switch (msg->Sensor)
+       switch (msg->Sensor)
         {
-        case 9: //Z forwards  - away from oneself
+        case 10: //Z forwards  - away from oneself
         debug_itongue("Z forwards  - away from oneself");
             velocity.Z = -0.30;
             break;
-        case 8: //Z backwards -- towards oneself
+        case 7: //Z backwards -- towards oneself
             velocity.Z = 0.30;
             break; 
         case 11: // cross up-left
@@ -610,25 +610,33 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             debug_itongue("twist 1");
             velocity.ThetaY = 0.7;
             break;
-        case 2: //twist  wrist another way
+        case 4: //twist  wrist another way
             debug_itongue("Twist 2");
             velocity.ThetaY = -0.7;
             break;
-        case 3: //twist  wrist another way
+        case 8: //twist  wrist another way
             debug_itongue("gripper");
             spherical_grip(100);
             break;
-        case 4: //twist  wrist another way
+        case 9: //twist  wrist another way
             debug_itongue("gripper open");
             spherical_grip(45);
             break;
-        case 5: //twist  wrist another way
+        case 2: //twist  wrist another way
             debug_itongue("rotate gripper");
             velocity.ThetaZ = 0.7;
             break;
-        case 6: //twist  wrist another way
+        case 5: //twist  wrist another way
             debug_itongue("rotate gripper");
             velocity.ThetaZ = -0.7;
+            break;
+        case 3: //twist  wrist another way
+            debug_itongue("rotate gripper");
+            velocity.ThetaX = -0.7;
+            break;
+        case 6: //twist  wrist another way
+            debug_itongue("rotate gripper");
+            velocity.ThetaX = -0.7;
             break;
         default:
         return;
