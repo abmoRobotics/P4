@@ -22,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   #ros_controllers
   #moveit_ros_planning
   moveit_ros_planning_interface
-  cv_bridge
+  #cv_bridge
 
 
 )
