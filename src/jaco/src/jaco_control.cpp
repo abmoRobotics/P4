@@ -564,7 +564,7 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
     if(Sensor_count > 4){
 
         //Switch statement to move robot in relation to sensor
-        switch (msg->Sensor)
+       switch (msg->Sensor)
         {
         case 7: //Z forwards  - away from oneself
         debug_itongue("Z forwards  - away from oneself");
@@ -616,6 +616,7 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             spherical_grip(45);
             break;
 
+        //Yaw
         case 1: //Twist wrist
             debug_itongue("twist 1");
             velocity.ThetaY = 0.7;
@@ -624,6 +625,8 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             debug_itongue("Twist 2");
             velocity.ThetaY = -0.7;
             break;
+
+        //Pitch
         case 2: //twist  wrist another way før 5
             debug_itongue("rotate gripper");
             velocity.ThetaZ = 0.7;
@@ -633,6 +636,7 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
             velocity.ThetaZ = -0.7;
             break;
 
+        //Roll
         case 3: //twist  wrist another way
             debug_itongue("rotate gripper");
             velocity.ThetaX = 0.7;
