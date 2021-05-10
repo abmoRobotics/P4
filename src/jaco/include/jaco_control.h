@@ -59,6 +59,9 @@
 #include <thread>
 
 #include <kinova_msgs/AddPoseToCartesianTrajectory.h>
+
+//#define _runtime 1;
+
 class jaco_control
 {
 private:
@@ -217,7 +220,7 @@ private:
     actionlib::SimpleActionClient<shapefitting::shapefitting_positionAction> shape_data_client;
 
     //Physical robot
-    
+    #ifdef _runtime
     boost::recursive_mutex mutexer;
     kinova::KinovaComm kinova_comm; 
     kinova::KinovaArm kinova_arm;
@@ -225,6 +228,7 @@ private:
     kinova::KinovaAnglesActionServer angles_server;
     kinova::KinovaFingersActionServer fingers_server;
     kinova::JointTrajectoryController joint_trajectory_controller;
+    #endif
 
     kinova_msgs::SetFingersPositionGoal finger_goal;
     kinova::KinovaAPI kinova_api_;

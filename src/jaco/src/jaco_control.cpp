@@ -235,9 +235,12 @@ void jaco_control::spherical_grip(double diameter){
     fingerAng.Finger1 = FINGER_MAX*fingerPercent;
     fingerAng.Finger2 = FINGER_MAX*fingerPercent;
     fingerAng.Finger3 = FINGER_MAX*fingerPercent;
-    kinova_comm.printFingers(fingerAng);
     kinova::FingerAngles fingerAnglesCurrent;
+    #ifdef _runtime
+    kinova_comm.printFingers(fingerAng);
     kinova_comm.getFingerPositions(fingerAnglesCurrent);
+    kinova_comm.setFingerPositions(fingerAng);
+    #endif
     if (fingerAng.Finger1 > fingerAnglesCurrent.Finger1)
     {
         setInHand(true);
@@ -245,7 +248,7 @@ void jaco_control::spherical_grip(double diameter){
         setInHand(false);
     }
     
-    kinova_comm.setFingerPositions(fingerAng);
+    
     
 
 	//gripper_group_->setJointValueTarget("j2n6s300_joint_finger_1", jointValue);
@@ -676,7 +679,9 @@ void jaco_control::itongue_callback(const jaco::RAWItongueOutConstPtr& msg){
                 }
             //velocity.ThetaY = 0.0;
             debug_experimental("Adjusted values : " + std::to_string(velocity.X) + " " + std::to_string(velocity.Y) + " " + std::to_string(velocity.Z) + " " + std::to_string(velocity.ThetaX) + " " + std::to_string(velocity.ThetaY) + " " + std::to_string(velocity.ThetaZ));
+             #ifdef _runtime
              kinova_comm.setCartesianVelocities(velocity);
+             #endif
             debug_normal("SEND  ");
             
         }
@@ -806,17 +811,20 @@ jaco_control::jaco_control(ros::NodeHandle &nh):
     nh_(nh),
     shape_data_client("get_shape",true),
     interface_as_(nh_, "IF_full_auto", boost::bind(&jaco_control::IF_full_auto_execute, this, _1), false),
+    #ifdef _runtime
     kinova_comm(nh_,mutexer,true,"j2n6s300"),
     kinova_arm(kinova_comm, nh_, "j2n6s300", "j2n6s300"),
     pose_server(kinova_comm, nh_, "j2n6s300", "j2n6s300"),
     angles_server(kinova_comm, nh_),
     fingers_server(kinova_comm, nh_),
     joint_trajectory_controller(kinova_comm, nh_),
+    #endif
     shapefitting_ac("get_simple_shape_array",true)
 {
     
+    #ifdef _runtime
     kinova_comm.startAPI();
-
+    #endif
 
    
     
