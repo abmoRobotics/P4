@@ -7,90 +7,16 @@ typedef actionlib::SimpleActionServer<shapefitting::shapefitting_position_arrayA
 using namespace cv;
 using namespace rs2;
 
-void single(const shapefitting::shapefitting_positionGoalConstPtr goal, ShapeFittingActionServer* as){
-    // Initiate Return variables
-    shapefitting::shapefitting_positionActionResult resultreturn;
-
-    // Initiate the Realsense sensor and pipeline
-    rs2::pipeline pipe = InitiateRealsense();
-
-    // Get depth data from pipeline
-    Mat depth_mat = GetDepthData(&pipe);
-
-// Isolate needed values, by use of the classification
-    double TopLeftX = goal->input.X1;
-    double TopLeftY = goal->input.Y1;
-    double RightButtomX = goal->input.X2;
-    double RightButtomY = goal->input.Y2;
-
-    // Isolate distances on region of interest
-    depth_mat = IsolateROI(depth_mat, TopLeftX, RightButtomX, TopLeftY, RightButtomY);
-
-    // Convert depth_mat to Pwn_list:
-    Pwn_list points = DepthMat_to_Pwn_list(depth_mat);
-    
-// Calculate point normals, for use in Ransac
-    const int nb_neighbors = 18; // K-nearest neighbors = 3 rings
-    
-    if(points.size() > 1){
-
-        Pwn_vector vector = EstimateNormals(points, 18);
-
-    // Perform Shape detection using Ransac
-        // Instantiate shape detection engine.
-        Efficient_ransac ransac;
-
-        //Shapes detected by ransac
-        Efficient_ransac::Shape_range shapes = PerformShapeDetection(&ransac, vector);
-        Efficient_ransac::Shape_range::iterator it = shapes.begin();    //Itterator for going through all points
-        if (shapes.size() == 0){
-            ROS_WARN("No shapes detected");
-            as->setAborted();
-        } else {  
-
-            while (it != shapes.end()) {
-                // Get parameters depending on the detected shape.
-                if (Cylinder* cyl = dynamic_cast<Cylinder*>(it->get())) {
-                    Kernel::Line_3 axis = cyl->axis();
-                    FT radius = cyl->radius();
-                    //Print result
-                    std::cout << "Cylinder with center "
-                        << axis.point() << " axis " << axis.direction() << " and radius " << radius << std::endl;
-                        
-                    resultreturn.result.object.pos.x = axis.point().x();
-                    resultreturn.result.object.pos.y = axis.point().y();
-                    resultreturn.result.object.pos.z = axis.point().z();
-
-                    resultreturn.result.object.orientation.x = axis.direction().dx();
-                    resultreturn.result.object.orientation.y = axis.direction().dy();
-                    resultreturn.result.object.orientation.z = axis.direction().dz();
-
-                    resultreturn.result.object.radius = radius;
-                                    
-                }
-                // Proceed with the next detected shape.
-                it++;
-            }
-
-            as->setSucceeded();
-        }
-    } else {
-        ROS_ERROR("Pointcloud empty");
-        as->setAborted();
-    }
-
-    
-    
-}
+Mat Depth_Image;
+bool runonce = false;
 
 void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, ShapeFittingArrayActionServer* as){
     // Initiate Return variables
     shapefitting::shapefitting_position_arrayResult resultreturn;
     shapefitting::shape_data result_temp;
-    // Initiate the Realsense sensor and pipeline
-    rs2::pipeline pipe = InitiateRealsense();
+
     // Get depth data from pipeline
-    Mat depth_mat = GetDepthData(&pipe);
+    Mat depth_mat = Depth_Image;
 
     int i = 0;
     // For each element to detect
@@ -164,6 +90,29 @@ void array(const shapefitting::shapefitting_position_arrayGoalConstPtr goal, Sha
     
 }
 
+void UpdatePointCloud(const jaco::DepthImageConstPtr &msg){
+
+    int i = 0;
+    
+    if(!runonce){
+        cv::Mat Initialiser(Size(msg->width, msg->height), CV_64F);
+        Depth_Image = Initialiser;
+        runonce = true;
+    }
+    
+
+    for (int x = 0; x < msg->width; x++)
+    {
+        for (int y = 0; y < msg->height; y++)
+        {
+            Depth_Image.at<double>(cv::Point(x, y)) = msg->data.at(i);
+            i++;
+        }
+        
+    }
+    
+}
+
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "get_shape");
@@ -171,10 +120,11 @@ int main(int argc, char **argv){
     
     ROS_INFO("Shape fitting up and running");
 
-    ShapeFittingActionServer server(node,"get_shape", boost::bind(&single,_1,&server),false);
     ShapeFittingArrayActionServer server2(node,"get_shape_array", boost::bind(&array,_1,&server2),false);
 
-    server.start();
+    ros::Subscriber PointCloudSubscriber;
+    PointCloudSubscriber = node.subscribe<jaco::DepthImage>("/Imagepub/Depth",1,&UpdatePointCloud);
+
     server2.start();
     ros::spin();
     
@@ -220,8 +170,8 @@ Pwn_list DepthMat_to_Pwn_list(Mat DepthMat)
     Point_with_normal Data; //Data to pushback in Pwn_list
   
     // // For visualization with Mathlab function
-     std::ofstream myfile;
-     myfile.open("test.txt");
+    //  std::ofstream myfile;
+    //  myfile.open("test.txt");
 
     // For all pixels in depth-image(+= other than 1 to export fewer points -> Fewer calculations -> faster runtime)
     for (int x = 0; x < DepthMat.cols; x++) {
@@ -257,12 +207,12 @@ Pwn_list DepthMat_to_Pwn_list(Mat DepthMat)
                 Data.second = {0,0,0};// Normalvektor til punktet
                 Out.push_back(Data);
 
-                 myfile << x << " " << y << " " << Data.first << "\n" ;
+                //  myfile << x << " " << y << " " << Data.first << "\n" ;
             }
         }
     }
 
-    myfile.close();
+    // myfile.close();
 
     return Out;
 }

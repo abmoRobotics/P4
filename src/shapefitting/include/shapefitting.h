@@ -4,6 +4,7 @@
 #include <jaco/obj_pos.h>
 
 #include <vision/Detection.h>
+#include <jaco/DepthImage.h>
 
 #include <std_msgs/String.h>
 #include <actionlib/server/simple_action_server.h>
