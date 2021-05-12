@@ -1310,17 +1310,14 @@ bool jaco_control::pregraspArea(geometry_msgs::TransformStamped pregraspPose, ge
 
     if (((0 < t) && (t < 1) && (perpendiscular_distance_to_ee < radius))) // < radius
     {
-        ROS_INFO("PREGRASP CYLINDER");
         return true;
     } else if (distance_to_ee_from_pregrasp < radius )
     {
-         ROS_INFO("PREGRASP KUGLE PREGRASP");
         
         
         return true;
     } else if (distance_to_ee_from_grasp < radius)
     {
-         ROS_INFO("PREGRASP KUGLE GRASp");
         return true;
     }
     
@@ -1589,7 +1586,7 @@ kinova::KinovaPose jaco_control::Assistance(kinova::KinovaPose &iTongueDir){
 
         if (!pregraspMode)
         {
-            debug_experimental("BEGIN");
+            // debug_experimental("BEGIN");
             geometry_msgs::TransformStamped object = objectToAssist(iTongueDir,obj_world_filtered);
             geometry_msgs::TransformStamped pregrasp = pregraspPose(object);
             //ROS_INFO_STREAM("TESTER3: "  + std::to_string(velocityPose.ThetaY));
